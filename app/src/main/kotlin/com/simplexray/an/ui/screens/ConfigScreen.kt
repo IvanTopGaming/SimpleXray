@@ -84,7 +84,8 @@ fun ConfigScreen(
         mainViewModel.refreshSubscriptions()
     }
 
-    val manualFiles = files.filter { it.name !in subscriptionByFile.keys }
+    val subscriptionIds = subscriptions.map { it.id }.toSet()
+    val manualFiles = files.filter { subscriptionByFile[it.name] !in subscriptionIds }
     val filesBySub: Map<String, List<File>> = subscriptions.associate { sub ->
         sub.id to files.filter { subscriptionByFile[it.name] == sub.id }
     }
@@ -93,92 +94,95 @@ fun ConfigScreen(
         modifier = Modifier
             .fillMaxSize()
     ) {
-        if (files.isEmpty()) {
-            Box(
-                modifier = Modifier
-                    .fillMaxSize(),
-                contentAlignment = Alignment.Center
-            ) {
-                Text(
-                    stringResource(R.string.no_config_files),
-                    modifier = Modifier.fillMaxWidth(),
-                    style = MaterialTheme.typography.bodyLarge,
-                    textAlign = TextAlign.Center,
+        LazyColumn(
+            modifier = Modifier.fillMaxHeight(),
+            contentPadding = PaddingValues(bottom = 10.dp, top = 10.dp),
+            state = listState
+        ) {
+            item(key = "subs_header") {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 20.dp, vertical = 6.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        stringResource(R.string.subscriptions),
+                        modifier = Modifier.weight(1f),
+                        style = MaterialTheme.typography.titleSmall,
+                        color = MaterialTheme.colorScheme.primary
+                    )
+                    IconButton(onClick = { showAddSubscriptionDialog.value = true }) {
+                        Icon(painterResource(R.drawable.add), contentDescription = "Add")
+                    }
+                }
+            }
+
+            items(subscriptions, key = { "sub_" + it.id }) { sub ->
+                SubscriptionCard(
+                    sub = sub,
+                    syncState = subscriptionSync[sub.id],
+                    onSync = { mainViewModel.syncSubscription(sub.id) },
+                    onDelete = { showDeleteSubDialog.value = sub }
                 )
             }
-        } else {
-            LazyColumn(
-                modifier = Modifier.fillMaxHeight(),
-                contentPadding = PaddingValues(bottom = 10.dp, top = 10.dp),
-                state = listState
-            ) {
-                item(key = "subs_header") {
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(horizontal = 20.dp, vertical = 6.dp),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Text(
-                            stringResource(R.string.subscriptions),
-                            modifier = Modifier.weight(1f),
-                            style = MaterialTheme.typography.titleSmall,
-                            color = MaterialTheme.colorScheme.primary
-                        )
-                        IconButton(onClick = { showAddSubscriptionDialog.value = true }) {
-                            Icon(painterResource(R.drawable.add), contentDescription = "Add")
-                        }
-                    }
-                }
 
-                items(subscriptions, key = { "sub_" + it.id }) { sub ->
-                    SubscriptionCard(
-                        sub = sub,
-                        syncState = subscriptionSync[sub.id],
-                        onSync = { mainViewModel.syncSubscription(sub.id) },
-                        onDelete = { showDeleteSubDialog.value = sub }
-                    )
-                }
-
-                subscriptions.forEach { sub ->
-                    val subFiles = filesBySub[sub.id].orEmpty()
-                    if (subFiles.isNotEmpty()) {
-                        item(key = "subgroup_" + sub.id) {
-                            GroupHeader(sub.name)
-                        }
-                        items(subFiles, key = { it.absolutePath }) { file ->
-                            ConfigRow(
-                                file = file,
-                                isSelected = file == selectedFile,
-                                isServiceEnabled = isServiceEnabled,
-                                showDelete = false,
-                                onSelect = {
-                                    mainViewModel.updateSelectedConfigFile(file)
-                                    if (isServiceEnabled) onReloadConfig()
-                                },
-                                onEdit = { onEditConfigClick(file) },
-                                onDelete = {}
-                            )
-                        }
+            subscriptions.forEach { sub ->
+                val subFiles = filesBySub[sub.id].orEmpty()
+                if (subFiles.isNotEmpty()) {
+                    item(key = "subgroup_" + sub.id) {
+                        GroupHeader(sub.name)
                     }
-                }
-
-                if (manualFiles.isNotEmpty()) {
-                    item(key = "manual_header") {
-                        GroupHeader(stringResource(R.string.manual_configs))
-                    }
-                    items(manualFiles, key = { it.absolutePath }) { file ->
+                    items(subFiles, key = { it.absolutePath }) { file ->
                         ConfigRow(
                             file = file,
                             isSelected = file == selectedFile,
                             isServiceEnabled = isServiceEnabled,
-                            showDelete = true,
+                            showDelete = false,
                             onSelect = {
                                 mainViewModel.updateSelectedConfigFile(file)
                                 if (isServiceEnabled) onReloadConfig()
                             },
                             onEdit = { onEditConfigClick(file) },
-                            onDelete = { showDeleteDialog.value = file }
+                            onDelete = {}
+                        )
+                    }
+                }
+            }
+
+            if (manualFiles.isNotEmpty()) {
+                item(key = "manual_header") {
+                    GroupHeader(stringResource(R.string.manual_configs))
+                }
+                items(manualFiles, key = { it.absolutePath }) { file ->
+                    ConfigRow(
+                        file = file,
+                        isSelected = file == selectedFile,
+                        isServiceEnabled = isServiceEnabled,
+                        showDelete = true,
+                        onSelect = {
+                            mainViewModel.updateSelectedConfigFile(file)
+                            if (isServiceEnabled) onReloadConfig()
+                        },
+                        onEdit = { onEditConfigClick(file) },
+                        onDelete = { showDeleteDialog.value = file }
+                    )
+                }
+            }
+
+            if (files.isEmpty()) {
+                item(key = "empty_state") {
+                    Box(
+                        modifier = Modifier
+                            .fillParentMaxWidth()
+                            .padding(top = 48.dp),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text(
+                            stringResource(R.string.no_config_files),
+                            modifier = Modifier.fillMaxWidth(),
+                            style = MaterialTheme.typography.bodyLarge,
+                            textAlign = TextAlign.Center,
                         )
                     }
                 }
