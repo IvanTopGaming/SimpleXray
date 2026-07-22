@@ -34,7 +34,7 @@ class ShadowsocksLinkConverter : ConfigFormatConverter {
                 method = userInfo.substringBefore(":")
                 password = userInfo.substringAfter(":")
                 val hostPort = body.substring(atIndex + 1).substringBefore("/")
-                host = hostPort.substringBeforeLast(":")
+                host = hostPort.substringBeforeLast(":").removeSurrounding("[", "]")
                 port = hostPort.substringAfterLast(":").toIntOrNull()
                     ?: return Result.failure(RuntimeException("Missing port"))
             } else {
@@ -43,7 +43,7 @@ class ShadowsocksLinkConverter : ConfigFormatConverter {
                 val hostPort = decoded.substringAfter("@")
                 method = methodPass.substringBefore(":")
                 password = methodPass.substringAfter(":")
-                host = hostPort.substringBeforeLast(":")
+                host = hostPort.substringBeforeLast(":").removeSurrounding("[", "]")
                 port = hostPort.substringAfterLast(":").toIntOrNull()
                     ?: return Result.failure(RuntimeException("Missing port"))
             }

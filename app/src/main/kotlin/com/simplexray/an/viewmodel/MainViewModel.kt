@@ -712,14 +712,6 @@ class MainViewModel(application: Application) :
         }
     }
 
-    fun moveConfigFile(fromIndex: Int, toIndex: Int) {
-        val currentList = _configFiles.value.toMutableList()
-        val movedItem = currentList.removeAt(fromIndex)
-        currentList.add(toIndex, movedItem)
-        _configFiles.value = currentList
-        prefs.configFilesOrder = currentList.map { it.name }
-    }
-
     fun refreshConfigFileList() {
         viewModelScope.launch(Dispatchers.IO) {
             val filesDir = application.filesDir

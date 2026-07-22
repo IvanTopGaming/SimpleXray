@@ -8,6 +8,8 @@ import com.simplexray.an.common.configFormat.SubscriptionParser
 import com.simplexray.an.data.model.Subscription
 import com.simplexray.an.prefs.Preferences
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
 import okhttp3.OkHttpClient
 import okhttp3.Request
@@ -21,92 +23,100 @@ class SubscriptionManager(
     private val prefs: Preferences,
     private val isServiceEnabled: () -> Boolean
 ) {
+    private val mutex = Mutex()
+
     suspend fun create(name: String, url: String): Subscription = withContext(Dispatchers.IO) {
-        val sub = Subscription(
-            id = System.currentTimeMillis().toString(),
-            name = name.trim(),
-            url = url.trim(),
-            lastUpdated = 0L,
-            files = emptyList()
-        )
-        prefs.subscriptions = prefs.subscriptions + sub
-        sub
+        mutex.withLock {
+            val sub = Subscription(
+                id = java.util.UUID.randomUUID().toString(),
+                name = name.trim(),
+                url = url.trim(),
+                lastUpdated = 0L,
+                files = emptyList()
+            )
+            prefs.subscriptions = prefs.subscriptions + sub
+            sub
+        }
     }
 
     suspend fun refresh(id: String): Result<Subscription> = withContext(Dispatchers.IO) {
-        val sub = prefs.subscriptions.find { it.id == id }
-            ?: return@withContext Result.failure(
-                IOException(application.getString(R.string.subscription_error_not_found))
-            )
+        mutex.withLock {
+            val sub = prefs.subscriptions.find { it.id == id }
+                ?: return@withLock Result.failure(
+                    IOException(application.getString(R.string.subscription_error_not_found))
+                )
 
-        val body = try {
-            fetch(sub.url)
-        } catch (e: Exception) {
-            Log.e(TAG, "Fetch failed for ${sub.url}", e)
-            return@withContext Result.failure(
-                IOException(application.getString(R.string.subscription_error_network))
-            )
-        }
-
-        val servers = SubscriptionParser.parse(application, body)
-        if (servers.isEmpty()) {
-            return@withContext Result.failure(
-                IOException(application.getString(R.string.subscription_error_empty))
-            )
-        }
-
-        val filesDir = application.filesDir
-        val newFileNames = mutableListOf<String>()
-        val ownFiles = sub.files.toSet()
-        val usedNames = (filesDir.listFiles { f -> f.isFile && f.name.endsWith(".json") }
-            ?.map { it.name }?.filter { it !in ownFiles } ?: emptyList()).toMutableSet()
-
-        for ((serverName, configJson) in servers) {
-            val fileName = uniqueFileName(sub.name, serverName, usedNames)
-            usedNames.add(fileName)
-            val formatted = try {
-                ConfigUtils.formatConfigContent(configJson)
+            val body = try {
+                fetch(sub.url)
             } catch (e: Exception) {
-                Log.e(TAG, "Skipping malformed server config: $serverName", e)
-                continue
+                Log.e(TAG, "Fetch failed for ${sub.url}", e)
+                return@withLock Result.failure(
+                    IOException(application.getString(R.string.subscription_error_network))
+                )
             }
-            try {
-                File(filesDir, fileName).writeText(formatted)
-                newFileNames.add(fileName)
-            } catch (e: IOException) {
-                Log.e(TAG, "Failed to write $fileName", e)
+
+            val servers = SubscriptionParser.parse(application, body)
+            if (servers.isEmpty()) {
+                return@withLock Result.failure(
+                    IOException(application.getString(R.string.subscription_error_empty))
+                )
             }
+
+            val filesDir = application.filesDir
+            val newFileNames = mutableListOf<String>()
+            val ownFiles = sub.files.toSet()
+            val usedNames = (filesDir.listFiles { f -> f.isFile && f.name.endsWith(".json") }
+                ?.map { it.name }?.filter { it !in ownFiles } ?: emptyList()).toMutableSet()
+
+            for ((serverName, configJson) in servers) {
+                val fileName = uniqueFileName(sub.name, serverName, usedNames)
+                usedNames.add(fileName)
+                val formatted = try {
+                    ConfigUtils.formatConfigContent(configJson)
+                } catch (e: Exception) {
+                    Log.e(TAG, "Skipping malformed server config: $serverName", e)
+                    continue
+                }
+                try {
+                    File(filesDir, fileName).writeText(formatted)
+                    newFileNames.add(fileName)
+                } catch (e: IOException) {
+                    Log.e(TAG, "Failed to write $fileName", e)
+                }
+            }
+
+            if (newFileNames.isEmpty()) {
+                return@withLock Result.failure(
+                    IOException(application.getString(R.string.subscription_error_empty))
+                )
+            }
+
+            val removedPaths = sub.files
+                .filter { it !in newFileNames }
+                .map { File(filesDir, it) }
+            removedPaths.forEach { if (it.exists()) it.delete() }
+
+            val updated = sub.copy(files = newFileNames, lastUpdated = System.currentTimeMillis())
+            prefs.subscriptions = prefs.subscriptions.map { if (it.id == id) updated else it }
+
+            reconcileOrderAndSelection(newFileNames)
+
+            Result.success(updated)
         }
-
-        if (newFileNames.isEmpty()) {
-            return@withContext Result.failure(
-                IOException(application.getString(R.string.subscription_error_empty))
-            )
-        }
-
-        val removedPaths = sub.files
-            .filter { it !in newFileNames }
-            .map { File(filesDir, it) }
-        removedPaths.forEach { if (it.exists()) it.delete() }
-
-        val updated = sub.copy(files = newFileNames, lastUpdated = System.currentTimeMillis())
-        prefs.subscriptions = prefs.subscriptions.map { if (it.id == id) updated else it }
-
-        reconcileOrderAndSelection(newFileNames)
-
-        Result.success(updated)
     }
 
     suspend fun delete(id: String): Boolean = withContext(Dispatchers.IO) {
-        val sub = prefs.subscriptions.find { it.id == id } ?: return@withContext false
-        val filesDir = application.filesDir
-        sub.files.forEach { name ->
-            val f = File(filesDir, name)
-            if (f.exists()) f.delete()
+        mutex.withLock {
+            val sub = prefs.subscriptions.find { it.id == id } ?: return@withLock false
+            val filesDir = application.filesDir
+            sub.files.forEach { name ->
+                val f = File(filesDir, name)
+                if (f.exists()) f.delete()
+            }
+            prefs.subscriptions = prefs.subscriptions.filter { it.id != id }
+            reconcileOrderAndSelection(emptyList())
+            true
         }
-        prefs.subscriptions = prefs.subscriptions.filter { it.id != id }
-        reconcileOrderAndSelection(emptyList())
-        true
     }
 
     private fun fetch(url: String): String {
