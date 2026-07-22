@@ -10,6 +10,9 @@ interface ConfigFormatConverter {
         val knownImplementations = listOf(
             SimpleXrayFormatConverter(),
             VlessLinkConverter(),
+            VmessLinkConverter(),
+            ShadowsocksLinkConverter(),
+            TrojanLinkConverter(),
         )
 
         fun convertOrNull(context: Context, content: String): Result<DetectedConfig>? {
