@@ -38,6 +38,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.receiveAsFlow
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.coroutines.withContext
@@ -777,17 +778,14 @@ class MainViewModel(application: Application) :
 
     fun addSubscription(name: String, url: String) {
         viewModelScope.launch(Dispatchers.IO) {
-            val tempId = "pending"
-            setSync(tempId, SubscriptionSyncState(syncing = true))
-            val result = subscriptionManager.add(name, url)
-            clearSync(tempId)
+            val created = subscriptionManager.create(name, url)
+            refreshSubscriptions()
+            setSync(created.id, SubscriptionSyncState(syncing = true))
+            val result = subscriptionManager.refresh(created.id)
+            val error = result.exceptionOrNull()?.message
+            if (error == null) clearSync(created.id) else setSync(created.id, SubscriptionSyncState(error = error))
             refreshSubscriptions()
             refreshConfigFileList()
-            result.exceptionOrNull()?.let { e ->
-                _subscriptions.value.lastOrNull()?.let {
-                    setSync(it.id, SubscriptionSyncState(error = e.message))
-                }
-            }
         }
     }
 
@@ -796,7 +794,8 @@ class MainViewModel(application: Application) :
         viewModelScope.launch(Dispatchers.IO) {
             setSync(id, SubscriptionSyncState(syncing = true))
             val result = subscriptionManager.refresh(id)
-            setSync(id, SubscriptionSyncState(error = result.exceptionOrNull()?.message))
+            val error = result.exceptionOrNull()?.message
+            if (error == null) clearSync(id) else setSync(id, SubscriptionSyncState(error = error))
             refreshSubscriptions()
             refreshConfigFileList()
         }
@@ -812,11 +811,11 @@ class MainViewModel(application: Application) :
     }
 
     private fun setSync(id: String, state: SubscriptionSyncState) {
-        _subscriptionSync.value = _subscriptionSync.value.toMutableMap().apply { put(id, state) }
+        _subscriptionSync.update { it + (id to state) }
     }
 
     private fun clearSync(id: String) {
-        _subscriptionSync.value = _subscriptionSync.value.toMutableMap().apply { remove(id) }
+        _subscriptionSync.update { it - id }
     }
 
     fun updateConnectivityTestTarget(target: String) {

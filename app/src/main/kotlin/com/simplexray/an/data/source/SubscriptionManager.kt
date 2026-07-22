@@ -21,7 +21,7 @@ class SubscriptionManager(
     private val prefs: Preferences,
     private val isServiceEnabled: () -> Boolean
 ) {
-    suspend fun add(name: String, url: String): Result<Subscription> {
+    suspend fun create(name: String, url: String): Subscription = withContext(Dispatchers.IO) {
         val sub = Subscription(
             id = System.currentTimeMillis().toString(),
             name = name.trim(),
@@ -30,7 +30,7 @@ class SubscriptionManager(
             files = emptyList()
         )
         prefs.subscriptions = prefs.subscriptions + sub
-        return refresh(sub.id)
+        sub
     }
 
     suspend fun refresh(id: String): Result<Subscription> = withContext(Dispatchers.IO) {
