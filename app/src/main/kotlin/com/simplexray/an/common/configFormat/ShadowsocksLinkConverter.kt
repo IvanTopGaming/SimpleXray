@@ -1,7 +1,6 @@
 package com.simplexray.an.common.configFormat
 
 import android.content.Context
-import androidx.core.net.toUri
 import com.simplexray.an.prefs.Preferences
 import org.json.JSONObject
 import java.net.URLDecoder
@@ -34,7 +33,7 @@ class ShadowsocksLinkConverter : ConfigFormatConverter {
                 val userInfo = String(Base64.getDecoder().decode(padBase64(body.substring(0, atIndex))))
                 method = userInfo.substringBefore(":")
                 password = userInfo.substringAfter(":")
-                val hostPort = body.substring(atIndex + 1)
+                val hostPort = body.substring(atIndex + 1).substringBefore("/")
                 host = hostPort.substringBeforeLast(":")
                 port = hostPort.substringAfterLast(":").toIntOrNull()
                     ?: return Result.failure(RuntimeException("Missing port"))
