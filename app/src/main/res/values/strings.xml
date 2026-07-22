@@ -128,4 +128,7 @@
     <string name="theme_light">Light</string>
     <string name="theme_dark">Dark</string>
     <string name="auto">Auto</string>
+    <string name="subscription_error_network">Failed to fetch subscription</string>
+    <string name="subscription_error_empty">No valid servers in subscription</string>
+    <string name="subscription_error_not_found">Subscription not found</string>
 </resources>
