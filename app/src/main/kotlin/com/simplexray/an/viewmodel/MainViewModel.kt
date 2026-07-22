@@ -23,7 +23,9 @@ import com.simplexray.an.common.CoreStatsClient
 import com.simplexray.an.common.ROUTE_APP_LIST
 import com.simplexray.an.common.ROUTE_CONFIG_EDIT
 import com.simplexray.an.common.ThemeMode
+import com.simplexray.an.data.model.Subscription
 import com.simplexray.an.data.source.FileManager
+import com.simplexray.an.data.source.SubscriptionManager
 import com.simplexray.an.prefs.Preferences
 import com.simplexray.an.service.TProxyService
 import kotlinx.coroutines.CoroutineScope
@@ -75,6 +77,19 @@ class MainViewModel(application: Application) :
     private var coreStatsClient: CoreStatsClient? = null
 
     private val fileManager: FileManager = FileManager(application, prefs)
+
+    private val subscriptionManager: SubscriptionManager =
+        SubscriptionManager(application, prefs) { _isServiceEnabled.value }
+
+    private val _subscriptions = MutableStateFlow<List<Subscription>>(emptyList())
+    val subscriptions: StateFlow<List<Subscription>> = _subscriptions.asStateFlow()
+
+    private val _subscriptionSync = MutableStateFlow<Map<String, SubscriptionSyncState>>(emptyMap())
+    val subscriptionSync: StateFlow<Map<String, SubscriptionSyncState>> =
+        _subscriptionSync.asStateFlow()
+
+    private val _subscriptionByFile = MutableStateFlow<Map<String, String>>(emptyMap())
+    val subscriptionByFile: StateFlow<Map<String, String>> = _subscriptionByFile.asStateFlow()
 
     var reloadView: (() -> Unit)? = null
 
@@ -177,6 +192,7 @@ class MainViewModel(application: Application) :
             updateSettingsState()
             loadKernelVersion()
             refreshConfigFileList()
+            refreshSubscriptions()
         }
     }
 
@@ -749,6 +765,58 @@ class MainViewModel(application: Application) :
     fun updateSelectedConfigFile(file: File?) {
         _selectedConfigFile.value = file
         prefs.selectedConfigPath = file?.absolutePath
+    }
+
+    fun refreshSubscriptions() {
+        val subs = prefs.subscriptions
+        _subscriptions.value = subs
+        _subscriptionByFile.value = buildMap {
+            subs.forEach { sub -> sub.files.forEach { put(it, sub.id) } }
+        }
+    }
+
+    fun addSubscription(name: String, url: String) {
+        viewModelScope.launch(Dispatchers.IO) {
+            val tempId = "pending"
+            setSync(tempId, SubscriptionSyncState(syncing = true))
+            val result = subscriptionManager.add(name, url)
+            clearSync(tempId)
+            refreshSubscriptions()
+            refreshConfigFileList()
+            result.exceptionOrNull()?.let { e ->
+                _subscriptions.value.lastOrNull()?.let {
+                    setSync(it.id, SubscriptionSyncState(error = e.message))
+                }
+            }
+        }
+    }
+
+    fun syncSubscription(id: String) {
+        if (_subscriptionSync.value[id]?.syncing == true) return
+        viewModelScope.launch(Dispatchers.IO) {
+            setSync(id, SubscriptionSyncState(syncing = true))
+            val result = subscriptionManager.refresh(id)
+            setSync(id, SubscriptionSyncState(error = result.exceptionOrNull()?.message))
+            refreshSubscriptions()
+            refreshConfigFileList()
+        }
+    }
+
+    fun deleteSubscription(id: String) {
+        viewModelScope.launch(Dispatchers.IO) {
+            subscriptionManager.delete(id)
+            clearSync(id)
+            refreshSubscriptions()
+            refreshConfigFileList()
+        }
+    }
+
+    private fun setSync(id: String, state: SubscriptionSyncState) {
+        _subscriptionSync.value = _subscriptionSync.value.toMutableMap().apply { put(id, state) }
+    }
+
+    private fun clearSync(id: String) {
+        _subscriptionSync.value = _subscriptionSync.value.toMutableMap().apply { remove(id) }
     }
 
     fun updateConnectivityTestTarget(target: String) {
