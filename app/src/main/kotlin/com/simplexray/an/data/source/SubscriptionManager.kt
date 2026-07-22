@@ -4,7 +4,6 @@ import android.app.Application
 import android.util.Log
 import com.simplexray.an.R
 import com.simplexray.an.common.ConfigUtils
-import com.simplexray.an.common.FilenameValidator
 import com.simplexray.an.common.configFormat.SubscriptionParser
 import com.simplexray.an.data.model.Subscription
 import com.simplexray.an.prefs.Preferences
@@ -58,7 +57,9 @@ class SubscriptionManager(
 
         val filesDir = application.filesDir
         val newFileNames = mutableListOf<String>()
-        val usedNames = mutableSetOf<String>()
+        val ownFiles = sub.files.toSet()
+        val usedNames = (filesDir.listFiles { f -> f.isFile && f.name.endsWith(".json") }
+            ?.map { it.name }?.filter { it !in ownFiles } ?: emptyList()).toMutableSet()
 
         for ((serverName, configJson) in servers) {
             val fileName = uniqueFileName(sub.name, serverName, usedNames)
@@ -77,6 +78,12 @@ class SubscriptionManager(
             }
         }
 
+        if (newFileNames.isEmpty()) {
+            return@withContext Result.failure(
+                IOException(application.getString(R.string.subscription_error_empty))
+            )
+        }
+
         val removedPaths = sub.files
             .filter { it !in newFileNames }
             .map { File(filesDir, it) }
@@ -85,7 +92,7 @@ class SubscriptionManager(
         val updated = sub.copy(files = newFileNames, lastUpdated = System.currentTimeMillis())
         prefs.subscriptions = prefs.subscriptions.map { if (it.id == id) updated else it }
 
-        reconcileOrderAndSelection(newFileNames, sub.files)
+        reconcileOrderAndSelection(newFileNames)
 
         Result.success(updated)
     }
@@ -98,7 +105,7 @@ class SubscriptionManager(
             if (f.exists()) f.delete()
         }
         prefs.subscriptions = prefs.subscriptions.filter { it.id != id }
-        reconcileOrderAndSelection(emptyList(), sub.files)
+        reconcileOrderAndSelection(emptyList())
         true
     }
 
@@ -133,7 +140,7 @@ class SubscriptionManager(
         return cleaned.ifEmpty { "server" }
     }
 
-    private fun reconcileOrderAndSelection(newFiles: List<String>, removedGroupFiles: List<String>) {
+    private fun reconcileOrderAndSelection(newFiles: List<String>) {
         val filesDir = application.filesDir
         val actual = filesDir.listFiles { f -> f.isFile && f.name.endsWith(".json") }
             ?.map { it.name }?.toMutableSet() ?: mutableSetOf()
