@@ -838,7 +838,7 @@ test('frameless view uses the available screen in portrait, landscape and short 
   expected.searchParams.set('view','app');
   assert.equal(target,expected.href);
   await send('Page.navigate',{url:target});
-  await waitFor('document.body.classList.contains("app-view")');
+  await waitFor('document.body?.classList.contains("app-view")');
   for(const [width,height] of [[320,640],[360,825],[412,919],[825,360],[360,320]]) {
     await send('Emulation.setDeviceMetricsOverride',{width,height,deviceScaleFactor:1,mobile:true});
     await wait(60);
@@ -867,7 +867,7 @@ test('dialog bounds follow the visual viewport when a keyboard reduces visible s
 test('frameless keyboard panning preserves the full visible height and safe area', async () => {
   const target=await evaluate('document.querySelector("#device-view").href');
   await send('Page.navigate',{url:target});
-  await waitFor('document.body.classList.contains("app-view")');
+  await waitFor('document.body?.classList.contains("app-view")');
   await evaluate(`Object.defineProperty(window,'visualViewport',{configurable:true,value:{offsetTop:240,offsetLeft:0,width:360,height:300,scale:1}});screen.style.padding='20px 12px';updateModalBounds();openServer();document.querySelector('#advanced-input').open=true`);
   const geometry=await evaluate(`(()=>{const d=document.querySelector('#server-dialog').getBoundingClientRect(),r=screen.getBoundingClientRect();return {top:r.top,height:r.height,dialogTop:d.top,dialogBottom:d.bottom,dialogHeight:d.height}})()`);
   assert.equal(geometry.top,240);
@@ -1043,7 +1043,7 @@ test('settings search finds appearance and subscription controls on the settings
 test('settings drafts and routing dialogs fit real phone widths and short keyboard windows', async () => {
   const target=await evaluate('document.querySelector("#device-view").href');
   await send('Page.navigate',{url:target});
-  await waitFor('document.body.classList.contains("app-view")');
+  await waitFor('document.body?.classList.contains("app-view")');
   for(const [width,height] of [[320,640],[360,825],[412,919],[360,320]]) {
     await send('Emulation.setDeviceMetricsOverride',{width,height,deviceScaleFactor:1,mobile:true});
     await wait(60);
@@ -1070,4 +1070,64 @@ test('settings drafts and routing dialogs fit real phone widths and short keyboa
 test('new routing form does not mark untouched required fields as errors', async () => {
   await evaluate("openPage('routing')");await click('#add-route');
   assert.equal(await evaluate('getComputedStyle(document.querySelector("#route-name")).borderTopColor'),await evaluate('getComputedStyle(document.querySelector("#route-port")).borderTopColor'));
+});
+
+test('clipboard import on server and subscription tabs opens review before adding anything', async () => {
+  for(const [page,button,dialog,field,text,count] of [
+    ['servers','import-server','server-dialog','server-link','trojan://clipboard-key@vpn.example.com:443#Clipboard','servers.length'],
+    ['subscriptions','import-subscription','subscription-dialog','sub-url','https://provider.example.com/private-token','subscriptions.length']
+  ]) {
+    await evaluate(`Object.defineProperty(navigator,'clipboard',{configurable:true,value:{readText:async()=>${JSON.stringify(text)}}})`);
+    await click('#tab-'+page);
+    assert.equal(await evaluate(`document.querySelector('#${button}')?.checkVisibility()`),true);
+    const before=await evaluate(count);
+    await click('#'+button);
+    await waitFor(`document.querySelector('#${field}').value===${JSON.stringify(text)}`);
+    assert.equal(await evaluate(`document.querySelector('#${dialog}').open`),true);
+    assert.equal(await evaluate(count),before);
+    await evaluate(`document.querySelector('#${dialog} form').requestSubmit()`);
+    assert.equal(await evaluate(count),before+1);
+    assert.equal(await evaluate(`document.querySelector('#${dialog}').open`),false);
+  }
+});
+
+test('tab clipboard imports handle denied access and wrong content without adding records', async () => {
+  for(const [page,button,dialog,field,error] of [
+    ['servers','import-server','server-dialog','server-link','server-error'],
+    ['subscriptions','import-subscription','subscription-dialog','sub-url','sub-error']
+  ]) {
+    await click('#tab-'+page);
+    assert.equal(await evaluate(`!!document.querySelector('#${button}')`),true);
+    await evaluate(`Object.defineProperty(navigator,'clipboard',{configurable:true,value:{readText:async()=>{throw new DOMException('denied','NotAllowedError')}}})`);
+    await click('#'+button);
+    await waitFor(`document.querySelector('#${error}').textContent.includes('Нет доступа')`);
+    assert.equal(await evaluate(`document.querySelector('#${field}').disabled`),false);
+    await evaluate(`document.querySelector('#${dialog}').close()`);
+    await evaluate("navigator.clipboard.readText=async()=>'not a connection link'");
+    await click('#'+button);
+    await waitFor(`document.querySelector('#${error}').textContent.includes('нет подходящей ссылки')`);
+    assert.equal(await evaluate(`document.querySelector('#${field}').value`),'');
+    await evaluate(`document.querySelector('#${dialog}').close()`);
+  }
+  assert.equal(await evaluate('servers.length'),60);
+  assert.equal(await evaluate('subscriptions.length'),1);
+});
+
+test('tab clipboard import ignores a reply after closing or typing a replacement link', async () => {
+  for(const [page,button,dialog,field,typed] of [
+    ['servers','import-server','server-dialog','server-link','trojan://typed@vpn.example.com:443'],
+    ['subscriptions','import-subscription','subscription-dialog','sub-url','https://typed.example.com/sub']
+  ]) {
+    await click('#tab-'+page);
+    assert.equal(await evaluate(`!!document.querySelector('#${button}')`),true);
+    await evaluate("Object.defineProperty(navigator,'clipboard',{configurable:true,value:{readText:()=>new Promise(resolve=>window.clipboardReply=resolve)}})");
+    await click('#'+button);
+    await value('#'+field,typed);
+    await evaluate(`clipboardReply(${JSON.stringify(typed.replace('typed','late'))})`);
+    assert.equal(await evaluate(`document.querySelector('#${field}').value`),typed);
+    await evaluate(`document.querySelector('#${dialog}').close()`);
+    await click('#'+button);
+    await evaluate(`document.querySelector('#${dialog}').close();clipboardReply(${JSON.stringify(typed)})`);
+    assert.equal(await evaluate(`document.querySelector('#${dialog}').open`),false);
+  }
 });
