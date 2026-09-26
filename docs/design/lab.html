@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SimpleXray — дизайн</title>
+<style>
+:root{font-family:Inter,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;color:#292a2d;background:#f4f3ef;font-synthesis:none}
+*{box-sizing:border-box}
+body{margin:0}
+button,select{font:inherit}
+button,select{min-height:38px;border:1px solid #deded8;border-radius:9px;background:#fff;color:inherit;padding:8px 12px}
+button{cursor:pointer;transition:background 150ms ease,transform 150ms ease}
+button:active{transform:scale(.97)}
+button[aria-pressed="true"]{background:#292a2d;border-color:#292a2d;color:#fff}
+button:focus-visible,select:focus-visible,.screen:focus-visible{outline:3px solid #46735d;outline-offset:3px}
+header{min-height:76px;padding:16px 28px;border-bottom:1px solid #deded8;display:flex;align-items:center;justify-content:space-between;gap:20px}
+.brand{display:flex;gap:12px;align-items:center}
+.brand-mark{display:grid;place-items:center;width:32px;height:32px;border:1px solid #292a2d;border-radius:9px;font-weight:600;font-size:19px}
+h1{margin:0;font-size:16px;font-weight:600;letter-spacing:-.4px}
+.subtitle{color:#777873;font-size:12px;margin-top:3px}
+.tools{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.separator{height:22px;width:1px;background:#deded8;margin:0 6px}
+main{display:grid;place-items:center;padding:22px 20px 14px;min-height:calc(100svh - 76px)}
+.workspace{display:flex;flex-direction:column;align-items:center;gap:13px}
+.canvas-label{width:100%;display:flex;align-items:center;justify-content:space-between;font-size:11px;color:#7b7c76;letter-spacing:.02em}
+.canvas-label strong{font-weight:500;color:#454642}
+.device{border:1px solid #cbcfc8;border-radius:30px;padding:7px;background:#e9ebe5;box-shadow:0 12px 30px #20251c0b}
+.screen{--w:393;--h:852;position:relative;height:min(72svh,760px);max-width:calc(100vw - 64px);aspect-ratio:var(--w)/var(--h);border-radius:23px;overflow:hidden;background:#fff;outline:none}
+.screen.dark{background:#141517}
+.screen.grid{background-image:linear-gradient(#80808012 1px,transparent 1px),linear-gradient(90deg,#80808012 1px,transparent 1px);background-size:calc(100% / 24) calc(100% / 52)}
+.screen.marking{cursor:crosshair}
+.pin{position:absolute;display:none;width:22px;height:22px;border-radius:50%;background:#417455;box-shadow:0 0 0 4px #41745525;transform:translate(-50%,-50%);pointer-events:none;color:white;text-align:center;font-size:12px;line-height:22px}
+.pin.visible{display:block}
+.caption{max-width:380px;min-height:34px;margin:0;text-align:center;font-size:12px;line-height:1.6;color:#85867f}
+footer{display:flex;gap:8px;align-items:center;font-size:10px;color:#91928a;letter-spacing:.04em}
+footer span{width:5px;height:5px;border-radius:50%;background:#87a38b}
+@media(hover:hover){button:hover{background:#eeeee8}button[aria-pressed="true"]:hover{background:#41433d}}
+@media(max-width:650px){header{padding:14px 16px;flex-direction:column;align-items:flex-start;gap:12px}.tools{gap:6px}.separator{display:none}button,select{font-size:12px;padding:7px 9px}main{min-height:auto;padding-top:20px}.screen{height:min(65svh,700px)}}
+@media(prefers-reduced-motion:reduce){button{transition:none}button:active{transform:none}}
+</style>
+</head>
+<body>
+<header>
+<div class="brand"><div class="brand-mark" aria-hidden="true">S</div><div><h1>SimpleXray</h1><div class="subtitle">Рабочий холст · первый набросок</div></div></div>
+<div class="tools" aria-label="Настройки холста">
+<select id="size" aria-label="Размер экрана"><option value="393,852">393 × 852</option><option value="360,800">360 × 800</option><option value="412,915">412 × 915</option></select>
+<button id="theme" aria-pressed="false">Тёмный фон</button>
+<button id="grid" aria-pressed="false">Сетка</button>
+<span class="separator" aria-hidden="true"></span>
+<button id="mark" aria-pressed="false">Указать место</button>
+<button id="clear" hidden>Убрать метку</button>
+</div>
+</header>
+<main>
+<div class="workspace">
+<div class="canvas-label"><strong>Главный экран</strong><span id="dimensions">393 × 852</span></div>
+<div class="device"><div class="screen" id="screen" tabindex="0" aria-label="Пустой макет главного экрана"><span class="pin" id="pin" aria-hidden="true">1</span></div></div>
+<p class="caption" id="caption" aria-live="polite">Чистый экран. Будем собирать его по одному элементу.</p>
+<footer><span></span>МАКЕТ ИНТЕРФЕЙСА</footer>
+</div>
+</main>
+<script>
+const screen = document.querySelector('#screen');
+const caption = document.querySelector('#caption');
+const pin = document.querySelector('#pin');
+const clear = document.querySelector('#clear');
+let width = 393;
+let height = 852;
+let marking = false;
+function announce(type, values) {
+  window.brainstorm?.send({type, ...values});
+}
+function toggle(button, className) {
+  const active = button.getAttribute('aria-pressed') !== 'true';
+  button.setAttribute('aria-pressed', String(active));
+  screen.classList.toggle(className, active);
+  return active;
+}
+document.querySelector('#theme').addEventListener('click', event => {
+  announce('canvas-theme', {dark:toggle(event.currentTarget, 'dark')});
+});
+document.querySelector('#grid').addEventListener('click', event => toggle(event.currentTarget, 'grid'));
+document.querySelector('#size').addEventListener('change', event => {
+  [width,height] = event.target.value.split(',').map(Number);
+  screen.style.setProperty('--w',width);
+  screen.style.setProperty('--h',height);
+  document.querySelector('#dimensions').textContent = width+' × '+height;
+  resetPin();
+  announce('canvas-size',{width,height});
+});
+document.querySelector('#mark').addEventListener('click', event => {
+  marking = toggle(event.currentTarget, 'marking');
+  caption.textContent = marking ? 'Нажми на экран, чтобы указать место для элемента. Затем опиши его в чате.' : 'Чистый экран. Будем собирать его по одному элементу.';
+});
+screen.addEventListener('click', event => {
+  if (!marking) return;
+  const rect = screen.getBoundingClientRect();
+  const x = (event.clientX-rect.left)/rect.width;
+  const y = (event.clientY-rect.top)/rect.height;
+  pin.style.left = (x*100)+'%';
+  pin.style.top = (y*100)+'%';
+  pin.classList.add('visible');
+  clear.hidden = false;
+  caption.textContent = 'Метка 1 · '+Math.round(x*width)+', '+Math.round(y*height)+'. Напиши в чате, что здесь разместим.';
+  announce('layout-pin',{screen:'home',x:Math.round(x*width),y:Math.round(y*height),width,height});
+});
+function resetPin() {
+  pin.classList.remove('visible');
+  clear.hidden = true;
+  caption.textContent = marking ? 'Нажми на экран, чтобы указать место для элемента.' : 'Чистый экран. Будем собирать его по одному элементу.';
+}
+clear.addEventListener('click', () => {resetPin();announce('layout-pin-clear',{screen:'home'});});
+</script>
+</body>
+</html>

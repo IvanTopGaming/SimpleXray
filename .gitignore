@@ -1,4 +1,5 @@
 .gradle
+.superpowers/
 .idea
 app/.externalNativeBuild
 app/build
