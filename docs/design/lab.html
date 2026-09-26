@@ -96,7 +96,7 @@ footer span{width:5px;height:5px;border-radius:50%;background:#87a38b}
 .server-entry{display:grid;grid-template-columns:minmax(0,1fr) auto;border:1px solid var(--line);border-radius:13px;overflow:hidden;min-width:0}
 .server-entry[data-selected="true"]{border-color:var(--accent);background:var(--surface)}
 .screen .server-entry .server-card{border:0;border-radius:0;padding:12px 10px;gap:8px}
-.screen .config-action{border:0;border-left:1px solid var(--line);border-radius:0;background:transparent;color:var(--accent);font-size:10px;padding:8px;min-width:58px}
+.screen .config-action{border:0;border-left:1px solid var(--line);border-radius:0;background:transparent;color:var(--accent);padding:10px;width:44px;min-width:44px;display:grid;place-items:center}
 .server-entry .location{padding:6px}.server-entry .latency{font-size:9px}
 .screen textarea{width:100%;min-height:220px;resize:vertical;border:1px solid var(--line);border-radius:10px;background:var(--surface);color:var(--ink);font:11px/1.6 ui-monospace,monospace;padding:12px;tab-size:2}
 .screen textarea:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
@@ -305,7 +305,7 @@ let nextServer = 0;
 const escapeHtml = value => String(value).replace(/[&<>"']/g, character => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[character]));
 function notice(message) { $('#notice').textContent = message; }
 function renderServers() {
-  $('#server-list').innerHTML = servers.map(server => `<div class="server-entry" data-selected="${selected === server.id}"><button class="server-card" data-server="${server.id}" aria-pressed="${selected === server.id}"><span class="location">${server.code}</span><span class="server-info"><strong>${escapeHtml(server.name)}</strong><small>${escapeHtml(server.country)} · ${escapeHtml(server.protocol)}</small></span><span class="latency">${server.latency || (selected === server.id ? '✓' : '—')}</span></button><button class="config-action" data-config="${server.id}" aria-label="${server.subscription ? 'Посмотреть конфиг' : 'Редактировать сервер'}: ${escapeHtml(server.name)}">${server.subscription ? 'Конфиг' : 'Изменить'}</button></div>`).join('');
+  $('#server-list').innerHTML = servers.map(server => `<div class="server-entry" data-selected="${selected === server.id}"><button class="server-card" data-server="${server.id}" aria-pressed="${selected === server.id}"><span class="location">${server.code}</span><span class="server-info"><strong>${escapeHtml(server.name)}</strong><small>${escapeHtml(server.country)} · ${escapeHtml(server.protocol)}</small></span><span class="latency">${server.latency || (selected === server.id ? '✓' : '—')}</span></button><button class="config-action" data-config="${server.id}" aria-label="${server.subscription ? 'Посмотреть конфиг' : 'Редактировать сервер'}: ${escapeHtml(server.name)}" title="${server.subscription ? 'Посмотреть конфиг' : 'Редактировать сервер'}"><svg aria-hidden="true"><use href="#i-arrow"/></svg></button></div>`).join('');
   const server = servers.find(item => item.id === selected);
   $('#selected-name').textContent = server?.name || 'Выбери сервер';
   $('#selected-detail').textContent = server ? `${server.country} · ${server.protocol}` : 'Открыть список';

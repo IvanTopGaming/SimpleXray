@@ -70,6 +70,21 @@ test('server selection reaches home and switching disconnects the demo', async (
   assert.match(await evaluate('document.querySelector("#connection-status")?.textContent'), /Отключено/);
 });
 
+test('server actions use compact accessible chevrons without text labels', async () => {
+  await click('#tab-servers');
+  const actions = await evaluate(`Array.from(document.querySelectorAll('[data-config]'),button => ({
+    text:button.textContent.trim(),width:button.getBoundingClientRect().width,
+    icon:button.querySelector('use')?.getAttribute('href'),label:button.getAttribute('aria-label'),title:button.title
+  }))`);
+  assert.equal(actions.length,4);
+  for(const action of actions) {
+    assert.equal(action.text,'');
+    assert.equal(action.icon,'#i-arrow');
+    assert.ok(action.width <= 44);
+    assert.ok(action.label.length > 0 && action.title.length > 0);
+  }
+});
+
 test('connection can be cancelled before the simulated completion', async () => {
   await click('#connect');
   await click('#connect');
