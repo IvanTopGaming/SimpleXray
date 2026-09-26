@@ -13,6 +13,7 @@ import com.simplexray.an.R
 import com.simplexray.an.common.ConfigUtils
 import com.simplexray.an.common.FilenameValidator
 import com.simplexray.an.common.configFormat.ConfigFormatConverter
+import com.simplexray.an.data.model.Subscription
 import com.simplexray.an.prefs.Preferences
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -191,6 +192,7 @@ class FileManager(private val application: Application, private val prefs: Prefe
                 preferencesMap[Preferences.GEOIP_URL] = prefs.geoipUrl
                 preferencesMap[Preferences.GEOSITE_URL] = prefs.geositeUrl
                 preferencesMap[Preferences.BYPASS_SELECTED_APPS] = prefs.bypassSelectedApps
+                preferencesMap[Preferences.SUBSCRIPTIONS] = gson.toJson(prefs.subscriptions)
                 val configFilesMap: MutableMap<String, String> = mutableMapOf()
                 val filesDir = application.filesDir
                 val files = filesDir.listFiles()
@@ -410,6 +412,16 @@ class FileManager(private val application: Application, private val prefs: Prefe
                     value = preferencesMap[Preferences.BYPASS_SELECTED_APPS]
                     if (value is Boolean) {
                         prefs.bypassSelectedApps = value
+                    }
+
+                    val subscriptionsJson = preferencesMap[Preferences.SUBSCRIPTIONS]
+                    if (subscriptionsJson is String) {
+                        try {
+                            val subsType = object : TypeToken<List<Subscription>>() {}.type
+                            prefs.subscriptions = gson.fromJson(subscriptionsJson, subsType)
+                        } catch (e: Exception) {
+                            Log.w(TAG, "Failed to restore SUBSCRIPTIONS", e)
+                        }
                     }
 
                     val configOrderObj = preferencesMap[Preferences.CONFIG_FILES_ORDER]

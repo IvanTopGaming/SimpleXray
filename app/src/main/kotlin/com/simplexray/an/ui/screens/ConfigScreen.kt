@@ -1,6 +1,5 @@
 package com.simplexray.an.ui.screens
 
-import android.util.Log
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -33,8 +32,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.hapticfeedback.HapticFeedbackType
-import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
@@ -44,11 +41,7 @@ import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import com.simplexray.an.R
 import com.simplexray.an.viewmodel.MainViewModel
-import sh.calvin.reorderable.ReorderableItem
-import sh.calvin.reorderable.rememberReorderableLazyListState
 import java.io.File
-
-private const val TAG = "ConfigScreen"
 
 @Composable
 fun ConfigScreen(
@@ -65,12 +58,19 @@ fun ConfigScreen(
     val files by mainViewModel.configFiles.collectAsState()
     val selectedFile by mainViewModel.selectedConfigFile.collectAsState()
 
+    val subscriptions by mainViewModel.subscriptions.collectAsState()
+    val subscriptionSync by mainViewModel.subscriptionSync.collectAsState()
+    val subscriptionByFile by mainViewModel.subscriptionByFile.collectAsState()
+    val showAddSubscriptionDialog = remember { mutableStateOf(false) }
+    val showDeleteSubDialog = remember { mutableStateOf<com.simplexray.an.data.model.Subscription?>(null) }
+
     val lifecycleOwner = LocalLifecycleOwner.current
 
     DisposableEffect(lifecycleOwner) {
         val observer = LifecycleEventObserver { _, event ->
             if (event == Lifecycle.Event.ON_RESUME) {
                 mainViewModel.refreshConfigFileList()
+                mainViewModel.refreshSubscriptions()
             }
         }
         lifecycleOwner.lifecycle.addObserver(observer)
@@ -81,95 +81,109 @@ fun ConfigScreen(
 
     LaunchedEffect(Unit) {
         mainViewModel.refreshConfigFileList()
+        mainViewModel.refreshSubscriptions()
     }
 
-    val hapticFeedback = LocalHapticFeedback.current
-    val reorderableLazyListState = rememberReorderableLazyListState(listState) { from, to ->
-        mainViewModel.moveConfigFile(from.index, to.index)
-        hapticFeedback.performHapticFeedback(HapticFeedbackType.SegmentFrequentTick)
+    val subscriptionIds = subscriptions.map { it.id }.toSet()
+    val manualFiles = files.filter { subscriptionByFile[it.name] !in subscriptionIds }
+    val filesBySub: Map<String, List<File>> = subscriptions.associate { sub ->
+        sub.id to files.filter { subscriptionByFile[it.name] == sub.id }
     }
 
     Column(
         modifier = Modifier
             .fillMaxSize()
     ) {
-        if (files.isEmpty()) {
-            Box(
-                modifier = Modifier
-                    .fillMaxSize(),
-                contentAlignment = Alignment.Center
-            ) {
-                Text(
-                    stringResource(R.string.no_config_files),
-                    modifier = Modifier.fillMaxWidth(),
-                    style = MaterialTheme.typography.bodyLarge,
-                    textAlign = TextAlign.Center,
+        LazyColumn(
+            modifier = Modifier.fillMaxHeight(),
+            contentPadding = PaddingValues(bottom = 10.dp, top = 10.dp),
+            state = listState
+        ) {
+            item(key = "subs_header") {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 20.dp, vertical = 6.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        stringResource(R.string.subscriptions),
+                        modifier = Modifier.weight(1f),
+                        style = MaterialTheme.typography.titleSmall,
+                        color = MaterialTheme.colorScheme.primary
+                    )
+                    IconButton(onClick = { showAddSubscriptionDialog.value = true }) {
+                        Icon(painterResource(R.drawable.add), contentDescription = "Add")
+                    }
+                }
+            }
+
+            items(subscriptions, key = { "sub_" + it.id }) { sub ->
+                SubscriptionCard(
+                    sub = sub,
+                    syncState = subscriptionSync[sub.id],
+                    onSync = { mainViewModel.syncSubscription(sub.id) },
+                    onDelete = { showDeleteSubDialog.value = sub }
                 )
             }
-        } else {
-            LazyColumn(
-                modifier = Modifier
-                    .fillMaxHeight(),
-                contentPadding = PaddingValues(bottom = 10.dp, top = 10.dp),
-                state = listState
-            ) {
-                items(files, key = { it }) { file ->
-                    ReorderableItem(reorderableLazyListState, key = file) {
-                        val isSelected = file == selectedFile
-                        Card(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(horizontal = 16.dp, vertical = 4.dp)
-                                .clip(MaterialTheme.shapes.extraLarge)
-                                .clickable {
-                                    mainViewModel.updateSelectedConfigFile(file)
-                                    if (isServiceEnabled) {
-                                        Log.d(
-                                            TAG,
-                                            "Config selected while service is running, requesting reload."
-                                        )
-                                        onReloadConfig()
-                                    }
-                                },
-                            colors = CardDefaults.cardColors(
-                                containerColor = if (isSelected) MaterialTheme.colorScheme.secondaryContainer
-                                else MaterialTheme.colorScheme.surfaceContainerHighest
-                            ),
-                            elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
-                        ) {
-                            Row(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .height(IntrinsicSize.Max)
-                                    .longPressDraggableHandle(),
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
-                                Row(
-                                    modifier = Modifier
-                                        .weight(1f)
-                                        .padding(16.dp),
-                                    verticalAlignment = Alignment.CenterVertically
-                                ) {
-                                    Text(
-                                        file.name.removeSuffix(".json"),
-                                        modifier = Modifier.weight(1f),
-                                        style = MaterialTheme.typography.titleMedium
-                                    )
-                                    IconButton(onClick = { onEditConfigClick(file) }) {
-                                        Icon(
-                                            painterResource(R.drawable.edit),
-                                            contentDescription = "Edit"
-                                        )
-                                    }
-                                    IconButton(onClick = { showDeleteDialog.value = file }) {
-                                        Icon(
-                                            painterResource(R.drawable.delete),
-                                            contentDescription = "Delete"
-                                        )
-                                    }
-                                }
-                            }
-                        }
+
+            subscriptions.forEach { sub ->
+                val subFiles = filesBySub[sub.id].orEmpty()
+                if (subFiles.isNotEmpty()) {
+                    item(key = "subgroup_" + sub.id) {
+                        GroupHeader(sub.name)
+                    }
+                    items(subFiles, key = { it.absolutePath }) { file ->
+                        ConfigRow(
+                            file = file,
+                            isSelected = file == selectedFile,
+                            isServiceEnabled = isServiceEnabled,
+                            showDelete = false,
+                            onSelect = {
+                                mainViewModel.updateSelectedConfigFile(file)
+                                if (isServiceEnabled) onReloadConfig()
+                            },
+                            onEdit = { onEditConfigClick(file) },
+                            onDelete = {}
+                        )
+                    }
+                }
+            }
+
+            if (manualFiles.isNotEmpty()) {
+                item(key = "manual_header") {
+                    GroupHeader(stringResource(R.string.manual_configs))
+                }
+                items(manualFiles, key = { it.absolutePath }) { file ->
+                    ConfigRow(
+                        file = file,
+                        isSelected = file == selectedFile,
+                        isServiceEnabled = isServiceEnabled,
+                        showDelete = true,
+                        onSelect = {
+                            mainViewModel.updateSelectedConfigFile(file)
+                            if (isServiceEnabled) onReloadConfig()
+                        },
+                        onEdit = { onEditConfigClick(file) },
+                        onDelete = { showDeleteDialog.value = file }
+                    )
+                }
+            }
+
+            if (files.isEmpty()) {
+                item(key = "empty_state") {
+                    Box(
+                        modifier = Modifier
+                            .fillParentMaxWidth()
+                            .padding(top = 48.dp),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text(
+                            stringResource(R.string.no_config_files),
+                            modifier = Modifier.fillMaxWidth(),
+                            style = MaterialTheme.typography.bodyLarge,
+                            textAlign = TextAlign.Center,
+                        )
                     }
                 }
             }
@@ -186,7 +200,6 @@ fun ConfigScreen(
                     showDeleteDialog.value = null
                     onDeleteConfigClick(fileToDelete) {
                         mainViewModel.refreshConfigFileList()
-                        mainViewModel.updateSelectedConfigFile(null)
                     }
                 }) {
                     Text(stringResource(R.string.confirm))
@@ -198,5 +211,96 @@ fun ConfigScreen(
                 }
             }
         )
+    }
+
+    if (showAddSubscriptionDialog.value) {
+        AddSubscriptionDialog(
+            onDismiss = { showAddSubscriptionDialog.value = false },
+            onConfirm = { name, url ->
+                showAddSubscriptionDialog.value = false
+                mainViewModel.addSubscription(name, url)
+            }
+        )
+    }
+
+    showDeleteSubDialog.value?.let { sub ->
+        AlertDialog(
+            onDismissRequest = { showDeleteSubDialog.value = null },
+            title = { Text(stringResource(R.string.delete_subscription)) },
+            text = { Text(sub.name) },
+            confirmButton = {
+                TextButton(onClick = {
+                    showDeleteSubDialog.value = null
+                    mainViewModel.deleteSubscription(sub.id)
+                }) { Text(stringResource(R.string.confirm)) }
+            },
+            dismissButton = {
+                TextButton(onClick = { showDeleteSubDialog.value = null }) {
+                    Text(stringResource(R.string.cancel))
+                }
+            }
+        )
+    }
+}
+
+@Composable
+private fun GroupHeader(title: String) {
+    Text(
+        title,
+        modifier = Modifier.padding(horizontal = 20.dp, vertical = 6.dp),
+        style = MaterialTheme.typography.titleSmall,
+        color = MaterialTheme.colorScheme.primary
+    )
+}
+
+@Composable
+private fun ConfigRow(
+    file: File,
+    isSelected: Boolean,
+    isServiceEnabled: Boolean,
+    showDelete: Boolean,
+    onSelect: () -> Unit,
+    onEdit: () -> Unit,
+    onDelete: () -> Unit
+) {
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp, vertical = 4.dp)
+            .clip(MaterialTheme.shapes.extraLarge)
+            .clickable { onSelect() },
+        colors = CardDefaults.cardColors(
+            containerColor = if (isSelected) MaterialTheme.colorScheme.secondaryContainer
+            else MaterialTheme.colorScheme.surfaceContainerHighest
+        ),
+        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(IntrinsicSize.Max),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Row(
+                modifier = Modifier
+                    .weight(1f)
+                    .padding(16.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    file.name.removeSuffix(".json"),
+                    modifier = Modifier.weight(1f),
+                    style = MaterialTheme.typography.titleMedium
+                )
+                IconButton(onClick = onEdit) {
+                    Icon(painterResource(R.drawable.edit), contentDescription = "Edit")
+                }
+                if (showDelete) {
+                    IconButton(onClick = onDelete) {
+                        Icon(painterResource(R.drawable.delete), contentDescription = "Delete")
+                    }
+                }
+            }
+        }
     }
 }

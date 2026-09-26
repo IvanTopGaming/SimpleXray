@@ -23,7 +23,9 @@ import com.simplexray.an.common.CoreStatsClient
 import com.simplexray.an.common.ROUTE_APP_LIST
 import com.simplexray.an.common.ROUTE_CONFIG_EDIT
 import com.simplexray.an.common.ThemeMode
+import com.simplexray.an.data.model.Subscription
 import com.simplexray.an.data.source.FileManager
+import com.simplexray.an.data.source.SubscriptionManager
 import com.simplexray.an.prefs.Preferences
 import com.simplexray.an.service.TProxyService
 import kotlinx.coroutines.CoroutineScope
@@ -36,8 +38,11 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.receiveAsFlow
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.suspendCancellableCoroutine
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
 import okhttp3.Call
 import okhttp3.Callback
@@ -75,6 +80,20 @@ class MainViewModel(application: Application) :
     private var coreStatsClient: CoreStatsClient? = null
 
     private val fileManager: FileManager = FileManager(application, prefs)
+    private val configUpdateMutex = Mutex()
+
+    private val subscriptionManager: SubscriptionManager =
+        SubscriptionManager(application, prefs) { _isServiceEnabled.value }
+
+    private val _subscriptions = MutableStateFlow<List<Subscription>>(emptyList())
+    val subscriptions: StateFlow<List<Subscription>> = _subscriptions.asStateFlow()
+
+    private val _subscriptionSync = MutableStateFlow<Map<String, SubscriptionSyncState>>(emptyMap())
+    val subscriptionSync: StateFlow<Map<String, SubscriptionSyncState>> =
+        _subscriptionSync.asStateFlow()
+
+    private val _subscriptionByFile = MutableStateFlow<Map<String, String>>(emptyMap())
+    val subscriptionByFile: StateFlow<Map<String, String>> = _subscriptionByFile.asStateFlow()
 
     var reloadView: (() -> Unit)? = null
 
@@ -177,6 +196,7 @@ class MainViewModel(application: Application) :
             updateSettingsState()
             loadKernelVersion()
             refreshConfigFileList()
+            refreshSubscriptions()
         }
     }
 
@@ -695,60 +715,124 @@ class MainViewModel(application: Application) :
         }
     }
 
-    fun moveConfigFile(fromIndex: Int, toIndex: Int) {
-        val currentList = _configFiles.value.toMutableList()
-        val movedItem = currentList.removeAt(fromIndex)
-        currentList.add(toIndex, movedItem)
-        _configFiles.value = currentList
-        prefs.configFilesOrder = currentList.map { it.name }
-    }
-
     fun refreshConfigFileList() {
         viewModelScope.launch(Dispatchers.IO) {
-            val filesDir = application.filesDir
-            val actualFiles =
-                filesDir.listFiles { file -> file.isFile && file.name.endsWith(".json") }?.toList()
-                    ?: emptyList()
-            val actualFilesByName = actualFiles.associateBy { it.name }
-            val savedOrder = prefs.configFilesOrder
+            configUpdateMutex.withLock {
+                val filesDir = application.filesDir
+                val actualFiles =
+                    filesDir.listFiles { file -> file.isFile && file.name.endsWith(".json") }?.toList()
+                        ?: emptyList()
+                val actualFilesByName = actualFiles.associateBy { it.name }
+                val savedOrder = prefs.configFilesOrder
 
-            val newOrder = mutableListOf<File>()
-            val remainingActualFileNames = actualFilesByName.toMutableMap()
+                val newOrder = mutableListOf<File>()
+                val remainingActualFileNames = actualFilesByName.toMutableMap()
 
-            savedOrder.forEach { filename ->
-                actualFilesByName[filename]?.let { file ->
-                    newOrder.add(file)
-                    remainingActualFileNames.remove(filename)
+                savedOrder.forEach { filename ->
+                    actualFilesByName[filename]?.let { file ->
+                        newOrder.add(file)
+                        remainingActualFileNames.remove(filename)
+                    }
                 }
-            }
 
-            newOrder.addAll(remainingActualFileNames.values.filter { it !in newOrder })
+                newOrder.addAll(remainingActualFileNames.values.filter { it !in newOrder })
 
-            _configFiles.value = newOrder
-            prefs.configFilesOrder = newOrder.map { it.name }
+                _configFiles.value = newOrder
+                prefs.configFilesOrder = newOrder.map { it.name }
 
-            val currentSelectedPath = prefs.selectedConfigPath
-            var fileToSelect: File? = null
+                val currentSelectedPath = prefs.selectedConfigPath
+                var fileToSelect: File? = null
 
-            if (currentSelectedPath != null) {
-                val foundSelected = newOrder.find { it.absolutePath == currentSelectedPath }
-                if (foundSelected != null) {
-                    fileToSelect = foundSelected
+                if (currentSelectedPath != null) {
+                    val foundSelected = newOrder.find { it.absolutePath == currentSelectedPath }
+                    if (foundSelected != null) {
+                        fileToSelect = foundSelected
+                    }
                 }
-            }
 
-            if (fileToSelect == null) {
-                fileToSelect = newOrder.firstOrNull()
+                _selectedConfigFile.value = fileToSelect
+                prefs.selectedConfigPath = fileToSelect?.absolutePath
             }
-
-            _selectedConfigFile.value = fileToSelect
-            prefs.selectedConfigPath = fileToSelect?.absolutePath
         }
     }
 
     fun updateSelectedConfigFile(file: File?) {
         _selectedConfigFile.value = file
         prefs.selectedConfigPath = file?.absolutePath
+    }
+
+    fun refreshSubscriptions() {
+        val subs = prefs.subscriptions
+        _subscriptions.value = subs
+        _subscriptionByFile.value = buildMap {
+            subs.forEach { sub -> sub.files.forEach { put(it, sub.id) } }
+        }
+    }
+
+    fun addSubscription(name: String, url: String) {
+        viewModelScope.launch(Dispatchers.IO) {
+            configUpdateMutex.withLock {
+                val created = subscriptionManager.create(name, url)
+                refreshSubscriptions()
+                setSync(created.id, SubscriptionSyncState(syncing = true))
+                val result = subscriptionManager.refresh(created.id)
+                val error = result.exceptionOrNull()?.message
+                if (error == null) clearSync(created.id) else setSync(created.id, SubscriptionSyncState(error = error))
+                refreshSubscriptions()
+                refreshConfigFileList()
+            }
+        }
+    }
+
+    fun syncSubscription(id: String) {
+        if (_subscriptionSync.value[id]?.syncing == true) return
+        viewModelScope.launch(Dispatchers.IO) {
+            configUpdateMutex.withLock {
+                val previousFiles = prefs.subscriptions.find { it.id == id }?.files.orEmpty()
+                setSync(id, SubscriptionSyncState(syncing = true))
+                val result = subscriptionManager.refresh(id)
+                result.onSuccess { applySubscriptionChange(previousFiles, it.files) }
+                val error = result.exceptionOrNull()?.message
+                if (error == null) clearSync(id) else setSync(id, SubscriptionSyncState(error = error))
+                refreshSubscriptions()
+                refreshConfigFileList()
+            }
+        }
+    }
+
+    fun deleteSubscription(id: String) {
+        viewModelScope.launch(Dispatchers.IO) {
+            configUpdateMutex.withLock {
+                val previousFiles = prefs.subscriptions.find { it.id == id }?.files.orEmpty()
+                if (subscriptionManager.delete(id)) {
+                    applySubscriptionChange(previousFiles, emptyList())
+                }
+                clearSync(id)
+                refreshSubscriptions()
+                refreshConfigFileList()
+            }
+        }
+    }
+
+    private suspend fun applySubscriptionChange(previousFiles: List<String>, updatedFiles: List<String>) {
+        withContext(Dispatchers.Main) {
+            val selected = _selectedConfigFile.value ?: return@withContext
+            if (selected.name !in previousFiles) return@withContext
+            if (selected.name !in updatedFiles) {
+                updateSelectedConfigFile(null)
+                if (_isServiceEnabled.value) stopTProxyService()
+            } else if (_isServiceEnabled.value) {
+                startTProxyService(TProxyService.ACTION_RELOAD_CONFIG)
+            }
+        }
+    }
+
+    private fun setSync(id: String, state: SubscriptionSyncState) {
+        _subscriptionSync.update { it + (id to state) }
+    }
+
+    private fun clearSync(id: String) {
+        _subscriptionSync.update { it - id }
     }
 
     fun updateConnectivityTestTarget(target: String) {
@@ -1176,4 +1260,3 @@ class MainViewModelFactory(
         throw IllegalArgumentException("Unknown ViewModel class")
     }
 }
-

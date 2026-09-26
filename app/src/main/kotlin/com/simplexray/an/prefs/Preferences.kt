@@ -8,6 +8,7 @@ import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
 import com.simplexray.an.R
 import com.simplexray.an.common.ThemeMode
+import com.simplexray.an.data.model.Subscription
 
 class Preferences(context: Context) {
     private val contentResolver: ContentResolver
@@ -262,6 +263,23 @@ class Preferences(context: Context) {
             setValueInProvider(CONFIG_FILES_ORDER, jsonList)
         }
 
+    var subscriptions: List<Subscription>
+        get() {
+            val jsonList = getPrefData(SUBSCRIPTIONS).first
+            return jsonList?.let {
+                try {
+                    val type = object : TypeToken<List<Subscription>>() {}.type
+                    gson.fromJson(it, type)
+                } catch (e: Exception) {
+                    Log.e(TAG, "Error deserializing SUBSCRIPTIONS List<Subscription>", e)
+                    emptyList()
+                }
+            } ?: emptyList()
+        }
+        set(value) {
+            setValueInProvider(SUBSCRIPTIONS, gson.toJson(value))
+        }
+
     var connectivityTestTarget: String
         get() = getPrefData(CONNECTIVITY_TEST_TARGET).first
             ?: context1.getString(R.string.connectivity_test_url)
@@ -335,6 +353,7 @@ class Preferences(context: Context) {
         const val CUSTOM_GEOIP_IMPORTED: String = "CustomGeoipImported"
         const val CUSTOM_GEOSITE_IMPORTED: String = "CustomGeositeImported"
         const val CONFIG_FILES_ORDER: String = "ConfigFilesOrder"
+        const val SUBSCRIPTIONS: String = "Subscriptions"
         const val DISABLE_VPN: String = "DisableVpn"
         const val CONNECTIVITY_TEST_TARGET: String = "ConnectivityTestTarget"
         const val CONNECTIVITY_TEST_TIMEOUT: String = "ConnectivityTestTimeout"

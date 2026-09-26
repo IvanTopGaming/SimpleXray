@@ -128,4 +128,16 @@
     <string name="theme_light">Light</string>
     <string name="theme_dark">Dark</string>
     <string name="auto">Auto</string>
+    <string name="subscription_error_network">Failed to fetch subscription</string>
+    <string name="subscription_error_empty">No valid servers in subscription</string>
+    <string name="subscription_error_not_found">Subscription not found</string>
+    <string name="subscriptions">Subscriptions</string>
+    <string name="add_subscription">Add subscription</string>
+    <string name="subscription_name">Name</string>
+    <string name="subscription_url">Subscription URL</string>
+    <string name="delete_subscription">Delete subscription</string>
+    <string name="subscription_servers_count">%1$d servers</string>
+    <string name="subscription_never_updated">Never updated</string>
+    <string name="subscription_updated_at">Updated %1$s</string>
+    <string name="manual_configs">Manual</string>
 </resources>

@@ -108,6 +108,10 @@ class PrefsProvider : ContentProvider() {
             if (key != null && values != null && values.containsKey(PrefsContract.PrefsEntry.COLUMN_PREF_VALUE)) {
                 val editor = prefs.edit()
                 when (val value = values[PrefsContract.PrefsEntry.COLUMN_PREF_VALUE]) {
+                    null -> {
+                        editor.remove(key)
+                    }
+
                     is String -> {
                         editor.putString(key, value)
                     }
