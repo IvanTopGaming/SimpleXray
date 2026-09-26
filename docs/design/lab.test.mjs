@@ -730,3 +730,55 @@ test('subscription update policy saves independently and daily update runs only 
   await evaluate('document.querySelector("#subscription-form").requestSubmit()');
   assert.equal(await evaluate('refreshDueSubscriptions(Date.now()+86400001,true)'),0);
 });
+
+test('all page content stays on the display axis with and without scrollbars', async () => {
+  for(const [width,height,mobile] of [[1440,1100,false],[538,656,false],[390,844,true],[360,800,true]]) {
+    await send('Emulation.setDeviceMetricsOverride',{width,height,deviceScaleFactor:1,mobile});
+    await evaluate('new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve)))');
+    for(const size of ['393,852','360,800','412,915']) {
+      await value('#size',size);
+      await evaluate('new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve)))');
+      for(const page of ['home','servers','subscriptions','settings','routing','advanced','diagnostics']) {
+        const geometry=await evaluate(`(()=>{openPage('${page}');const root=screen.getBoundingClientRect(),p=document.querySelector('#page-${page}'),rect=p.getBoundingClientRect();return {offset:rect.left+rect.width/2-root.left-root.width/2,overflow:p.scrollWidth>p.clientWidth,viewportOverflow:document.documentElement.scrollWidth>innerWidth}})()`);
+        assert.ok(Math.abs(geometry.offset)<1,`${page}: ${geometry.offset}px off-axis at ${width}, ${size}`);
+        assert.equal(geometry.overflow,false,`${page}: content overflow at ${width}, ${size}`);
+        assert.equal(geometry.viewportOverflow,false,`${page}: viewport overflow at ${width}, ${size}`);
+      }
+    }
+  }
+});
+
+test('dialog actions and scrollable form content are centered with balanced button widths', async () => {
+  for(const [width,height] of [[1440,1100],[538,656],[390,844]]) {
+    await send('Emulation.setDeviceMetricsOverride',{width,height,deviceScaleFactor:1,mobile:false});
+    await evaluate('new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve)))');
+    for(const trigger of ["openServer()","openServer('manual')","openServer('nl')","openSubscription()","document.querySelector('#connection-error-dialog').showModal()","document.querySelector('#delete-server-dialog').showModal()","document.querySelector('#qr-dialog').showModal()"]){
+      await evaluate(trigger);
+      await evaluate('new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve)))');
+      const data=await evaluate(`(()=>{const d=document.querySelector('dialog[open]'),r=d.getBoundingClientRect(),a=d.querySelector('.actions'),ar=a.getBoundingClientRect(),buttons=[...a.querySelectorAll('button')].filter(b=>b.checkVisibility()).map(b=>b.getBoundingClientRect()),cx=q=>q.left+q.width/2;return {id:d.id,offset:cx(ar)-cx(r),buttons:buttons.map(b=>({left:b.left,right:b.right,width:b.width,top:b.top,height:b.height})),axis:cx(ar),overflow:d.scrollWidth>d.clientWidth}})()`);
+      assert.ok(Math.abs(data.offset)<1,`${data.id}: form content offset ${data.offset}px`);
+      const rows=Object.groupBy(data.buttons,b=>Math.round(b.top));
+      for(const row of Object.values(rows)) {
+        assert.ok(Math.abs((row[0].left+row.at(-1).right)/2-data.axis)<1,`${data.id}: action row off-axis`);
+        assert.ok(Math.max(...row.map(b=>b.width))-Math.min(...row.map(b=>b.width))<1,`${data.id}: unequal button widths`);
+        assert.ok(Math.max(...row.map(b=>b.height))-Math.min(...row.map(b=>b.height))<1,`${data.id}: unequal button heights`);
+      }
+      assert.equal(data.overflow,false,data.id+' horizontal overflow');
+      await evaluate("document.querySelectorAll('dialog[open]').forEach(d=>d.close())");
+    }
+  }
+});
+
+test('icons, input actions and dashboard statistics have consistent internal alignment', async () => {
+  for(const page of ['home','servers','settings']) {
+    await evaluate(`openPage('${page}')`);
+    const offsets=await evaluate(`Array.from(document.querySelectorAll('#page-${page} button>svg')).filter(el=>el.checkVisibility()).map(el=>{const i=el.getBoundingClientRect(),b=el.parentElement.getBoundingClientRect();return Math.abs(i.top+i.height/2-b.top-b.height/2)})`);
+    assert.ok(offsets.every(offset=>offset<1),page+' icon alignment');
+  }
+  await evaluate('openServer()');
+  assert.ok(await evaluate(`(()=>{const i=document.querySelector('#server-link').getBoundingClientRect(),b=document.querySelector('#paste-server').getBoundingClientRect();return Math.abs(i.height-b.height)<1 && Math.abs(i.top-b.top)<1})()`));
+  await click('#close-server');
+  await click('#tab-home');
+  assert.equal(await evaluate('getComputedStyle(document.querySelector(".live-speeds")).textAlign'),'center');
+  assert.equal(await evaluate('getComputedStyle(document.querySelector(".session-totals")).textAlign'),'center');
+});
