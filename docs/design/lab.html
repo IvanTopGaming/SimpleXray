@@ -113,6 +113,15 @@ footer span{width:5px;height:5px;border-radius:50%;background:#87a38b}
 .screen textarea:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 .screen input[readonly],.screen textarea[readonly]{color:var(--muted)}
 .screen button[hidden]{display:none}
+.screen [hidden]{display:none!important}
+.input-action{display:flex;gap:6px;align-items:center}.input-action input{flex:1;width:100%}.input-action button{flex-shrink:0;min-width:44px;padding:8px}.input-action input::-webkit-search-cancel-button{display:none}
+.latency::before,.home-ping::before{content:"";display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--muted);margin-right:5px;vertical-align:middle}
+[data-quality="fast"]::before{background:#3b9363}[data-quality="medium"]::before{background:#c38c24}[data-quality="slow"]::before{background:#c6594b}
+.status-area[data-state="error"] .status-orbit{color:#b65449;border-color:#b65449}.status-area[data-state="error"] .status-orbit::after{opacity:.6;border-color:#b65449}.screen.dark .status-area[data-state="error"] .status-orbit{color:#ffaea3}
+.welcome{display:flex;flex-direction:column;gap:16px;padding:26px 4px}.welcome h3{font-size:24px;line-height:1.25;margin:0;letter-spacing:-.5px}.welcome p{font-size:13px;line-height:1.7;margin:0;color:var(--muted)}
+.screen .subscription-link{display:block;width:100%;text-align:left;padding:0 0 10px;background:none;border:0;color:var(--ink)}.subscription-link h3{margin:0 0 6px}.subscription-link small{color:var(--muted)}
+.screen .filter-chip{display:flex;align-items:center;justify-content:space-between;gap:8px;text-align:left;border-color:var(--line);background:var(--surface);font-size:11px}.filter-chip span{overflow-wrap:anywhere}
+#advanced-input summary{font-size:12px;color:var(--accent);padding:12px 0;cursor:pointer;min-height:44px}#advanced-input label{margin-top:8px}.screen #delete-server{align-self:flex-start}.screen #diagnostic-log{min-height:300px;resize:vertical}#qr-video{width:100%;max-height:220px;border-radius:10px;background:var(--surface);object-fit:cover}#qr-status{margin:12px 0}
 @media(hover:hover){.screen button:hover{background:var(--surface)}.screen .primary:hover{background:var(--accent);filter:brightness(.95)}}
 @media(max-width:650px){.screen{height:min(76svh,760px);min-width:280px}.page{padding:20px 15px}.tabs{padding-bottom:9px}}
 </style>
@@ -122,6 +131,7 @@ footer span{width:5px;height:5px;border-radius:50%;background:#87a38b}
 <div class="brand"><div class="brand-mark" aria-hidden="true">S</div><div><h1>SimpleXray</h1></div></div>
 <div class="tools" aria-label="Настройки холста">
 <select id="size" aria-label="Размер экрана"><option value="393,852">393 × 852</option><option value="360,800">360 × 800</option><option value="412,915">412 × 915</option></select>
+<select id="scenario" aria-label="Сценарий макета"><option value="normal">Обычный сценарий</option><option value="empty">Первый запуск</option><option value="error">Ошибка подключения</option></select>
 <button id="theme" aria-pressed="false">Тёмный фон</button>
 <button id="grid" aria-pressed="false">Сетка</button>
 <span class="separator" aria-hidden="true"></span>
@@ -147,17 +157,20 @@ footer span{width:5px;height:5px;border-radius:50%;background:#87a38b}
 <div class="pages">
 <section class="page" id="page-home" role="tabpanel" aria-labelledby="tab-home">
 <h2>Главная</h2>
-<div><p class="eyebrow">Выбранный сервер</p><button class="server-slot" data-open="servers"><svg aria-hidden="true"><use href="#i-servers"/></svg><div><span id="selected-name">Амстердам</span><small id="selected-detail">Нидерланды · VLESS</small></div><span class="home-ping" id="selected-ping" aria-label="Задержка">—</span><svg class="chevron" aria-hidden="true"><use href="#i-arrow"/></svg></button></div>
+<div class="welcome" id="home-empty" hidden><h3>Добро пожаловать<br>в SimpleXray</h3><p>Чтобы начать, добавьте подписку вашего провайдера или ссылку на сервер.</p><button class="primary" id="welcome-subscription">＋ Добавить подписку</button><button class="secondary" id="welcome-paste">Вставить из буфера</button><button class="text-button" id="welcome-server">Ввести ссылку вручную</button></div>
+<div id="home-selection"><p class="eyebrow">Выбранный сервер</p><button class="server-slot" data-open="servers"><svg aria-hidden="true"><use href="#i-servers"/></svg><div><span id="selected-name">Амстердам</span><small id="selected-detail">Нидерланды · VLESS</small></div><span class="home-ping" id="selected-ping" aria-label="Задержка">—</span><svg class="chevron" aria-hidden="true"><use href="#i-arrow"/></svg></button></div>
 <div class="status-area" id="connection" data-state="disconnected"><button class="status-orbit" id="connect" type="button" aria-label="Подключиться" aria-pressed="false" aria-describedby="connection-status"><svg aria-hidden="true"><use href="#i-power"/></svg></button><h3 id="connection-status" role="status">Отключено</h3></div>
 <div class="live-speeds"><div><small>↓ Загрузка</small><strong id="speed-down">0 КБ/с</strong></div><div><small>↑ Отдача</small><strong id="speed-up">0 КБ/с</strong></div></div><div class="session-totals"><span>↓ <span id="download">0 МБ</span></span><span>↑ <span id="upload">0 МБ</span></span><span id="uptime" aria-label="Время подключения">00:00</span></div>
 </section>
-<section class="page" id="page-servers" role="tabpanel" aria-labelledby="tab-servers" hidden><div class="page-title"><h2>Серверы</h2><button class="secondary" id="add-server" aria-label="Добавить сервер">＋ Добавить</button></div><div class="server-tools"><input type="search" id="server-search" aria-label="Поиск серверов" placeholder="Сервер, страна или подписка"><div class="server-filters"><label>Группировка<select id="server-group"><option value="subscription">По подпискам</option><option value="country">По странам</option></select></label><label>Сортировка<select id="server-sort"><option value="name">По имени</option><option value="ping">По пингу</option></select></label></div></div><button class="secondary" id="check-servers">Проверить доступность</button><p class="note" id="server-results" role="status">Проверка ещё не запускалась</p><div id="server-list" class="server-list"></div></section>
+<section class="page" id="page-servers" role="tabpanel" aria-labelledby="tab-servers" hidden><div class="page-title"><h2>Серверы</h2><button class="secondary" id="add-server" aria-label="Добавить сервер">＋ Добавить</button></div><div class="server-tools"><div class="input-action"><input type="search" id="server-search" aria-label="Поиск серверов" placeholder="Сервер, страна или подписка"><button class="secondary" id="clear-search" aria-label="Очистить поиск" hidden>✕</button></div><button id="clear-sub-filter" class="filter-chip" aria-label="Сбросить фильтр подписки" hidden><span id="sub-filter-name"></span><span aria-hidden="true">✕</span></button><div class="server-filters"><label>Группировка<select id="server-group"><option value="subscription">По подпискам</option><option value="country">По странам</option></select></label><label>Сортировка<select id="server-sort"><option value="name">По имени</option><option value="ping">По пингу</option></select></label></div></div><button class="secondary" id="check-servers">Проверить доступность</button><p class="note" id="server-results" role="status">Проверка ещё не запускалась</p><div id="server-list" class="server-list"></div></section>
 <section class="page" id="page-subscriptions" role="tabpanel" aria-labelledby="tab-subscriptions" hidden><div class="page-title"><h2>Подписки</h2><button class="secondary" id="add-subscription" aria-label="Добавить подписку">＋ Добавить</button></div><div id="subscription-list" class="stack"></div></section>
 <section class="page" id="page-settings" role="tabpanel" aria-labelledby="tab-settings" hidden><h2>Настройки</h2>
+<button class="setting-row" data-open="diagnostics"><svg aria-hidden="true"><use href="#i-info"/></svg><span>Журнал и отладка</span><svg aria-hidden="true"><use href="#i-arrow"/></svg></button>
 <div class="setting-group"><h3>Оформление</h3><label class="field"><span>Тема</span><select id="app-theme"><option value="light">Светлая</option><option value="dark">Тёмная</option><option value="auto">Системная</option></select></label></div>
 <div class="setting-group"><h3>Соединение</h3><label class="switch-row"><span>IPv6<small>Разрешить IPv6 в VPN-интерфейсе</small></span><input type="checkbox" id="ipv6" role="switch"></label><label class="field"><span>DNS · IPv4</span><input id="dns-ipv4" value="8.8.8.8" required></label><label class="field"><span>DNS · IPv6</span><input id="dns-ipv6" value="2001:4860:4860::8888" required disabled></label></div>
 <div><button class="setting-row" data-open="routing"><svg aria-hidden="true"><use href="#i-route"/></svg><span>Роутинг</span><svg aria-hidden="true"><use href="#i-arrow"/></svg></button><button class="setting-row" data-open="advanced"><svg aria-hidden="true"><use href="#i-settings"/></svg><span>Дополнительно</span><svg aria-hidden="true"><use href="#i-arrow"/></svg></button></div>
 </section>
+<section class="page" id="page-diagnostics" aria-labelledby="diagnostics-title" hidden><div class="page-title"><button class="back" data-open="settings" aria-label="Назад в настройки">‹</button><h2 id="diagnostics-title">Журнал и отладка</h2></div><p class="note">Последние события соединения. Ключи и ссылки не записываются в журнал.</p><textarea id="diagnostic-log" readonly aria-label="Журнал событий" spellcheck="false"></textarea><button class="secondary" id="copy-log">Скопировать журнал</button><p class="note" id="log-status" role="status"></p></section>
 <section class="page" id="page-advanced" aria-labelledby="advanced-title" hidden><div class="page-title"><button class="back" data-open="settings" aria-label="Назад в настройки">‹</button><h2 id="advanced-title">Дополнительно</h2></div>
 <div class="setting-group"><h3>Конфигурация</h3><label class="switch-row"><span>Использовать шаблон<small>Собирать конфигурацию из настроек</small></span><input type="checkbox" checked role="switch"></label><label class="switch-row"><span>Без VPN-интерфейса<small>Только локальный прокси</small></span><input id="disable-vpn" type="checkbox" role="switch"></label></div>
 <div class="setting-group"><h3>Локальный SOCKS</h3><label class="field"><span>Адрес</span><input value="127.0.0.1" required></label><label class="field"><span>Порт<small>От 1 до 65535</small></span><input id="socks-port" type="number" min="1" max="65535" step="1" value="10808" required></label><label class="field"><span>Имя пользователя</span><input autocomplete="off" placeholder="Не задано"></label><label class="field"><span>Пароль</span><input type="password" autocomplete="new-password" placeholder="Не задан"></label><label class="switch-row"><span>HTTP-прокси</span><input type="checkbox" checked role="switch"></label></div>
@@ -176,9 +189,12 @@ footer span{width:5px;height:5px;border-radius:50%;background:#87a38b}
 <button class="tab" id="tab-subscriptions" role="tab" aria-selected="false" aria-controls="page-subscriptions" data-tab="subscriptions" tabindex="-1"><svg aria-hidden="true"><use href="#i-subs"/></svg>Подписки</button>
 <button class="tab" id="tab-settings" role="tab" aria-selected="false" aria-controls="page-settings" data-tab="settings" tabindex="-1"><svg aria-hidden="true"><use href="#i-settings"/></svg>Настройки</button>
 </nav>
-<dialog id="server-dialog" aria-labelledby="server-title"><form id="server-form"><h3 id="server-title">Добавить сервер</h3><p class="note" id="server-origin"></p><label>Название<input id="server-name" required maxlength="60" autocomplete="off"></label><label>Конфигурация · JSON<textarea id="server-config" required spellcheck="false" autocapitalize="off" autocomplete="off"></textarea></label><p class="error" id="server-error" role="alert"></p><div class="actions"><button type="button" class="secondary" data-close="server-dialog" id="close-server">Отмена</button><button class="primary" type="submit" id="save-server">Сохранить</button></div></form></dialog>
-<dialog id="subscription-dialog" aria-labelledby="subscription-title"><form id="subscription-form"><h3 id="subscription-title">Добавить подписку</h3><label>Ссылка подписки<input id="sub-url" type="url" pattern="https?://.+" required value="https://example.com/subscription" autocomplete="off"></label><label>Автообновление<select id="sub-refresh"><option value="manual">Вручную</option><option value="startup">При запуске</option><option value="daily">Раз в сутки</option></select></label><p id="sub-error" class="error" role="alert"></p><div class="actions"><button type="button" class="secondary" data-close="subscription-dialog">Отмена</button><button class="primary" type="submit" id="save-subscription">Добавить</button></div></form></dialog>
+<dialog id="server-dialog" aria-labelledby="server-title"><form id="server-form"><h3 id="server-title">Добавить сервер</h3><p class="note" id="server-origin"></p><div id="link-input"><label for="server-link">Ссылка подключения</label><div class="input-action"><input id="server-link" placeholder="vless://, vmess://, trojan://" autocomplete="off" autocapitalize="off" spellcheck="false" maxlength="16384"><button type="button" class="secondary" id="paste-server" aria-label="Вставить ссылку из буфера">Вставить</button></div><button type="button" class="text-button" id="scan-qr">Сканировать QR-код</button></div><label>Название<input id="server-name" maxlength="60" autocomplete="off" placeholder="Из ссылки или адреса сервера"></label><details id="advanced-input"><summary>Расширенный ввод</summary><label>Конфигурация · JSON<textarea id="server-config" spellcheck="false" autocapitalize="off" autocomplete="off"></textarea></label></details><p class="error" id="server-error" role="alert"></p><button type="button" class="text-button danger" id="delete-server" hidden>Удалить сервер</button><div class="actions"><button type="button" class="secondary" data-close="server-dialog" id="close-server">Отмена</button><button class="primary" type="submit" id="save-server">Сохранить</button></div></form></dialog>
+<dialog id="subscription-dialog" aria-labelledby="subscription-title"><form id="subscription-form"><h3 id="subscription-title">Добавить подписку</h3><label for="sub-url">Ссылка подписки</label><div class="input-action"><input id="sub-url" type="url" pattern="https?://.+" required placeholder="https://" autocomplete="off"><button type="button" class="secondary" id="paste-subscription" aria-label="Вставить ссылку подписки из буфера">Вставить</button></div><label>Автообновление<select id="sub-refresh"><option value="manual">Вручную</option><option value="startup">При запуске</option><option value="daily">Раз в сутки</option></select></label><p id="sub-error" class="error" role="alert"></p><div class="actions"><button type="button" class="secondary" data-close="subscription-dialog">Отмена</button><button class="primary" type="submit" id="save-subscription">Добавить</button></div></form></dialog>
 <dialog id="delete-dialog" aria-labelledby="delete-title"><h3 id="delete-title">Удалить подписку?</h3><p class="note">Все серверы этой подписки также будут удалены.</p><div class="actions"><button class="secondary" data-close="delete-dialog">Отмена</button><button class="secondary danger" id="confirm-delete">Удалить</button></div></dialog>
+<dialog id="delete-server-dialog" aria-labelledby="delete-server-title"><h3 id="delete-server-title">Удалить сервер?</h3><p class="note">Сервер будет удалён из списка. Если он подключён, соединение прервётся.</p><div class="actions"><button class="secondary" data-close="delete-server-dialog">Отмена</button><button class="secondary danger" id="confirm-delete-server">Удалить</button></div></dialog>
+<dialog id="connection-error-dialog" aria-labelledby="connection-error-title"><h3 id="connection-error-title">Ошибка соединения</h3><p class="note" id="connection-reason">Сервер не ответил вовремя. Проверьте интернет или выберите другой сервер.</p><div class="actions"><button class="primary" id="retry-connection">Повторить</button><button class="secondary" id="choose-other-server">Выбрать сервер</button><button class="text-button" data-close="connection-error-dialog">Закрыть</button></div></dialog>
+<dialog id="qr-dialog" aria-labelledby="qr-title"><h3 id="qr-title">Сканировать QR-код</h3><video id="qr-video" autoplay muted playsinline hidden></video><p class="note" id="qr-status" role="status"></p><div class="actions"><button class="secondary" data-close="qr-dialog">Закрыть</button></div></dialog>
 <span class="pin" id="pin" aria-hidden="true">1</span></div></div>
 <p class="caption" id="caption" aria-live="polite"></p>
 </div>
@@ -209,13 +225,13 @@ let width = 393;
 let height = 852;
 let marking = false;
 let currentPage = 'home';
-const pageNames = {home:'Главная',servers:'Серверы',subscriptions:'Подписки',settings:'Настройки',routing:'Роутинг',advanced:'Дополнительно'};
+const pageNames = {home:'Главная',servers:'Серверы',subscriptions:'Подписки',settings:'Настройки',routing:'Роутинг',advanced:'Дополнительно',diagnostics:'Журнал и отладка'};
 const defaultCaption = '';
 function openPage(name) {
   currentPage = name;
   document.querySelectorAll('.page').forEach(page => {page.hidden = page.id !== 'page-'+name;});
   document.querySelectorAll('[data-tab]').forEach(tab => {
-    const active = tab.dataset.tab === (['routing','advanced'].includes(name) ? 'settings' : name);
+    const active = tab.dataset.tab === (['routing','advanced','diagnostics'].includes(name) ? 'settings' : name);
     tab.setAttribute('aria-selected',String(active));
     tab.tabIndex = active ? 0 : -1;
   });
@@ -271,6 +287,76 @@ function resetPin() {
 }
 clear.addEventListener('click', () => {resetPin();announce('layout-pin-clear',{screen:currentPage});});
 const $ = selector => document.querySelector(selector);
+function parseServerLink(input) {
+  const invalid = () => {throw new Error('Некорректная ссылка. Проверьте адрес, порт и ключ сервера.');};
+  const unsupported = () => {throw new Error('Параметры ссылки не поддерживаются. Используйте расширенный ввод JSON.');};
+  const text = input.trim();
+  if(!text || text.length > 16384 || /[\s\u0000-\u001f]/u.test(text)) invalid();
+  let protocol, address, port, credential, name, params;
+  if(text.startsWith('vmess://') && !text.includes('@')) {
+    let data;
+    try {data = JSON.parse(new TextDecoder('utf-8',{fatal:true}).decode(Uint8Array.from(atob(text.slice(8).replace(/-/g,'+').replace(/_/g,'/')),c=>c.charCodeAt(0))));} catch {invalid();}
+    if(!data || typeof data !== 'object' || Array.isArray(data)) invalid();
+    const allowed = ['v','ps','add','port','id','aid','scy','net','type','host','path','tls','sni','alpn','fp'];
+    if(Object.keys(data).some(key=>!allowed.includes(key)) || Object.values(data).some(value=>typeof value !== 'string' && typeof value !== 'number')) unsupported();
+    if((data.v !== undefined && String(data.v) !== '2') || (data.aid !== undefined && String(data.aid) !== '0') || (data.type && data.type !== 'none')) unsupported();
+    protocol = 'vmess';address = String(data.add || '');port = String(data.port || '');credential = String(data.id || '');name = String(data.ps || '');
+    params = new URLSearchParams({type:data.net || 'tcp',security:data.tls || 'none',encryption:data.scy || 'auto'});
+    for(const key of ['host','path','sni','alpn','fp']) if(data[key]) params.set(key,String(data[key]));
+  } else {
+    let url;
+    try {url = new URL(text);decodeURIComponent(text);} catch {invalid();}
+    protocol = url.protocol.slice(0,-1);
+    if(!['vless','vmess','trojan'].includes(protocol)) unsupported();
+    if(url.password || (url.pathname && url.pathname !== '/')) invalid();
+    address = url.hostname;port = url.port;credential = decodeURIComponent(url.username);name = decodeURIComponent(url.hash.slice(1));params = url.searchParams;
+    if(new Set(params.keys()).size !== [...params.keys()].length) invalid();
+  }
+  address = address.replace(/^\[|\]$/g,'');
+  if(!address || /[\s/@?#]/.test(address) || !/^\d+$/.test(port) || Number(port) < 1 || Number(port) > 65535 || !credential) invalid();
+  if(protocol !== 'trojan' && !/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(credential)) invalid();
+  const network = params.get('type') || 'tcp';
+  const security = params.get('security') || (protocol === 'trojan' ? 'tls' : 'none');
+  if(!['tcp','ws','grpc'].includes(network) || !['none','tls','reality'].includes(security)) unsupported();
+  if(security === 'reality' && (protocol !== 'vless' || network !== 'tcp')) unsupported();
+  const allowed = ['type','security',...(protocol !== 'trojan' ? ['encryption'] : []),...(protocol === 'vless' ? ['flow'] : [])];
+  if(network === 'ws') allowed.push('path','host');
+  if(network === 'grpc') allowed.push('serviceName','authority','mode');
+  if(security !== 'none') allowed.push('sni','fp','alpn');
+  if(security === 'reality') allowed.push('pbk','sid','spx');
+  if([...params.keys()].some(key=>!allowed.includes(key))) unsupported();
+  const streamSettings = {network,security};
+  if(network === 'ws') streamSettings.wsSettings = {path:params.get('path') || '/',...(params.has('host') ? {headers:{Host:params.get('host')}} : {})};
+  if(network === 'grpc') {
+    const mode = params.get('mode') || 'gun';
+    if(!['gun','multi'].includes(mode)) unsupported();
+    streamSettings.grpcSettings = {serviceName:params.get('serviceName') || '',multiMode:mode === 'multi',...(params.has('authority') ? {authority:params.get('authority')} : {})};
+  }
+  if(security !== 'none') {
+    const settings = {serverName:params.get('sni') || address};
+    if(params.has('fp')) settings.fingerprint = params.get('fp');
+    if(params.has('alpn')) settings.alpn = params.get('alpn').split(',');
+    if(security === 'reality') {
+      if(!params.get('pbk')) invalid();
+      Object.assign(settings,{publicKey:params.get('pbk'),shortId:params.get('sid') || ''});
+      if(params.has('spx')) settings.spiderX = params.get('spx');
+    }
+    streamSettings[security+'Settings'] = settings;
+  }
+  let settings;
+  if(protocol === 'trojan') settings = {servers:[{address,port:Number(port),password:credential}]};
+  else {
+    const encryption = params.get('encryption') || (protocol === 'vless' ? 'none' : 'auto');
+    if(protocol === 'vless' ? encryption !== 'none' : !['auto','aes-128-gcm','chacha20-poly1305','none','zero'].includes(encryption)) unsupported();
+    const user = {id:credential,[protocol === 'vless' ? 'encryption' : 'security']:encryption};
+    if(params.get('flow')) {
+      if(params.get('flow') !== 'xtls-rprx-vision' || network !== 'tcp' || security === 'none') unsupported();
+      user.flow = params.get('flow');
+    }
+    settings = {vnext:[{address,port:Number(port),users:[user]}]};
+  }
+  return {name:(name || address).slice(0,60),config:JSON.stringify({outbounds:[{tag:'proxy',protocol,settings,streamSettings}]},null,2)};
+}
 function subscriptionTitle(url,headers = {}) {
   const values = Object.fromEntries(Object.entries(headers).map(([key,value]) => [key.toLowerCase(),String(value).trim()]));
   const clean = value => value.replace(/[\u0000-\u001f\u007f]/g,'').trim();
@@ -335,6 +421,21 @@ for(let index = 0; index < 56; index++) {
   servers.splice(servers.length-1,0,{id:'region'+index,name:city+' '+String(Math.floor(index/6)+2).padStart(2,'0'),country,code,protocol:'VLESS',subscription:'sample'});
 }
 servers.forEach(server => {server.config = exampleConfig(server.protocol.toLowerCase(),server.id+'.example.com');});
+const initialServers = structuredClone(servers);
+const initialSubscriptions = structuredClone(subscriptions);
+let subscriptionFilter = null;
+let failNextConnection = false;
+let checkingServers = false;
+let checkGeneration = 0;
+let serverFormVersion = 0;
+let serverInputMode = 'link';
+let subscriptionFormVersion = 0;
+const diagnosticEvents = [];
+function logEvent(level,message) {
+  diagnosticEvents.push(new Date().toLocaleTimeString('ru-RU')+' ['+level+'] '+message);
+  if(diagnosticEvents.length > 100) diagnosticEvents.shift();
+  $('#diagnostic-log').value = diagnosticEvents.join('\n');
+}
 let selected = 'nl';
 let connectionState = 'disconnected';
 let connectionTimer;
@@ -348,14 +449,21 @@ const escapeHtml = value => String(value).replace(/[&<>"']/g, character => ({'&'
 function notice(message) { $('#notice').textContent = message; }
 const groupExpansion = new Map();
 function pingLabel(server) {return server?.unavailable ? 'Недоступен' : Number.isFinite(server?.ping) ? server.ping+' мс' : '—';}
+function pingQuality(server) {return server?.unavailable ? 'offline' : !Number.isFinite(server?.ping) ? 'unknown' : server.ping < 100 ? 'fast' : server.ping <= 250 ? 'medium' : 'slow';}
 function serverMarkup(server) {
-  return `<div class="server-entry" data-selected="${selected === server.id}"><button class="server-card" data-server="${server.id}" aria-pressed="${selected === server.id}"><span class="location">${server.code}</span><span class="server-info"><strong>${escapeHtml(server.name)}</strong><small>${escapeHtml(server.country)} · ${escapeHtml(server.protocol)}</small></span><span class="latency">${pingLabel(server)}</span></button><button class="config-action" data-config="${server.id}" aria-label="${server.subscription ? 'Посмотреть конфиг' : 'Редактировать сервер'}: ${escapeHtml(server.name)}" title="${server.subscription ? 'Посмотреть конфиг' : 'Редактировать сервер'}"><svg aria-hidden="true"><use href="${server.subscription ? '#i-info' : '#i-edit'}"/></svg></button></div>`;
+  return `<div class="server-entry" data-selected="${selected === server.id}"><button class="server-card" data-server="${server.id}" aria-pressed="${selected === server.id}"><span class="location">${server.code}</span><span class="server-info"><strong>${escapeHtml(server.name)}</strong><small>${escapeHtml(server.country)} · ${escapeHtml(server.protocol)}</small></span><span class="latency" data-quality="${pingQuality(server)}">${pingLabel(server)}</span></button><button class="config-action" data-config="${server.id}" aria-label="${server.subscription ? 'Посмотреть конфиг' : 'Редактировать сервер'}: ${escapeHtml(server.name)}" title="${server.subscription ? 'Посмотреть конфиг' : 'Редактировать сервер'}"><svg aria-hidden="true"><use href="${server.subscription ? '#i-info' : '#i-edit'}"/></svg></button></div>`;
 }
 function renderServers() {
   const query = $('#server-search').value.trim().toLocaleLowerCase('ru');
+  const filteredSubscription = subscriptions.find(sub=>sub.id === subscriptionFilter);
+  if(!filteredSubscription) subscriptionFilter = null;
+  $('#clear-search').hidden = !$('#server-search').value;
+  $('#clear-sub-filter').hidden = !filteredSubscription;
+  $('#sub-filter-name').textContent = filteredSubscription?.name || '';
+  $('#check-servers').disabled = checkingServers || !servers.length;
   const mode = $('#server-group').value;
   const groups = new Map();
-  const matching = servers.filter(server => [server.name,server.country,subscriptions.find(sub => sub.id === server.subscription)?.name || 'Ручные серверы'].join(' ').toLocaleLowerCase('ru').includes(query));
+  const matching = servers.filter(server => (!subscriptionFilter || server.subscription === subscriptionFilter) && [server.name,server.country,subscriptions.find(sub => sub.id === server.subscription)?.name || 'Ручные серверы'].join(' ').toLocaleLowerCase('ru').includes(query));
   matching.sort((a,b) => {
     if($('#server-sort').value === 'ping') {
       const rank = server => Number.isFinite(server.ping) && !server.unavailable ? server.ping : Infinity;
@@ -384,9 +492,15 @@ function updateSelectedServer() {
   $('#selected-name').textContent = server?.name || 'Выбери сервер';
   $('#selected-detail').textContent = server ? `${server.country} · ${server.protocol}` : 'Открыть список';
   $('#selected-ping').textContent = pingLabel(server);
+  $('#selected-ping').dataset.quality = pingQuality(server);
   $('#connect').disabled = !server;
+  const empty = !servers.length;
+  $('#home-empty').hidden = !empty;
+  for(const selector of ['#home-selection','#connection','.live-speeds','.session-totals']) $(selector).hidden = empty;
 }
 $('#server-search').addEventListener('input',renderServers);
+$('#clear-search').addEventListener('click',()=>{$('#server-search').value='';renderServers();$('#server-search').focus();});
+$('#clear-sub-filter').addEventListener('click',()=>{subscriptionFilter=null;renderServers();});
 $('#server-group').addEventListener('change',renderServers);
 $('#server-sort').addEventListener('change',renderServers);
 function formatTraffic(bytes) {return (bytes/1073741824).toLocaleString('ru-RU',{maximumFractionDigits:1})+' ГБ';}
@@ -403,12 +517,12 @@ function subscriptionMetrics(sub) {
 }
 const updatePolicyLabels = {manual:'Вручную',startup:'При запуске',daily:'Раз в сутки'};
 function renderSubscriptions() {
-  $('#subscription-list').innerHTML = subscriptions.length ? subscriptions.map(sub => `<article class="card subscription-card" data-expired="${subscriptionUsage(sub.userinfo).expired}"><h3>${escapeHtml(sub.name)}</h3><p class="note">${escapeHtml(sub.status)}</p>${subscriptionMetrics(sub)}<p class="update-policy">Обновление: ${updatePolicyLabels[sub.policy]}</p><div class="actions"><button class="text-button" data-refresh="${sub.id}" ${sub.busy ? 'disabled' : ''}>Обновить</button><button class="text-button" data-edit-sub="${sub.id}" ${sub.busy ? 'disabled' : ''}>Настроить</button><button class="text-button danger" data-delete="${sub.id}">Удалить</button></div></article>`).join('') : '<div class="empty-slot">Подписок пока нет.<br>Добавьте подписку.</div>';
+  $('#subscription-list').innerHTML = subscriptions.length ? subscriptions.map(sub => `<article class="card subscription-card" data-expired="${subscriptionUsage(sub.userinfo).expired}"><button class="subscription-link" data-sub-servers="${sub.id}" aria-label="Открыть серверы: ${escapeHtml(sub.name)}"><h3>${escapeHtml(sub.name)}</h3><small>${servers.filter(server=>server.subscription === sub.id).length} серверов →</small></button><p class="note">${escapeHtml(sub.status)}</p>${subscriptionMetrics(sub)}<p class="update-policy">Обновление: ${updatePolicyLabels[sub.policy]}</p><div class="actions"><button class="text-button" data-refresh="${sub.id}" ${sub.busy ? 'disabled' : ''}>Обновить</button><button class="text-button" data-edit-sub="${sub.id}" ${sub.busy ? 'disabled' : ''}>Настроить</button><button class="text-button danger" data-delete="${sub.id}">Удалить</button></div></article>`).join('') : '<div class="empty-slot">Подписок пока нет.<br>Добавьте подписку.</div>';
 }
 function renderConnection() {
   $('#connection').dataset.state = connectionState;
-  $('#connection-status').textContent = {disconnected:'Отключено',connecting:'Подключение…',connected:'Подключено'}[connectionState];
-  const action = {disconnected:'Подключиться',connecting:'Отменить подключение',connected:'Отключиться'}[connectionState];
+  $('#connection-status').textContent = {disconnected:'Отключено',connecting:'Подключение…',connected:'Подключено',error:'Ошибка соединения'}[connectionState];
+  const action = {disconnected:'Подключиться',connecting:'Отменить подключение',connected:'Отключиться',error:'Показать причину ошибки'}[connectionState];
   $('#connect').setAttribute('aria-label',action);
   $('#connect').setAttribute('aria-pressed',String(connectionState === 'connected'));
   $('#connect').title = action;
@@ -423,23 +537,41 @@ function renderConnection() {
 }
 function disconnect() {
   clearTimeout(connectionTimer);
+  if(connectionState !== 'disconnected') logEvent('INFO','Соединение остановлено');
   connectionState = 'disconnected';
   renderConnection();
 }
-$('#connect').addEventListener('click', () => {
-  if(connectionState !== 'disconnected') return disconnect();
+function startConnection() {
   if(!servers.some(server => server.id === selected)) return;
+  clearTimeout(connectionTimer);
+  const shouldFail = failNextConnection || servers.find(server=>server.id === selected)?.unavailable;
+  failNextConnection = false;
   connectionState = 'connecting';
+  logEvent('INFO','Подключение начато');
   renderConnection();
   connectionTimer = setTimeout(() => {
+    if(shouldFail) {
+      connectionState = 'error';
+      logEvent('ERROR','Сервер не ответил: тайм-аут соединения');
+      renderConnection();
+      return;
+    }
     connectionState = 'connected';
+    logEvent('INFO','Соединение установлено');
     sessionStarted = Date.now();
     const server = servers.find(item => item.id === selected);
     if(server && !Number.isFinite(server.ping) && !server.unavailable) server.ping = 45;
     renderServers();
     renderConnection();
   },600);
+}
+$('#connect').addEventListener('click', () => {
+  if(connectionState === 'error') {$('#connection-error-dialog').showModal();return;}
+  if(connectionState !== 'disconnected') return disconnect();
+  startConnection();
 });
+$('#retry-connection').addEventListener('click',()=>{$('#connection-error-dialog').close();startConnection();});
+$('#choose-other-server').addEventListener('click',()=>{$('#connection-error-dialog').close();disconnect();subscriptionFilter=null;$('#server-search').value='';renderServers();openPage('servers');});
 setInterval(() => {if(connectionState === 'connected') renderConnection();},1000);
 $('#server-list').addEventListener('click', event => {
   const config = event.target.closest('[data-config]');
@@ -455,10 +587,18 @@ function openServer(id = null) {
   const server = servers.find(item => item.id === id);
   if(id && !server) return;
   editingServer = id;
+  serverFormVersion++;
+  serverInputMode = server ? 'json' : 'link';
   const readonly = Boolean(server?.subscription);
   $('#server-title').textContent = readonly ? 'Конфигурация сервера' : server ? 'Редактировать сервер' : 'Добавить сервер';
   $('#server-name').value = server?.name || '';
   $('#server-config').value = server?.config || exampleConfig('vless','server.example.com');
+  $('#server-link').value = '';
+  $('#link-input').hidden = Boolean(server);
+  $('#advanced-input').open = Boolean(server);
+  $('#advanced-input summary').textContent = readonly ? 'Конфигурация JSON' : 'Расширенный ввод';
+  $('#delete-server').hidden = !server || readonly;
+  $('#delete-server').disabled = !server || readonly;
   $('#server-name').readOnly = readonly;
   $('#server-config').readOnly = readonly;
   $('#server-origin').textContent = readonly ? 'Сервер из подписки. Конфигурация доступна только для просмотра.' : '';
@@ -470,14 +610,35 @@ function openServer(id = null) {
   $('#server-dialog').showModal();
 }
 $('#add-server').addEventListener('click', () => openServer());
+function previewServerLink() {
+  serverInputMode='link';
+  try {$('#server-config').value=parseServerLink($('#server-link').value).config;}
+  catch {$('#server-config').value='';}
+}
+$('#server-link').addEventListener('input',previewServerLink);
+$('#server-config').addEventListener('input',()=>{serverInputMode='json';$('#server-link').value='';});
+$('#advanced-input').addEventListener('toggle',()=>{
+  if($('#advanced-input').open && !editingServer && serverInputMode === 'link') {
+    if($('#server-link').value.trim()) previewServerLink();
+    else serverInputMode='json';
+  }
+});
 $('#server-form').addEventListener('submit', event => {
   event.preventDefault();
   const server = servers.find(item => item.id === editingServer);
   if((editingServer && !server) || server?.subscription) return;
-  const name = $('#server-name').value.trim();
+  let name = $('#server-name').value.trim();
+  let source = $('#server-config').value;
+  if(!server && serverInputMode === 'link') {
+    try {
+      const imported = parseServerLink($('#server-link').value);
+      name ||= imported.name;
+      source = imported.config;
+    } catch(error) {$('#server-error').textContent = error.message;return;}
+  }
   if(!name) {$('#server-error').textContent = 'Введите название сервера.';return;}
   let parsed;
-  try {parsed = JSON.parse($('#server-config').value);}
+  try {parsed = JSON.parse(source);}
   catch {$('#server-error').textContent = 'Некорректный JSON. Проверьте скобки и запятые.';return;}
   if(!parsed || !Array.isArray(parsed.outbounds) || !parsed.outbounds.length || parsed.outbounds.some(item => !item || typeof item.protocol !== 'string' || !item.protocol.trim())) {
     $('#server-error').textContent = 'JSON должен содержать outbounds с протоколом сервера.';
@@ -489,24 +650,55 @@ $('#server-form').addEventListener('submit', event => {
     if(server.config !== config) {if(selected === server.id) disconnect();delete server.ping;delete server.unavailable;}
     Object.assign(server,{name,config,protocol});
   } else servers.push({id:'manual'+(++nextServer),name,config,protocol,country:'Ручная конфигурация',code:'01',subscription:null});
+  if(!selected) selected = servers.at(-1).id;
+  if(!server) {subscriptionFilter=null;$('#server-search').value='';groupExpansion.set('subscription:manual',true);}
+  logEvent('INFO',server ? 'Ручной сервер изменён' : 'Ручной сервер добавлен');
   renderServers();
   $('#server-dialog').close();
   notice(server ? 'Сервер сохранён' : 'Сервер добавлен');
 });
-$('#check-servers').addEventListener('click', () => {
+$('#delete-server').addEventListener('click',()=>{
+  const server = servers.find(item=>item.id === editingServer);
+  if(server && !server.subscription) $('#delete-server-dialog').showModal();
+});
+$('#confirm-delete-server').addEventListener('click',()=>{
+  if(!$('#delete-server-dialog').open) return;
+  const server = servers.find(item=>item.id === editingServer);
+  if(!server || server.subscription) return;
+  servers = servers.filter(item=>item !== server);
+  if(selected === server.id) {disconnect();selected=servers[0]?.id || null;}
+  $('#delete-server-dialog').close();$('#server-dialog').close();
+  renderServers();logEvent('INFO','Ручной сервер удалён');notice('Сервер удалён');
+});
+$('#check-servers').addEventListener('click', async () => {
+  if(checkingServers || !servers.length) return;
+  checkingServers = true;
+  const generation = ++checkGeneration;
+  const snapshot = [...servers];
   $('#check-servers').disabled = true;
-  $('#server-results').textContent = 'Проверка…';
-  setTimeout(() => {
-    servers.forEach((server,index) => {server.unavailable = index%13 === 2;server.ping = server.unavailable ? null : 42+index*17;});
+  let available = 0, offline = 0;
+  $('#server-results').textContent = `Проверка 0 из ${snapshot.length}…`;
+  for(let index=0;index<snapshot.length;index++) {
+    await new Promise(resolve=>setTimeout(resolve,40));
+    if(generation !== checkGeneration) return;
+    const server = snapshot[index];
+    if(servers.includes(server)) {
+      server.unavailable = index%13 === 2;server.ping = server.unavailable ? null : 42+index*17;
+      if(server.unavailable) offline++;else available++;
+    }
+    $('#server-results').textContent = `Проверка ${index+1} из ${snapshot.length}…`;
     renderServers();
-    $('#check-servers').disabled = false;
-    $('#server-results').textContent = 'Проверка завершена';
-  },600);
+  }
+  checkingServers = false;
+  renderServers();
+  $('#server-results').textContent = `✓ ${available} доступно, ${offline} офлайн`;
+  logEvent('INFO','Проверка серверов завершена');
 });
 function openSubscription(id = null) {
   const sub = subscriptions.find(item => item.id === id);
   if(id && (!sub || sub.busy)) return;
   editingSubscription = id;
+  subscriptionFormVersion++;
   $('#subscription-form').reset();
   $('#subscription-title').textContent = sub ? 'Настройки подписки' : 'Добавить подписку';
   $('#save-subscription').textContent = sub ? 'Сохранить' : 'Добавить';
@@ -515,6 +707,8 @@ function openSubscription(id = null) {
   $('#subscription-dialog').showModal();
 }
 $('#add-subscription').addEventListener('click', () => openSubscription());
+$('#welcome-subscription').addEventListener('click',()=>openSubscription());
+$('#welcome-server').addEventListener('click',()=>openServer());
 document.querySelectorAll('[data-close]').forEach(button => button.addEventListener('click', () => $('#'+button.dataset.close).close()));
 $('#subscription-dialog').addEventListener('close', () => {if(!$('#subscription-dialog').open) $('#subscription-form').reset();});
 $('#subscription-form').addEventListener('submit', event => {
@@ -538,6 +732,7 @@ $('#subscription-form').addEventListener('submit', event => {
     const id = 'demo'+(++nextSubscription);
     subscriptions.push({id,url,name,policy,userinfo:usageHeader(subscriptionHeaders(url)),lastUpdated:Date.now(),status:'2 сервера'});
     servers.push({id:id+'nl',name:'Амстердам · '+name,country:'Нидерланды',code:'NL',protocol:'VLESS',subscription:id,config:exampleConfig('vless','nl.example.com')},{id:id+'de',name:'Франкфурт · '+name,country:'Германия',code:'DE',protocol:'VLESS',subscription:id,config:exampleConfig('vless','de.example.com')});
+    if(!selected) selected = servers.at(-2).id;
   }
   renderSubscriptions();
   renderServers();
@@ -571,6 +766,13 @@ function refreshDueSubscriptions(now = Date.now(),startup = false) {
   return count;
 }
 $('#subscription-list').addEventListener('click', event => {
+  const link = event.target.closest('[data-sub-servers]');
+  if(link) {
+    subscriptionFilter = link.dataset.subServers;
+    $('#server-search').value='';$('#server-group').value='subscription';
+    groupExpansion.set('subscription:'+subscriptionFilter,true);
+    renderServers();openPage('servers');return;
+  }
   const refresh = event.target.closest('[data-refresh]');
   const remove = event.target.closest('[data-delete]');
   const edit = event.target.closest('[data-edit-sub]');
@@ -616,6 +818,109 @@ document.querySelectorAll('[data-rule]').forEach(button => button.addEventListen
   status.textContent = 'Обновление…';
   setTimeout(() => {button.disabled = false;status.textContent = 'Обновлено';},600);
 }));
+async function pasteInto(inputSelector,errorSelector,dialogSelector,version) {
+  const field = $(inputSelector);
+  const previous = field.value;
+  const revision = version();
+  const active = ()=>$(dialogSelector).open && revision === version() && field.value === previous;
+  try {
+    const text = (await navigator.clipboard.readText()).trim();
+    if(!active()) return;
+    if(inputSelector === '#sub-url' ? !/^https?:\/\//i.test(text) : !/^(vless|vmess|trojan):\/\//.test(text)) {
+      $(errorSelector).textContent = 'В буфере нет подходящей ссылки.';return;
+    }
+    field.value=text;field.dispatchEvent(new Event('input',{bubbles:true}));field.focus();$(errorSelector).textContent='';
+  } catch {
+    if(active()) $(errorSelector).textContent='Нет доступа к буферу. Вставьте ссылку вручную.';
+  }
+}
+$('#paste-server').addEventListener('click',()=>pasteInto('#server-link','#server-error','#server-dialog',()=>serverFormVersion));
+$('#paste-subscription').addEventListener('click',()=>pasteInto('#sub-url','#sub-error','#subscription-dialog',()=>subscriptionFormVersion));
+$('#welcome-paste').addEventListener('click',async()=>{
+  const revision = serverFormVersion+subscriptionFormVersion;
+  try {
+    const text = (await navigator.clipboard.readText()).trim();
+    if(currentPage !== 'home' || servers.length || revision !== serverFormVersion+subscriptionFormVersion) return;
+    if(/^https?:\/\//i.test(text)) {openSubscription();$('#sub-url').value=text;}
+    else if(/^(vless|vmess|trojan):\/\//.test(text)) {openServer();$('#server-link').value=text;previewServerLink();}
+    else notice('В буфере нет ссылки на подписку или сервер.');
+  } catch {notice('Нет доступа к буферу. Вставьте ссылку вручную.');}
+});
+$('#copy-log').addEventListener('click',async()=>{
+  try {await navigator.clipboard.writeText($('#diagnostic-log').value);$('#log-status').textContent='Журнал скопирован';}
+  catch {$('#log-status').textContent='Нет доступа к буферу. Выделите и скопируйте текст вручную.';$('#diagnostic-log').focus();$('#diagnostic-log').select();}
+});
+let qrGeneration = 0;
+let qrStream = null;
+let qrTimer;
+function stopQr() {
+  qrGeneration++;
+  clearTimeout(qrTimer);
+  qrStream?.getTracks().forEach(track=>track.stop());
+  qrStream=null;$('#qr-video').srcObject=null;$('#qr-video').hidden=true;
+}
+$('#qr-dialog').addEventListener('close',()=>{if(!$('#qr-dialog').open) stopQr();});
+$('#qr-dialog').addEventListener('cancel',stopQr);
+window.addEventListener('pagehide',stopQr);
+document.addEventListener('visibilitychange',()=>{if(document.hidden && $('#qr-dialog').open) {stopQr();$('#qr-dialog').close();}});
+$('#scan-qr').addEventListener('click',async()=>{
+  stopQr();
+  const generation=qrGeneration;
+  const active=()=>generation === qrGeneration && $('#qr-dialog').open;
+  $('#qr-status').textContent='Подготовка камеры…';$('#qr-dialog').showModal();
+  try {
+    if(!window.BarcodeDetector || !navigator.mediaDevices?.getUserMedia || !(await BarcodeDetector.getSupportedFormats()).includes('qr_code')) {
+      if(active()) $('#qr-status').textContent='Сканирование недоступно в этом браузере. Вставьте ссылку вручную.';
+      return;
+    }
+    if(!active()) return;
+    const detector = new BarcodeDetector({formats:['qr_code']});
+    const stream = await navigator.mediaDevices.getUserMedia({video:{facingMode:{ideal:'environment'}},audio:false});
+    if(!active()) {stream.getTracks().forEach(track=>track.stop());return;}
+    qrStream=stream;$('#qr-video').srcObject=stream;$('#qr-video').hidden=false;
+    await $('#qr-video').play();
+    if(!active()) return;
+    $('#qr-status').textContent='Наведите камеру на QR-код сервера.';
+    const scan = async()=>{
+      if(!active()) return;
+      try {
+        const codes = await detector.detect($('#qr-video'));
+        if(!active()) return;
+        if(codes.length) {
+          try {
+            parseServerLink(codes[0].rawValue);
+            $('#server-link').value=codes[0].rawValue.trim();previewServerLink();$('#server-error').textContent='';
+            stopQr();$('#qr-dialog').close();$('#server-link').focus();return;
+          } catch {$('#qr-status').textContent='QR-код не содержит поддерживаемую ссылку сервера.';}
+        }
+      } catch {
+        if(active()) {stopQr();$('#qr-status').textContent='Не удалось прочитать QR-код. Вставьте ссылку вручную.';}
+        return;
+      }
+      if(active()) qrTimer=setTimeout(scan,250);
+    };
+    scan();
+  } catch {
+    if(active()) {stopQr();$('#qr-status').textContent='Камера недоступна или доступ запрещён. Вставьте ссылку вручную.';}
+  }
+});
+let emptyScenario = false;
+const scenarioStores = {normal:{servers:initialServers,subscriptions:initialSubscriptions,selected:'nl'},empty:{servers:[],subscriptions:[],selected:null}};
+$('#scenario').addEventListener('change',()=>{
+  disconnect();checkGeneration++;checkingServers=false;
+  document.querySelectorAll('dialog[open]').forEach(dialog=>dialog.close());stopQr();
+  serverFormVersion++;subscriptionFormVersion++;
+  const nextEmpty = $('#scenario').value === 'empty';
+  if(nextEmpty !== emptyScenario) {
+    scenarioStores[emptyScenario ? 'empty' : 'normal']={servers:structuredClone(servers),subscriptions:structuredClone(subscriptions),selected};
+    const state = scenarioStores[nextEmpty ? 'empty' : 'normal'];
+    servers=structuredClone(state.servers);subscriptions.splice(0,subscriptions.length,...structuredClone(state.subscriptions));
+    subscriptions.forEach(sub=>{sub.busy=false;});selected=state.selected;emptyScenario=nextEmpty;
+  }
+  failNextConnection = $('#scenario').value === 'error';
+  subscriptionFilter=null;$('#server-search').value='';$('#server-results').textContent='Проверка ещё не запускалась';
+  renderServers();renderSubscriptions();openPage('home');
+});
 screen.addEventListener('click', event => {
   if(!marking) return;
   event.preventDefault();
@@ -633,6 +938,7 @@ screen.addEventListener('click', event => {
 renderServers();
 renderSubscriptions();
 renderConnection();
+logEvent('INFO','Приложение готово');
 refreshDueSubscriptions(Date.now(),true);
 setInterval(() => {refreshDueSubscriptions();},60000);
 document.addEventListener('visibilitychange',() => {if(!document.hidden) refreshDueSubscriptions();});

@@ -63,7 +63,11 @@ beforeEach(async () => {
   }
 });
 
-after(() => socket?.close());
+after(() => {
+  socket?.close();
+  assert.deepEqual(errors, []);
+  assert.deepEqual(requests.filter(request => !request.startsWith('file:') && !/^https?:\/\/(localhost|127\.0\.0\.1)(:|\/)/.test(request)), []);
+});
 
 test('server selection reaches home and switching disconnects the demo', async () => {
   await click('#tab-servers');
@@ -122,8 +126,8 @@ test('power circle is the only connection button and supports connect, disconnec
 test('availability check completes and displays results', async () => {
   await click('#tab-servers');
   await click('#check-servers');
-  await wait(750);
-  assert.match(await evaluate('document.querySelector("#server-results")?.textContent'), /Проверка завершена/);
+  await waitFor('!document.querySelector("#check-servers").disabled');
+  assert.match(await evaluate('document.querySelector("#server-results")?.textContent'), /доступно.*офлайн/);
   assert.match(await evaluate('document.querySelector("#server-list")?.textContent'), /мс/);
 });
 
@@ -247,6 +251,7 @@ test('app screens and dialogs use product copy without prototype instructions', 
 test('manual servers can be added, selected and edited with JSON validation', async () => {
   await click('#tab-servers');
   await click('#add-server');
+  await click('#advanced-input summary');
   assert.equal(await evaluate('document.querySelector("#server-dialog")?.open'), true);
   await value('#server-name', '<img src=x onerror=alert(1)>');
   await value('#server-config', '{broken');
@@ -275,6 +280,228 @@ test('manual servers can be added, selected and edited with JSON validation', as
   await value('#server-name', 'Не сохранять');
   await click('[data-close="server-dialog"]');
   assert.doesNotMatch(await evaluate('document.querySelector("#server-list").textContent'), /Не сохранять/);
+});
+
+test('manual deletion confirms, disconnects and reveals onboarding after the last server', async () => {
+  await click('#tab-servers');
+  await click('[data-server="manual"]');
+  await click('#connect');
+  await wait(750);
+  await click('#tab-servers');
+  await click('[data-config="manual"]');
+  assert.equal(await evaluate('document.querySelector("#delete-server")?.hidden'),false);
+  await click('#delete-server');
+  await click('[data-close="delete-server-dialog"]');
+  assert.equal(await evaluate('servers.length'),60);
+  await click('#delete-server');
+  await click('#confirm-delete-server');
+  assert.equal(await evaluate('servers.some(s=>s.id==="manual")'),false);
+  assert.equal(await evaluate('connectionState'),'disconnected');
+  await click('[data-config="nl"]');
+  assert.equal(await evaluate('document.querySelector("#delete-server").hidden'),true);
+  await evaluate('document.querySelector("#delete-server").click();document.querySelector("#confirm-delete-server").click()');
+  assert.equal(await evaluate('servers.length'),59);
+  await click('#close-server');
+  await click('#tab-subscriptions');
+  await click('[data-delete="sample"]');
+  await click('#confirm-delete');
+  await click('#tab-home');
+  assert.equal(await evaluate('document.querySelector("#home-empty").hidden'),false);
+  assert.equal(await evaluate('document.querySelector("#connection").hidden'),true);
+  await click('#welcome-subscription');
+  assert.equal(await evaluate('document.querySelector("#subscription-dialog").open'),true);
+});
+
+test('share links import credentials and transport without silently discarding unsupported fields', async () => {
+  await click('#tab-servers');
+  await click('#add-server');
+  assert.equal(await evaluate('document.querySelector("#advanced-input")?.open'),false);
+  assert.equal(await value('#server-link','vless://00000000-0000-4000-8000-000000000001@vpn.example.com:443?type=ws&security=tls&sni=edge.example.com&path=%2Fvpn&host=cdn.example.com#%D0%9C%D0%BE%D0%B9'),true);
+  await evaluate('document.querySelector("#server-form").requestSubmit()');
+  assert.equal(await evaluate('servers.at(-1).name'),'Мой');
+  const config = await evaluate('JSON.parse(servers.at(-1).config).outbounds[0]');
+  assert.equal(config.settings.vnext[0].address,'vpn.example.com');
+  assert.equal(config.streamSettings.wsSettings.path,'/vpn');
+  assert.equal(config.streamSettings.wsSettings.headers.Host,'cdn.example.com');
+  assert.equal(config.streamSettings.tlsSettings.serverName,'edge.example.com');
+  await click('#add-server');
+  await value('#server-link','trojan://p%40ss%3Aword@[2001:db8::1]:8443?security=tls#Private');
+  await evaluate('document.querySelector("#server-form").requestSubmit()');
+  assert.deepEqual(await evaluate('JSON.parse(servers.at(-1).config).outbounds[0].settings.servers[0]'),{address:'2001:db8::1',port:8443,password:'p@ss:word'});
+  const vmess = 'vmess://'+Buffer.from(JSON.stringify({v:'2',ps:'VMess',add:'vm.example.com',port:'443',id:'00000000-0000-4000-8000-000000000001',aid:'0',scy:'auto',net:'ws',type:'none',host:'cdn.example.com',path:'/ws',tls:'tls',sni:'vm.example.com'})).toString('base64');
+  await click('#add-server');
+  await value('#server-link',vmess);
+  await evaluate('document.querySelector("#server-form").requestSubmit()');
+  assert.equal(await evaluate('JSON.parse(servers.at(-1).config).outbounds[0].protocol'),'vmess');
+  for(const link of ['vless://bad@vpn.example.com:443','vless://00000000-0000-4000-8000-000000000001@vpn.example.com:443?unknown=secret','vmess://not-base64','trojan://pass@vpn.example.com:0']) {
+    await click('#add-server');
+    await value('#server-link',link);
+    await evaluate('document.querySelector("#server-form").requestSubmit()');
+    assert.equal(await evaluate('document.querySelector("#server-dialog").open'),true);
+    assert.ok(await evaluate('document.querySelector("#server-error").textContent.length > 0'));
+    assert.equal(await evaluate('servers.length'),63);
+    await click('#close-server');
+  }
+});
+
+test('ping categories use boundaries and availability progress reports actual totals', async () => {
+  assert.equal(await evaluate('typeof pingQuality'),'function');
+  assert.deepEqual(await evaluate('[99,100,250,251].map(ping=>pingQuality({ping}))'),['fast','medium','medium','slow']);
+  assert.equal(await evaluate('pingQuality({ping:45,unavailable:true})'),'offline');
+  await click('#tab-servers');
+  await click('#check-servers');
+  await wait(200);
+  assert.match(await evaluate('document.querySelector("#server-results").textContent'),/Проверка \d+ из 60/);
+  assert.equal(await evaluate('document.querySelector("#check-servers").disabled'),true);
+  await waitFor('!document.querySelector("#check-servers").disabled');
+  assert.match(await evaluate('document.querySelector("#server-results").textContent'),/55 доступно.*5 офлайн/);
+  assert.equal(await evaluate('document.querySelectorAll(".latency[data-quality=offline]").length'),5);
+});
+
+test('subscription navigation filters by identity and both filters can be cleared', async () => {
+  await click('#tab-subscriptions');
+  await click('[data-sub-servers="sample"]');
+  assert.equal(await evaluate('document.querySelector("#page-servers").hidden'),false);
+  assert.equal(await evaluate('document.querySelectorAll("[data-server]").length'),59);
+  await value('#server-search','франк');
+  assert.ok(await evaluate('document.querySelectorAll("[data-server]").length < 59'));
+  await click('#clear-search');
+  assert.equal(await evaluate('document.querySelectorAll("[data-server]").length'),59);
+  await click('#clear-sub-filter');
+  assert.equal(await evaluate('document.querySelectorAll("[data-server]").length'),60);
+});
+
+test('clipboard is explicit, routes to a review form and fails without losing typed input', async () => {
+  await evaluate('window.clipboardReads=0;Object.defineProperty(navigator,"clipboard",{configurable:true,value:{readText:async()=>{window.clipboardReads++;return "https://provider.example.com/secret";}}})');
+  await value('#scenario','empty');
+  assert.equal(await evaluate('window.clipboardReads'),0);
+  await click('#welcome-paste');
+  await waitFor('document.querySelector("#subscription-dialog").open');
+  assert.equal(await evaluate('document.querySelector("#sub-url").value'),'https://provider.example.com/secret');
+  assert.equal(await evaluate('subscriptions.length'),0);
+  await click('[data-close="subscription-dialog"]');
+  await click('#tab-servers');
+  await click('#add-server');
+  assert.equal(await evaluate('window.clipboardReads'),1);
+  await value('#server-link','trojan://keep@vpn.example.com:443');
+  await evaluate('navigator.clipboard.readText=async()=>{throw new DOMException("denied","NotAllowedError")}');
+  await click('#paste-server');
+  await waitFor('document.querySelector("#server-error").textContent.length>0');
+  assert.equal(await evaluate('document.querySelector("#server-link").value'),'trojan://keep@vpn.example.com:443');
+});
+
+test('error state offers retry and server selection and diagnostics never include imported secrets', async () => {
+  assert.equal(await value('#scenario','error'),true);
+  await click('#connect');
+  await wait(750);
+  assert.equal(await evaluate('connectionState'),'error');
+  await click('#connect');
+  assert.equal(await evaluate('document.querySelector("#connection-error-dialog").open'),true);
+  await click('#retry-connection');
+  assert.equal(await evaluate('connectionState'),'connecting');
+  await wait(750);
+  assert.equal(await evaluate('connectionState'),'connected');
+  await value('#scenario','error');
+  await click('#connect');
+  await wait(750);
+  await click('#connect');
+  await click('#choose-other-server');
+  assert.equal(await evaluate('document.querySelector("#page-servers").hidden'),false);
+  await click('#add-server');
+  await value('#server-link','trojan://DO-NOT-LOG@vpn.example.com:443#SECRET-NAME');
+  await evaluate('document.querySelector("#server-form").requestSubmit()');
+  await click('#tab-settings');
+  await click('[data-open="diagnostics"]');
+  assert.match(await evaluate('document.querySelector("#diagnostic-log").value'),/ERROR/);
+  assert.doesNotMatch(await evaluate('document.querySelector("#diagnostic-log").value'),/DO-NOT-LOG|SECRET-NAME|vpn.example.com/);
+  await evaluate('Object.defineProperty(navigator,"clipboard",{configurable:true,value:{writeText:async text=>{window.copiedLog=text}}})');
+  await click('#copy-log');
+  await waitFor('Boolean(window.copiedLog)');
+  assert.match(await evaluate('window.copiedLog'),/ERROR/);
+});
+
+test('QR unsupported fallback keeps manual input usable without requesting a camera', async () => {
+  await evaluate('window.BarcodeDetector=undefined');
+  await click('#tab-servers');
+  await click('#add-server');
+  assert.equal(await evaluate('Boolean(document.querySelector("#scan-qr"))'),true);
+  await click('#scan-qr');
+  await waitFor('document.querySelector("#qr-status")?.textContent.includes("Вставьте")');
+  await click('[data-close="qr-dialog"]');
+  assert.equal(await evaluate('document.querySelector("#server-dialog").open'),true);
+});
+
+test('QR camera result fills the review form and releases camera tracks', async () => {
+  await evaluate(`window.BarcodeDetector=class {static async getSupportedFormats(){return ['qr_code']} async detect(){return [{rawValue:'trojan://qr-secret@qr.example.com:443#QR'}]}};
+    window.qrCanvas=document.createElement('canvas');qrCanvas.width=100;qrCanvas.height=100;qrCanvas.getContext('2d').fillRect(0,0,100,100);
+    window.testCamera=qrCanvas.captureStream(1);
+    Object.defineProperty(navigator.mediaDevices,'getUserMedia',{configurable:true,value:async()=>testCamera});`);
+  await click('#tab-servers');
+  await click('#add-server');
+  await click('#scan-qr');
+  await waitFor('document.querySelector("#server-link").value.includes("qr-secret")');
+  assert.equal(await evaluate('document.querySelector("#qr-dialog").open'),false);
+  assert.equal(await evaluate('testCamera.getTracks()[0].readyState'),'ended');
+  assert.equal(await evaluate('servers.length'),60);
+  assert.doesNotMatch(await evaluate('document.querySelector("#diagnostic-log").value'),/qr-secret/);
+});
+
+test('QR cancellation stops a camera granted after the dialog was closed', async () => {
+  await evaluate(`window.BarcodeDetector=class {static async getSupportedFormats(){return ['qr_code']}};
+    Object.defineProperty(navigator.mediaDevices,'getUserMedia',{configurable:true,value:()=>new Promise(resolve=>window.grantCamera=resolve)});`);
+  await click('#tab-servers');
+  await click('#add-server');
+  await click('#scan-qr');
+  await waitFor('typeof window.grantCamera==="function"');
+  await click('[data-close="qr-dialog"]');
+  await evaluate(`window.lateCanvas=document.createElement('canvas');window.lateCamera=lateCanvas.captureStream();window.grantCamera(lateCamera)`);
+  await waitFor('lateCamera.getTracks()[0].readyState==="ended"');
+  assert.equal(await evaluate('document.querySelector("#server-link").value'),'');
+});
+
+test('clipboard late reply cannot overwrite a reopened form or newer typing', async () => {
+  await evaluate('Object.defineProperty(navigator,"clipboard",{configurable:true,value:{readText:()=>new Promise(resolve=>window.resolveClipboard=resolve)}})');
+  await click('#tab-servers');
+  await click('#add-server');
+  await click('#paste-server');
+  await value('#server-link','trojan://typed@vpn.example.com:443');
+  await evaluate('resolveClipboard("trojan://late@vpn.example.com:443")');
+  assert.equal(await evaluate('document.querySelector("#server-link").value'),'trojan://typed@vpn.example.com:443');
+  await click('#paste-server');
+  await click('#close-server');
+  await click('#add-server');
+  await evaluate('resolveClipboard("trojan://late@vpn.example.com:443")');
+  assert.equal(await evaluate('document.querySelector("#server-link").value'),'');
+});
+
+test('new modal states stay inside the phone on narrow and desktop viewports', async () => {
+  for(const [width,height] of [[1440,1100],[390,844],[538,656]]) {
+    await send('Emulation.setDeviceMetricsOverride',{width,height,deviceScaleFactor:1,mobile:width<600});
+    await evaluate('new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve)))');
+    for(const id of ['delete-server-dialog','connection-error-dialog','qr-dialog']) {
+      const bounds=await evaluate(`(()=>{const dialog=document.querySelector('#${id}');dialog.showModal();const d=dialog.getBoundingClientRect(),s=document.querySelector('#screen').getBoundingClientRect();return {inside:d.left>=s.left && d.right<=s.right && d.top>=Math.max(0,s.top) && d.bottom<=Math.min(innerHeight,s.bottom),overflow:dialog.scrollWidth>dialog.clientWidth}})()`);
+      assert.equal(bounds.inside,true,id+' outside display at '+width+'x'+height);
+      assert.equal(bounds.overflow,false,id+' horizontal overflow');
+      await evaluate(`document.querySelector('#${id}').close()`);
+    }
+  }
+});
+
+test('expanding JSON does not replace a share link and collapsing does not discard JSON edits', async () => {
+  await click('#tab-servers');
+  await click('#add-server');
+  await value('#server-link','trojan://preserve@real.example.com:8443#Linked');
+  await value('#server-name','My server');
+  await click('#advanced-input summary');
+  await evaluate('document.querySelector("#server-form").requestSubmit()');
+  assert.equal(await evaluate('JSON.parse(servers.at(-1).config).outbounds[0].settings.servers?.[0]?.address'),'real.example.com');
+  await click('#add-server');
+  await click('#advanced-input summary');
+  await value('#server-name','JSON');
+  await value('#server-config','{"outbounds":[{"protocol":"trojan","settings":{"servers":[{"address":"json.example.com","port":443,"password":"json"}]}}]}');
+  await click('#advanced-input summary');
+  await evaluate('document.querySelector("#server-form").requestSubmit()');
+  assert.equal(await evaluate('JSON.parse(servers.at(-1).config).outbounds[0].settings.servers[0].address'),'json.example.com');
 });
 
 test('subscription server config is read-only and a forced submit cannot change it', async () => {
@@ -394,7 +621,7 @@ test('home has a 112px power button, live speeds, ping and reduced-motion suppor
   assert.equal(await evaluate('document.querySelector("#selected-ping")?.textContent'),'—');
   await click('#tab-servers');
   await click('#check-servers');
-  await wait(750);
+  await waitFor('!document.querySelector("#check-servers").disabled');
   await click('#tab-home');
   assert.equal(await evaluate('document.querySelector("#selected-ping").textContent'),'42 мс');
   await send('Emulation.setEmulatedMedia',{features:[{name:'prefers-reduced-motion',value:'reduce'}]});
@@ -431,7 +658,7 @@ test('large server list searches all fields, groups, remembers collapse and sort
   assert.equal(await evaluate('document.querySelector("#server-list details").open'),true);
   await value('#server-search','');
   await click('#check-servers');
-  await wait(750);
+  await waitFor('!document.querySelector("#check-servers").disabled');
   const pings = await evaluate('Array.from(document.querySelectorAll("#server-list details:first-child .latency"),el=>el.textContent)');
   assert.equal(pings[0],'42 мс');
   assert.equal(pings.at(-1),'Недоступен');
