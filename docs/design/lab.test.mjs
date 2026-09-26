@@ -93,7 +93,7 @@ test('server actions distinguish read-only information from manual editing', asy
   for(const action of actions) {
     assert.equal(action.text,'');
     assert.equal(action.icon,action.id === 'manual' ? '#i-edit' : '#i-info');
-    assert.ok(action.width <= 44);
+    assert.equal(action.width,48);
     assert.ok(action.label.length > 0 && action.title.length > 0);
   }
 });
@@ -811,4 +811,67 @@ test('icons, input actions and dashboard statistics have consistent internal ali
   await click('#tab-home');
   assert.equal(await evaluate('getComputedStyle(document.querySelector(".live-speeds")).textAlign'),'center');
   assert.equal(await evaluate('getComputedStyle(document.querySelector(".session-totals")).textAlign'),'center');
+});
+
+test('phone controls and typography remain touch sized in both device presets', async () => {
+  for(const size of ['412,919','360,825']) {
+    await value('#size',size);
+    for(const page of ['servers','subscriptions','settings','routing','advanced']) {
+      await evaluate(`openPage('${page}')`);
+      const small=await evaluate(`Array.from(document.querySelectorAll('#page-${page} button,#page-${page} input:not([type=checkbox]),#page-${page} select,#page-${page} summary,#page-${page} .switch-row')).filter(el=>el.checkVisibility()).filter(el=>{const r=el.getBoundingClientRect();return r.height<48 || r.width<48}).map(el=>el.id||el.className)`);
+      assert.deepEqual(small,[],page+' small targets');
+    }
+    await evaluate('openServer()');
+    assert.ok(await evaluate('parseFloat(getComputedStyle(document.querySelector("#server-link")).fontSize)>=16'));
+    await click('#close-server');
+  }
+});
+
+test('frameless view uses the available screen in portrait, landscape and short windows', async () => {
+  const target=await evaluate('document.querySelector("#device-view")?.href');
+  assert.ok(target);
+  const current=await evaluate('location.href');
+  const expected=new URL(current);
+  expected.searchParams.set('view','app');
+  assert.equal(target,expected.href);
+  await send('Page.navigate',{url:target});
+  await waitFor('document.body.classList.contains("app-view")');
+  for(const [width,height] of [[320,640],[360,825],[412,919],[825,360],[360,320]]) {
+    await send('Emulation.setDeviceMetricsOverride',{width,height,deviceScaleFactor:1,mobile:true});
+    await wait(60);
+    for(const page of ['home','servers','subscriptions','settings','routing','advanced','diagnostics']) {
+      const layout=await evaluate(`(()=>{openPage('${page}');const r=screen.getBoundingClientRect(),p=document.querySelector('.pages'),tabs=document.querySelector('.tabs').getBoundingClientRect();return {width:r.width,height:r.height,left:r.left,top:r.top,overflow:p.scrollWidth>p.clientWidth || document.documentElement.scrollWidth>innerWidth,tabsBottom:tabs.bottom}})()`);
+      assert.ok(Math.abs(layout.width-width)<1 && Math.abs(layout.height-height)<1,JSON.stringify(layout));
+      assert.equal(layout.left,0);
+      assert.equal(layout.top,0);
+      assert.equal(layout.overflow,false,page+' overflow');
+      assert.ok(layout.tabsBottom<=height);
+    }
+    await evaluate('openServer()');
+    await evaluate('document.querySelector("#advanced-input").open=true;document.querySelector("#server-config").focus();document.querySelector("#save-server").scrollIntoView({block:"nearest"})');
+    assert.ok(await evaluate('(()=>{const d=document.querySelector("#server-dialog"),r=d.getBoundingClientRect(),b=document.querySelector("#save-server").getBoundingClientRect();return r.top>=0 && r.bottom<=innerHeight && d.scrollWidth<=d.clientWidth && b.top>=r.top && b.bottom<=r.bottom})()'));
+    await click('#close-server');
+  }
+});
+
+test('dialog bounds follow the visual viewport when a keyboard reduces visible space', async () => {
+  await send('Emulation.setDeviceMetricsOverride',{width:360,height:825,deviceScaleFactor:1,mobile:true});
+  await evaluate('openServer()');
+  await evaluate(`Object.defineProperty(window,'visualViewport',{configurable:true,value:{offsetTop:240,offsetLeft:0,width:360,height:300,scale:1}});updateModalBounds()`);
+  assert.ok(await evaluate('(()=>{const r=document.querySelector("#server-dialog").getBoundingClientRect();return r.top>=240 && r.bottom<=540})()'));
+});
+
+test('frameless keyboard panning preserves the full visible height and safe area', async () => {
+  const target=await evaluate('document.querySelector("#device-view").href');
+  await send('Page.navigate',{url:target});
+  await waitFor('document.body.classList.contains("app-view")');
+  await evaluate(`Object.defineProperty(window,'visualViewport',{configurable:true,value:{offsetTop:240,offsetLeft:0,width:360,height:300,scale:1}});screen.style.padding='20px 12px';updateModalBounds();openServer();document.querySelector('#advanced-input').open=true`);
+  const geometry=await evaluate(`(()=>{const d=document.querySelector('#server-dialog').getBoundingClientRect(),r=screen.getBoundingClientRect();return {top:r.top,height:r.height,dialogTop:d.top,dialogBottom:d.bottom,dialogHeight:d.height}})()`);
+  assert.equal(geometry.top,240);
+  assert.equal(geometry.height,300);
+  assert.ok(geometry.dialogTop>=272 && geometry.dialogBottom<=508,JSON.stringify(geometry));
+  assert.ok(geometry.dialogHeight>=230,JSON.stringify(geometry));
+  await evaluate('visualViewport.scale=2;updateModalBounds()');
+  assert.equal(await evaluate('screen.getBoundingClientRect().height'),1100);
+  assert.equal(await evaluate('screen.getBoundingClientRect().top'),0);
 });
