@@ -615,8 +615,8 @@ function previewServerLink() {
   try {$('#server-config').value=parseServerLink($('#server-link').value).config;}
   catch {$('#server-config').value='';}
 }
-$('#server-link').addEventListener('input',previewServerLink);
-$('#server-config').addEventListener('input',()=>{serverInputMode='json';$('#server-link').value='';});
+$('#server-link').addEventListener('input',()=>{serverFormVersion++;previewServerLink();});
+$('#server-config').addEventListener('input',()=>{serverFormVersion++;serverInputMode='json';$('#server-link').value='';});
 $('#advanced-input').addEventListener('toggle',()=>{
   if($('#advanced-input').open && !editingServer && serverInputMode === 'link') {
     if($('#server-link').value.trim()) previewServerLink();

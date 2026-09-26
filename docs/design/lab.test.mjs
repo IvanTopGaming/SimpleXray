@@ -474,6 +474,19 @@ test('clipboard late reply cannot overwrite a reopened form or newer typing', as
   assert.equal(await evaluate('document.querySelector("#server-link").value'),'');
 });
 
+test('pending clipboard paste cannot overwrite a newer JSON configuration', async () => {
+  await evaluate('Object.defineProperty(navigator,"clipboard",{configurable:true,value:{readText:()=>new Promise(resolve=>window.resolveClipboard=resolve)}})');
+  await click('#tab-servers');
+  await click('#add-server');
+  await click('#paste-server');
+  await click('#advanced-input summary');
+  await value('#server-name','Edited JSON');
+  await value('#server-config','{"outbounds":[{"protocol":"trojan","settings":{"servers":[{"address":"typed.example.com","port":443,"password":"typed"}]}}]}');
+  await evaluate('resolveClipboard("trojan://late@clipboard.example.com:443")');
+  await evaluate('document.querySelector("#server-form").requestSubmit()');
+  assert.equal(await evaluate('JSON.parse(servers.at(-1).config).outbounds[0].settings.servers[0].address'),'typed.example.com');
+});
+
 test('new modal states stay inside the phone on narrow and desktop viewports', async () => {
   for(const [width,height] of [[1440,1100],[390,844],[538,656]]) {
     await send('Emulation.setDeviceMetricsOverride',{width,height,deviceScaleFactor:1,mobile:width<600});
