@@ -38,9 +38,6 @@ main{display:grid;place-items:center;padding:22px 20px 14px;min-height:calc(100s
 .server-slot span{display:block;font-size:13px;font-weight:500}.server-slot small{display:block;margin-top:5px;font-size:11px;color:var(--muted);font-weight:400}
 .server-slot svg{color:var(--muted);flex-shrink:0}
 .server-slot .chevron{margin-left:auto}
-.connection-space{flex:1;min-height:50px}
-.connect-button{width:100%;min-height:46px;background:var(--surface);border-color:var(--line);color:var(--muted);display:flex;justify-content:center;align-items:center;gap:8px;font-size:13px;cursor:default}
-.connect-button:disabled{opacity:.8}
 .empty-slot{border:1px dashed var(--line);border-radius:15px;display:grid;place-content:center;min-height:160px;padding:22px;text-align:center;color:var(--muted);font-size:12px;line-height:1.6}
 .setting-row{display:flex;align-items:center;gap:12px;min-height:56px;width:100%;background:transparent;border:1px solid var(--line);color:var(--ink);padding:14px;border-radius:14px;text-align:left;font-size:13px}
 .setting-row span{flex:1}
@@ -75,10 +72,10 @@ footer span{width:5px;height:5px;border-radius:50%;background:#87a38b}
 .card h3{font-size:13px;margin:0 0 6px;font-weight:600;overflow-wrap:anywhere}.card p{margin:0}
 .server-slot{border-style:solid;background:var(--surface)}.server-slot div{min-width:0}.server-slot span{overflow-wrap:anywhere}
 .status-area{text-align:center;padding:12px 0 4px}.status-orbit{margin:0 auto 16px;width:68px;height:68px;border-radius:50%;border:1px solid var(--line);display:grid;place-items:center;background:var(--surface);color:var(--muted)}
-.status-orbit svg{width:28px;height:28px}.status-area[data-state="connected"] .status-orbit{color:var(--accent);border-color:var(--accent)}
+.status-orbit svg{width:28px;height:28px}.status-area[data-state="connected"] .status-orbit{background:var(--accent);color:var(--paper);border-color:var(--accent)}
 .status-area h3{font-size:19px;margin:0 0 7px}.stats{display:grid;grid-template-columns:1fr 1fr;gap:10px}.stat{padding:13px;border-radius:12px;background:var(--surface)}
 .stat small{display:block;font-size:10px;color:var(--muted);margin-bottom:7px}.stat strong{font-size:16px;font-weight:500;font-variant-numeric:tabular-nums}.stat.wide{grid-column:1/-1}
-.connect-button{cursor:pointer}.connection-space{min-height:0}.server-list{display:flex;flex-direction:column;gap:9px}
+.server-list{display:flex;flex-direction:column;gap:9px}
 .screen .server-card{display:flex;align-items:center;gap:10px;width:100%;text-align:left;border:1px solid var(--line);border-radius:13px;background:var(--paper);color:var(--ink);padding:13px}
 .screen .server-card[aria-pressed="true"]{background:var(--surface);border-color:var(--accent)}
 .server-info{flex:1;min-width:0}.server-info strong{display:block;font-size:12px;font-weight:600;overflow-wrap:anywhere}.server-info small{display:block;font-size:10px;margin-top:5px;color:var(--muted)}
@@ -130,10 +127,8 @@ footer span{width:5px;height:5px;border-radius:50%;background:#87a38b}
 <section class="page" id="page-home" role="tabpanel" aria-labelledby="tab-home">
 <h2>Главная</h2>
 <div><p class="eyebrow">Выбранный сервер</p><button class="server-slot" data-open="servers"><svg aria-hidden="true"><use href="#i-servers"/></svg><div><span id="selected-name">Амстердам</span><small id="selected-detail">Нидерланды · VLESS</small></div><svg class="chevron" aria-hidden="true"><use href="#i-arrow"/></svg></button></div>
-<div class="status-area" id="connection" data-state="disconnected"><div class="status-orbit"><svg aria-hidden="true"><use href="#i-power"/></svg></div><h3 id="connection-status" role="status">Отключено</h3><p class="note">Демонстрация состояния подключения</p></div>
+<div class="status-area" id="connection" data-state="disconnected"><button class="status-orbit" id="connect" type="button" aria-label="Подключиться · демо" aria-pressed="false" aria-describedby="connection-status"><svg aria-hidden="true"><use href="#i-power"/></svg></button><h3 id="connection-status" role="status">Отключено</h3><p class="note" id="connection-hint">Нажми на кружок для подключения</p></div>
 <div class="stats"><div class="stat"><small>↓ Получено · демо</small><strong id="download">0 МБ</strong></div><div class="stat"><small>↑ Отправлено · демо</small><strong id="upload">0 МБ</strong></div><div class="stat wide"><small>Время демо-сессии</small><strong id="uptime">00:00</strong></div></div>
-<div class="connection-space"></div>
-<button class="connect-button primary" id="connect">Подключиться · демо</button>
 </section>
 <section class="page" id="page-servers" role="tabpanel" aria-labelledby="tab-servers" hidden><h2>Серверы</h2><p class="note">Выбери сервер для главного экрана. Все адреса и результаты здесь демонстрационные.</p><button class="secondary" id="check-servers">Проверить доступность · демо</button><p class="note" id="server-results" role="status">Проверка ещё не запускалась</p><div id="server-list" class="server-list"></div></section>
 <section class="page" id="page-subscriptions" role="tabpanel" aria-labelledby="tab-subscriptions" hidden><div class="page-title"><h2>Подписки</h2><button class="secondary" id="add-subscription" aria-label="Добавить подписку">＋ Добавить</button></div><p class="note">Используй тестовую ссылку. Макет не обращается к ней и не сохраняет её после добавления.</p><div id="subscription-list" class="stack"></div></section>
@@ -267,7 +262,11 @@ function renderSubscriptions() {
 function renderConnection() {
   $('#connection').dataset.state = connectionState;
   $('#connection-status').textContent = {disconnected:'Отключено',connecting:'Подключение…',connected:'Подключено · демо'}[connectionState];
-  $('#connect').textContent = {disconnected:'Подключиться · демо',connecting:'Отменить',connected:'Отключиться · демо'}[connectionState];
+  const action = {disconnected:'Подключиться · демо',connecting:'Отменить подключение',connected:'Отключиться · демо'}[connectionState];
+  $('#connect').setAttribute('aria-label',action);
+  $('#connect').setAttribute('aria-pressed',String(connectionState === 'connected'));
+  $('#connect').title = action;
+  $('#connection-hint').textContent = {disconnected:'Нажми на кружок для подключения',connecting:'Нажми ещё раз, чтобы отменить',connected:'Нажми на кружок для отключения'}[connectionState];
   const elapsed = connectionState === 'connected' ? Math.floor((Date.now()-sessionStarted)/1000) : 0;
   $('#uptime').textContent = `${String(Math.floor(elapsed/60)).padStart(2,'0')}:${String(elapsed%60).padStart(2,'0')}`;
   $('#download').textContent = connectionState === 'connected' ? '24,8 МБ' : '0 МБ';

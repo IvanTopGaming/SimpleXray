@@ -77,6 +77,24 @@ test('connection can be cancelled before the simulated completion', async () => 
   assert.match(await evaluate('document.querySelector("#connection-status")?.textContent'), /Отключено/);
 });
 
+test('power circle is the only connection button and supports connect, disconnect and cancel', async () => {
+  assert.equal(await evaluate('document.querySelector(".status-orbit")?.tagName'), 'BUTTON');
+  assert.equal(await evaluate('document.querySelectorAll("#page-home .connect-button").length'), 0);
+  await click('.status-orbit');
+  assert.match(await evaluate('document.querySelector(".status-orbit").getAttribute("aria-label")'), /Отменить/);
+  await wait(750);
+  assert.match(await evaluate('document.querySelector("#connection-status").textContent'), /Подключено/);
+  assert.equal(await evaluate('document.querySelector(".status-orbit").getAttribute("aria-pressed")'), 'true');
+  assert.equal(await evaluate('document.querySelectorAll(".status-orbit svg").length'), 1);
+  await click('.status-orbit');
+  assert.match(await evaluate('document.querySelector("#connection-status").textContent'), /Отключено/);
+  await click('.status-orbit');
+  await click('.status-orbit');
+  await wait(750);
+  assert.match(await evaluate('document.querySelector("#connection-status").textContent'), /Отключено/);
+  assert.equal(await evaluate('document.querySelector(".status-orbit").getAttribute("aria-pressed")'), 'false');
+});
+
 test('availability check produces explicitly simulated results', async () => {
   await click('#tab-servers');
   await click('#check-servers');
