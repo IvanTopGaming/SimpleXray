@@ -200,7 +200,6 @@ fun ConfigScreen(
                     showDeleteDialog.value = null
                     onDeleteConfigClick(fileToDelete) {
                         mainViewModel.refreshConfigFileList()
-                        mainViewModel.updateSelectedConfigFile(null)
                     }
                 }) {
                     Text(stringResource(R.string.confirm))
