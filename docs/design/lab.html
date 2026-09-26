@@ -90,8 +90,8 @@ footer span{width:5px;height:5px;border-radius:50%;background:#87a38b}
 .switch-row input:before{content:"";position:absolute;left:3px;top:3px;width:14px;height:14px;border-radius:50%;background:var(--muted)}
 .switch-row input:checked{background:var(--accent);border-color:var(--accent)}.switch-row input:checked:before{left:17px;background:var(--paper)}
 .screen .setting-row{margin-top:10px}.toast{font-size:11px;line-height:1.5;padding:8px 12px;color:var(--accent);background:var(--surface);border-top:1px solid var(--line)}.toast:empty{display:none}
-.screen dialog{background:var(--paper);color:var(--ink);border:1px solid var(--line);border-radius:20px;padding:22px;width:340px;max-width:calc(100vw - 32px);max-height:85svh;overflow:auto}
-.screen dialog::backdrop{background:#10161066}.screen dialog h3{margin:0 0 10px;font-size:19px}.screen dialog form{display:flex;flex-direction:column;gap:12px}.screen dialog label{font-size:12px;display:flex;flex-direction:column;gap:7px}
+.screen dialog{position:fixed;inset:auto;left:var(--modal-left);top:var(--modal-top);transform:translate(-50%,-50%);margin:0;background:var(--paper);color:var(--ink);border:1px solid var(--line);border-radius:16px;padding:16px;width:var(--modal-width);max-width:var(--modal-width);max-height:var(--modal-height);overflow:auto;overscroll-behavior:contain}
+.screen dialog::backdrop{position:fixed;inset:auto;left:var(--phone-left);top:var(--phone-top);width:var(--phone-width);height:var(--phone-height);border-radius:23px;background:#10161066}.screen dialog h3{margin:0 0 10px;font-size:19px}.screen dialog form{display:flex;flex-direction:column;gap:12px}.screen dialog label{font-size:12px;display:flex;flex-direction:column;gap:7px}
 .screen dialog .actions{justify-content:flex-end}.screen dialog .actions button{flex:initial}.error{color:#b65449;font-size:11px;margin:0;min-height:15px}
 .server-entry{display:grid;grid-template-columns:minmax(0,1fr) auto;border:1px solid var(--line);border-radius:13px;overflow:hidden;min-width:0}
 .server-entry[data-selected="true"]{border-color:var(--accent);background:var(--surface)}
@@ -101,7 +101,7 @@ footer span{width:5px;height:5px;border-radius:50%;background:#87a38b}
 .screen textarea{width:100%;min-height:220px;resize:vertical;border:1px solid var(--line);border-radius:10px;background:var(--surface);color:var(--ink);font:11px/1.6 ui-monospace,monospace;padding:12px;tab-size:2}
 .screen textarea:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 .screen input[readonly],.screen textarea[readonly]{color:var(--muted)}
-#server-dialog{width:440px}.screen button[hidden]{display:none}
+.screen button[hidden]{display:none}
 @media(hover:hover){.screen button:hover{background:var(--surface)}.screen .primary:hover{background:var(--accent);filter:brightness(.95)}}
 @media(max-width:650px){.screen{height:min(76svh,760px);min-width:280px}.page{padding:20px 15px}.tabs{padding-bottom:9px}}
 </style>
@@ -172,6 +172,23 @@ footer span{width:5px;height:5px;border-radius:50%;background:#87a38b}
 </main>
 <script>
 const screen = document.querySelector('#screen');
+function updateModalBounds() {
+  const rect = screen.getBoundingClientRect();
+  const top = Math.max(0,rect.top);
+  const bottom = Math.min(innerHeight,rect.bottom);
+  const left = Math.max(0,rect.left);
+  const right = Math.min(innerWidth,rect.right);
+  const bounds = {
+    'phone-left':rect.left,'phone-top':rect.top,'phone-width':rect.width,'phone-height':rect.height,
+    'modal-left':(left+right)/2,'modal-top':(top+bottom)/2,
+    'modal-width':Math.max(0,right-left-24),'modal-height':Math.max(0,bottom-top-24)
+  };
+  Object.entries(bounds).forEach(([name,value]) => document.documentElement.style.setProperty('--'+name,value+'px'));
+}
+new ResizeObserver(updateModalBounds).observe(screen);
+window.addEventListener('resize',updateModalBounds);
+window.addEventListener('scroll',updateModalBounds,{passive:true});
+updateModalBounds();
 const caption = document.querySelector('#caption');
 const pin = document.querySelector('#pin');
 const clear = document.querySelector('#clear');

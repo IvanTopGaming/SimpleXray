@@ -311,3 +311,56 @@ test('no script errors or external network calls occur', () => {
   assert.deepEqual(errors, []);
   assert.deepEqual(requests.filter(request => !request.startsWith('file:') && !/^https?:\/\/(localhost|127\.0\.0\.1)(:|\/)/.test(request)), []);
 });
+
+test('all dialogs and their backdrops fit the phone display on desktop and mobile', async () => {
+  for (const [width,height] of [[1440,1100],[538,656],[390,844]]) {
+    await send('Emulation.setDeviceMetricsOverride', { width,height,deviceScaleFactor:1,mobile:width < 600 });
+    for(const [tab,trigger,id] of [
+      ['servers','[data-config="nl"]','server-dialog'],
+      ['servers','#add-server','server-dialog'],
+      ['subscriptions','#add-subscription','subscription-dialog'],
+      ['subscriptions','[data-edit-sub="sample"]','subscription-dialog'],
+      ['subscriptions','[data-delete="sample"]','delete-dialog']
+    ]) {
+      await click('#tab-'+tab);
+      await click(trigger);
+      await wait(80);
+      const geometry = await evaluate(`(() => {
+        const screen=document.querySelector('#screen').getBoundingClientRect();
+        const dialog=document.querySelector('#${id}');
+        const rect=dialog.getBoundingClientRect();
+        const backdrop=getComputedStyle(dialog,'::backdrop');
+        return {screen:screen.toJSON(),rect:rect.toJSON(),backdrop:{left:parseFloat(backdrop.left),top:parseFloat(backdrop.top),width:parseFloat(backdrop.width),height:parseFloat(backdrop.height)},overflow:dialog.scrollWidth > dialog.clientWidth};
+      })()`);
+      const {screen,rect,backdrop} = geometry;
+      assert.ok(rect.left >= screen.left && rect.right <= screen.right, `${id}: horizontal overflow at ${width}`);
+      assert.ok(rect.top >= screen.top && rect.bottom <= screen.bottom, `${id}: vertical overflow at ${width}`);
+      assert.ok(rect.top >= 0 && rect.bottom <= height, `${id}: viewport overflow at ${width}`);
+      assert.equal(geometry.overflow,false);
+      assert.ok(Math.abs(backdrop.left-screen.left)<1 && Math.abs(backdrop.top-screen.top)<1 && Math.abs(backdrop.width-screen.width)<1 && Math.abs(backdrop.height-screen.height)<1, `${id}: backdrop outside display`);
+      await click(`[data-close="${id}"]`);
+    }
+  }
+});
+
+test('an open dialog follows display resizing and page scrolling and remains closable', async () => {
+  await click('#tab-servers');
+  await click('[data-config="nl"]');
+  await send('Emulation.setDeviceMetricsOverride', {width:538,height:656,deviceScaleFactor:1,mobile:false});
+  await evaluate('window.scrollTo(0,90)');
+  await wait(100);
+  assert.equal(await evaluate(`(() => {
+    const phone=document.querySelector('#screen').getBoundingClientRect();
+    const dialog=document.querySelector('#server-dialog').getBoundingClientRect();
+    return dialog.left >= phone.left && dialog.right <= phone.right && dialog.top >= Math.max(0,phone.top) && dialog.bottom <= Math.min(innerHeight,phone.bottom);
+  })()`),true);
+  await evaluate('document.querySelector("#close-server").scrollIntoView({block:"nearest"})');
+  await wait(80);
+  assert.equal(await evaluate(`(() => {
+    const button=document.querySelector('#close-server').getBoundingClientRect();
+    const dialog=document.querySelector('#server-dialog').getBoundingClientRect();
+    return button.top >= dialog.top && button.bottom <= dialog.bottom;
+  })()`),true);
+  await click('#close-server');
+  assert.equal(await evaluate('document.querySelector("#server-dialog").open'),false);
+});
