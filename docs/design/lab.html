@@ -26,7 +26,7 @@ main{display:grid;place-items:center;padding:22px 20px 14px;min-height:calc(100s
 .canvas-label{width:100%;display:flex;align-items:center;justify-content:space-between;font-size:11px;color:#7b7c76;letter-spacing:.02em}
 .canvas-label strong{font-weight:500;color:#454642}
 .device{border:1px solid #cbcfc8;border-radius:30px;padding:7px;background:#e9ebe5;box-shadow:0 12px 30px #20251c0b}
-.screen{--w:393;--h:852;--paper:#fff;--ink:#292a2d;--muted:#8a8d86;--line:#e7e8e2;--surface:#f5f6f2;--accent:#417455;position:relative;height:min(72svh,760px);max-width:calc(100vw - 64px);aspect-ratio:var(--w)/var(--h);border-radius:23px;overflow:hidden;background:var(--paper);color:var(--ink);outline:none;display:flex;flex-direction:column}
+.screen{--w:412;--h:919;--paper:#fff;--ink:#292a2d;--muted:#8a8d86;--line:#e7e8e2;--surface:#f5f6f2;--accent:#417455;position:relative;width:min(calc(var(--w)*1px),calc(100vw - 64px));height:auto;max-width:calc(100vw - 64px);aspect-ratio:var(--w)/var(--h);border-radius:23px;overflow:hidden;background:var(--paper);color:var(--ink);outline:none;display:flex;flex-direction:column}
 .screen.dark{--paper:#141517;--ink:#eceee8;--muted:#8b918b;--line:#30342e;--surface:#20241f;--accent:#9ac9a8}
 .pages{flex:1;min-height:0;position:relative;overflow:auto;scrollbar-width:thin;scrollbar-gutter:stable both-edges}
 .page{min-height:100%;padding:30px 20px 22px;display:flex;flex-direction:column;gap:22px}
@@ -55,9 +55,9 @@ main{display:grid;place-items:center;padding:22px 20px 14px;min-height:calc(100s
 footer{display:flex;gap:8px;align-items:center;font-size:10px;color:#91928a;letter-spacing:.04em}
 footer span{width:5px;height:5px;border-radius:50%;background:#87a38b}
 @media(hover:hover){button:hover{background:#eeeee8}button[aria-pressed="true"]:hover{background:#41433d}}
-@media(max-width:650px){header{padding:14px 16px;flex-direction:column;align-items:flex-start;gap:12px}.tools{gap:6px}.separator{display:none}button,select{font-size:12px;padding:7px 9px}main{min-height:auto;padding-top:20px}.screen{height:min(65svh,700px)}}
+@media(max-width:650px){header{padding:14px 16px;flex-direction:column;align-items:flex-start;gap:12px}.tools{gap:6px}.separator{display:none}button,select{font-size:12px;padding:7px 9px}main{min-height:auto;padding-top:20px}}
 @media(prefers-reduced-motion:reduce){button{transition:none}button:active{transform:none}}
-.screen{--muted:#6f766e;min-width:280px}.screen.dark{--muted:#a4ada2;color-scheme:dark}
+.screen{--muted:#6f766e}.screen.dark{--muted:#a4ada2;color-scheme:dark}
 .page{gap:18px;padding:24px 18px}.screen button,.screen input,.screen select{font:inherit;font-size:12px}
 .screen button{min-height:44px}.screen button:disabled{cursor:default;opacity:.55}
 .screen button:focus-visible,.screen input:focus-visible,.screen select:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
@@ -109,7 +109,7 @@ footer span{width:5px;height:5px;border-radius:50%;background:#87a38b}
 .home-ping{font-size:10px;color:var(--accent);white-space:nowrap;margin-left:auto}.server-slot .chevron{margin-left:0}
 .server-tools{display:flex;flex-direction:column;gap:10px}.server-filters{display:grid;grid-template-columns:1fr 1fr;gap:8px}.server-filters label{display:flex;flex-direction:column;gap:5px;color:var(--muted);font-size:10px}.server-filters select{width:100%;font-size:11px}
 .server-group{min-width:0}.server-group summary{display:flex;align-items:center;gap:8px;min-height:44px;padding:8px 0;cursor:pointer;font-size:12px;font-weight:600;list-style:none}.server-group summary::-webkit-details-marker{display:none}.server-group summary span{flex:1;min-width:0;overflow-wrap:anywhere}.server-group summary small{font-size:10px;font-weight:400;color:var(--muted)}.server-group summary svg{width:15px;height:15px;transform:rotate(0deg)}.server-group[open] summary svg{transform:rotate(90deg)}.group-servers{display:flex;flex-direction:column;gap:9px}
-.usage{margin-top:14px;font-size:11px;color:var(--muted)}.usage-line{display:flex;justify-content:space-between;gap:8px;margin-bottom:8px}.usage-line strong{color:var(--ink);font-weight:500}progress{display:block;width:100%;height:5px;border:0;border-radius:6px;overflow:hidden;accent-color:var(--accent);background:var(--line)}progress::-webkit-progress-bar{background:var(--line)}progress::-webkit-progress-value{background:var(--accent)}.usage .note{margin-top:7px}.expiry{font-size:11px;color:var(--muted);margin-top:12px!important}.expired{color:#b65449!important}.screen.dark .expired{color:#ffaea3!important}.subscription-card[data-expired="true"]{border-color:#b65449}.update-policy{font-size:10px;color:var(--muted);margin-top:10px!important}
+.usage{margin-top:14px;font-size:11px;color:var(--muted)}.usage-line{display:flex;justify-content:space-between;gap:8px;margin-bottom:8px}.usage-line strong{color:var(--ink);font-weight:500}progress{display:block;width:100%;height:5px;border:0;border-radius:6px;overflow:hidden;accent-color:var(--accent);background:var(--line)}progress::-webkit-progress-bar{background:var(--line)}progress::-webkit-progress-value{background:var(--accent)}.usage .note{margin-top:7px}.expiry{font-size:11px;color:var(--muted);margin-top:12px!important}.expired{color:#b65449!important}.screen.dark .expired{color:#ffaea3!important}.subscription-card[data-expired="true"]{border-color:#b65449}
 .screen textarea{width:100%;min-height:220px;resize:vertical;border:1px solid var(--line);border-radius:10px;background:var(--surface);color:var(--ink);font:11px/1.6 ui-monospace,monospace;padding:12px;tab-size:2}
 .screen textarea:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 .screen input[readonly],.screen textarea[readonly]{color:var(--muted)}
@@ -124,14 +124,14 @@ footer span{width:5px;height:5px;border-radius:50%;background:#87a38b}
 .screen .filter-chip{display:flex;align-items:center;justify-content:space-between;gap:8px;text-align:left;border-color:var(--line);background:var(--surface);font-size:11px}.filter-chip span{overflow-wrap:anywhere}
 #advanced-input summary{font-size:12px;color:var(--accent);padding:12px 0;cursor:pointer;min-height:44px}#advanced-input label{margin-top:8px}.screen #delete-server{align-self:center}.screen #diagnostic-log{min-height:300px;resize:vertical}#qr-video{width:100%;max-height:220px;border-radius:10px;background:var(--surface);object-fit:cover}#qr-status{margin:12px 0}
 @media(hover:hover){.screen button:hover{background:var(--surface)}.screen .primary:hover{background:var(--accent);filter:brightness(.95)}}
-@media(max-width:650px){.screen{height:min(76svh,760px);min-width:280px}.page{padding:20px 15px}.tabs{padding-bottom:9px}}
+@media(max-width:650px){.page{padding:20px 15px}.tabs{padding-bottom:9px}}
 </style>
 </head>
 <body>
 <header>
 <div class="brand"><div class="brand-mark" aria-hidden="true">S</div><div><h1>SimpleXray</h1></div></div>
 <div class="tools" aria-label="Настройки холста">
-<select id="size" aria-label="Размер экрана"><option value="393,852">393 × 852</option><option value="360,800">360 × 800</option><option value="412,915">412 × 915</option></select>
+<select id="size" aria-label="Размер экрана"><option value="412,919">Pixel 10 Pro · 412 × 919</option><option value="393,852">393 × 852</option><option value="360,800">360 × 800</option><option value="412,915">412 × 915</option></select>
 <select id="scenario" aria-label="Сценарий макета"><option value="normal">Обычный сценарий</option><option value="empty">Первый запуск</option><option value="error">Ошибка подключения</option></select>
 <button id="theme" aria-pressed="false">Тёмный фон</button>
 <button id="grid" aria-pressed="false">Сетка</button>
@@ -142,7 +142,7 @@ footer span{width:5px;height:5px;border-radius:50%;background:#87a38b}
 </header>
 <main>
 <div class="workspace">
-<div class="canvas-label"><strong id="screen-name">Главная</strong><span id="dimensions">393 × 852</span></div>
+<div class="canvas-label"><strong id="screen-name">Главная</strong><span id="dimensions">412 × 919</span></div>
 <div class="device"><div class="screen" id="screen" tabindex="0" aria-label="SimpleXray">
 <svg aria-hidden="true" style="display:none"><defs>
 <symbol id="i-home" viewBox="0 0 24 24"><path d="m3 10 9-7 9 7v10a1 1 0 0 1-1 1h-5v-7H9v7H4a1 1 0 0 1-1-1Z"/></symbol>
@@ -166,6 +166,7 @@ footer span{width:5px;height:5px;border-radius:50%;background:#87a38b}
 <section class="page" id="page-servers" role="tabpanel" aria-labelledby="tab-servers" hidden><div class="page-title"><h2>Серверы</h2><button class="secondary" id="add-server" aria-label="Добавить сервер">＋ Добавить</button></div><div class="server-tools"><div class="input-action"><input type="search" id="server-search" aria-label="Поиск серверов" placeholder="Сервер, страна или подписка"><button class="secondary" id="clear-search" aria-label="Очистить поиск" hidden>✕</button></div><button id="clear-sub-filter" class="filter-chip" aria-label="Сбросить фильтр подписки" hidden><span id="sub-filter-name"></span><span aria-hidden="true">✕</span></button><div class="server-filters"><label>Группировка<select id="server-group"><option value="subscription">По подпискам</option><option value="country">По странам</option></select></label><label>Сортировка<select id="server-sort"><option value="name">По имени</option><option value="ping">По пингу</option></select></label></div></div><button class="secondary" id="check-servers">Проверить доступность</button><p class="note" id="server-results" role="status">Проверка ещё не запускалась</p><div id="server-list" class="server-list"></div></section>
 <section class="page" id="page-subscriptions" role="tabpanel" aria-labelledby="tab-subscriptions" hidden><div class="page-title"><h2>Подписки</h2><button class="secondary" id="add-subscription" aria-label="Добавить подписку">＋ Добавить</button></div><div id="subscription-list" class="stack"></div></section>
 <section class="page" id="page-settings" role="tabpanel" aria-labelledby="tab-settings" hidden><h2>Настройки</h2>
+<div class="setting-group"><h3>Подписки</h3><label class="switch-row"><span>Автообновление подписок<small>Все подписки, каждый час</small></span><input type="checkbox" id="subscriptions-auto-update" role="switch" checked></label></div>
 <button class="setting-row" data-open="diagnostics"><svg aria-hidden="true"><use href="#i-info"/></svg><span>Журнал и отладка</span><svg aria-hidden="true"><use href="#i-arrow"/></svg></button>
 <div class="setting-group"><h3>Оформление</h3><label class="field"><span>Тема</span><select id="app-theme"><option value="light">Светлая</option><option value="dark">Тёмная</option><option value="auto">Системная</option></select></label></div>
 <div class="setting-group"><h3>Соединение</h3><label class="switch-row"><span>IPv6<small>Разрешить IPv6 в VPN-интерфейсе</small></span><input type="checkbox" id="ipv6" role="switch"></label><label class="field"><span>DNS · IPv4</span><input id="dns-ipv4" value="8.8.8.8" required></label><label class="field"><span>DNS · IPv6</span><input id="dns-ipv6" value="2001:4860:4860::8888" required disabled></label></div>
@@ -191,7 +192,7 @@ footer span{width:5px;height:5px;border-radius:50%;background:#87a38b}
 <button class="tab" id="tab-settings" role="tab" aria-selected="false" aria-controls="page-settings" data-tab="settings" tabindex="-1"><svg aria-hidden="true"><use href="#i-settings"/></svg>Настройки</button>
 </nav>
 <dialog id="server-dialog" aria-labelledby="server-title"><form id="server-form"><h3 id="server-title">Добавить сервер</h3><p class="note" id="server-origin"></p><div id="link-input"><label for="server-link">Ссылка подключения</label><div class="input-action"><input id="server-link" placeholder="vless://, vmess://, trojan://" autocomplete="off" autocapitalize="off" spellcheck="false" maxlength="16384"><button type="button" class="secondary" id="paste-server" aria-label="Вставить ссылку из буфера">Вставить</button></div><button type="button" class="text-button" id="scan-qr">Сканировать QR-код</button></div><label>Название<input id="server-name" maxlength="60" autocomplete="off" placeholder="Из ссылки или адреса сервера"></label><details id="advanced-input"><summary>Расширенный ввод</summary><label>Конфигурация · JSON<textarea id="server-config" spellcheck="false" autocapitalize="off" autocomplete="off"></textarea></label></details><p class="error" id="server-error" role="alert"></p><button type="button" class="text-button danger" id="delete-server" hidden>Удалить сервер</button><div class="actions"><button type="button" class="secondary" data-close="server-dialog" id="close-server">Отмена</button><button class="primary" type="submit" id="save-server">Сохранить</button></div></form></dialog>
-<dialog id="subscription-dialog" aria-labelledby="subscription-title"><form id="subscription-form"><h3 id="subscription-title">Добавить подписку</h3><label for="sub-url">Ссылка подписки</label><div class="input-action"><input id="sub-url" type="url" pattern="https?://.+" required placeholder="https://" autocomplete="off"><button type="button" class="secondary" id="paste-subscription" aria-label="Вставить ссылку подписки из буфера">Вставить</button></div><label>Автообновление<select id="sub-refresh"><option value="manual">Вручную</option><option value="startup">При запуске</option><option value="daily">Раз в сутки</option></select></label><p id="sub-error" class="error" role="alert"></p><div class="actions"><button type="button" class="secondary" data-close="subscription-dialog">Отмена</button><button class="primary" type="submit" id="save-subscription">Добавить</button></div></form></dialog>
+<dialog id="subscription-dialog" aria-labelledby="subscription-title"><form id="subscription-form"><h3 id="subscription-title">Добавить подписку</h3><label for="sub-url">Ссылка подписки</label><div class="input-action"><input id="sub-url" type="url" pattern="https?://.+" required placeholder="https://" autocomplete="off"><button type="button" class="secondary" id="paste-subscription" aria-label="Вставить ссылку подписки из буфера">Вставить</button></div><p id="sub-error" class="error" role="alert"></p><div class="actions"><button type="button" class="secondary" data-close="subscription-dialog">Отмена</button><button class="primary" type="submit" id="save-subscription">Добавить</button></div></form></dialog>
 <dialog id="delete-dialog" aria-labelledby="delete-title"><h3 id="delete-title">Удалить подписку?</h3><p class="note">Все серверы этой подписки также будут удалены.</p><div class="actions"><button class="secondary" data-close="delete-dialog">Отмена</button><button class="secondary danger" id="confirm-delete">Удалить</button></div></dialog>
 <dialog id="delete-server-dialog" aria-labelledby="delete-server-title"><h3 id="delete-server-title">Удалить сервер?</h3><p class="note">Сервер будет удалён из списка. Если он подключён, соединение прервётся.</p><div class="actions"><button class="secondary" data-close="delete-server-dialog">Отмена</button><button class="secondary danger" id="confirm-delete-server">Удалить</button></div></dialog>
 <dialog id="connection-error-dialog" aria-labelledby="connection-error-title"><h3 id="connection-error-title">Ошибка соединения</h3><p class="note" id="connection-reason">Сервер не ответил вовремя. Проверьте интернет или выберите другой сервер.</p><div class="actions"><button class="primary" id="retry-connection">Повторить</button><button class="secondary" id="choose-other-server">Выбрать сервер</button><button class="text-button" data-close="connection-error-dialog">Закрыть</button></div></dialog>
@@ -222,8 +223,8 @@ updateModalBounds();
 const caption = document.querySelector('#caption');
 const pin = document.querySelector('#pin');
 const clear = document.querySelector('#clear');
-let width = 393;
-let height = 852;
+let width = 412;
+let height = 919;
 let marking = false;
 let currentPage = 'home';
 const pageNames = {home:'Главная',servers:'Серверы',subscriptions:'Подписки',settings:'Настройки',routing:'Роутинг',advanced:'Дополнительно',diagnostics:'Журнал и отладка'};
@@ -400,7 +401,7 @@ function usageHeader(headers) {
   return Object.entries(headers).find(([key]) => key.toLowerCase() === 'subscription-userinfo')?.[1] || '';
 }
 const sampleUrl = 'https://connect.example.com/subscription';
-const subscriptions = [{id:'sample',url:sampleUrl,name:subscriptionTitle(sampleUrl,subscriptionHeaders(sampleUrl)),status:'59 серверов',userinfo:usageHeader(subscriptionHeaders(sampleUrl)),policy:'manual',lastUpdated:subscriptionClock}];
+const subscriptions = [{id:'sample',url:sampleUrl,name:subscriptionTitle(sampleUrl,subscriptionHeaders(sampleUrl)),status:'59 серверов',userinfo:usageHeader(subscriptionHeaders(sampleUrl)),lastUpdated:subscriptionClock}];
 function exampleConfig(protocol,address) {
   const server = {address,port:443};
   if(protocol === 'trojan') server.password = 'example-password';
@@ -516,9 +517,8 @@ function subscriptionMetrics(sub) {
   if(usage.expires !== null) html += `<p class="expiry ${usage.expired ? 'expired' : ''}">${usage.expired ? 'Срок истёк' : 'До '+new Date(usage.expires).toLocaleDateString('ru-RU')+' · '+usage.days+' дн.'}</p>`;
   return html;
 }
-const updatePolicyLabels = {manual:'Вручную',startup:'При запуске',daily:'Раз в сутки'};
 function renderSubscriptions() {
-  $('#subscription-list').innerHTML = subscriptions.length ? subscriptions.map(sub => `<article class="card subscription-card" data-expired="${subscriptionUsage(sub.userinfo).expired}"><button class="subscription-link" data-sub-servers="${sub.id}" aria-label="Открыть серверы: ${escapeHtml(sub.name)}"><h3>${escapeHtml(sub.name)}</h3><small>${servers.filter(server=>server.subscription === sub.id).length} серверов →</small></button><p class="note">${escapeHtml(sub.status)}</p>${subscriptionMetrics(sub)}<p class="update-policy">Обновление: ${updatePolicyLabels[sub.policy]}</p><div class="actions"><button class="text-button" data-refresh="${sub.id}" ${sub.busy ? 'disabled' : ''}>Обновить</button><button class="text-button" data-edit-sub="${sub.id}" ${sub.busy ? 'disabled' : ''}>Настроить</button><button class="text-button danger" data-delete="${sub.id}">Удалить</button></div></article>`).join('') : '<div class="empty-slot">Подписок пока нет.<br>Добавьте подписку.</div>';
+  $('#subscription-list').innerHTML = subscriptions.length ? subscriptions.map(sub => `<article class="card subscription-card" data-expired="${subscriptionUsage(sub.userinfo).expired}"><button class="subscription-link" data-sub-servers="${sub.id}" aria-label="Открыть серверы: ${escapeHtml(sub.name)}"><h3>${escapeHtml(sub.name)}</h3><small>${servers.filter(server=>server.subscription === sub.id).length} серверов →</small></button><p class="note">${escapeHtml(sub.status)}</p>${subscriptionMetrics(sub)}<div class="actions"><button class="text-button" data-refresh="${sub.id}" ${sub.busy ? 'disabled' : ''}>Обновить</button><button class="text-button" data-edit-sub="${sub.id}" ${sub.busy ? 'disabled' : ''}>Настроить</button><button class="text-button danger" data-delete="${sub.id}">Удалить</button></div></article>`).join('') : '<div class="empty-slot">Подписок пока нет.<br>Добавьте подписку.</div>';
 }
 function renderConnection() {
   $('#connection').dataset.state = connectionState;
@@ -703,7 +703,7 @@ function openSubscription(id = null) {
   $('#subscription-form').reset();
   $('#subscription-title').textContent = sub ? 'Настройки подписки' : 'Добавить подписку';
   $('#save-subscription').textContent = sub ? 'Сохранить' : 'Добавить';
-  if(sub) {$('#sub-url').value = sub.url;$('#sub-refresh').value = sub.policy;}
+  if(sub) $('#sub-url').value = sub.url;
   $('#sub-error').textContent = '';
   $('#subscription-dialog').showModal();
 }
@@ -721,17 +721,15 @@ $('#subscription-form').addEventListener('submit', event => {
     url = parsed.href;
   } catch {$('#sub-error').textContent = 'Введите корректную HTTP(S) ссылку.';return;}
   const name = subscriptionTitle(url,subscriptionHeaders(url));
-  const policy = $('#sub-refresh').value;
-  if(!Object.hasOwn(updatePolicyLabels,policy)) return;
   const sub = subscriptions.find(item => item.id === editingSubscription);
   if(editingSubscription && (!sub || sub.busy)) return;
   if(sub) {
     const changedUrl = sub.url !== url;
     if(changedUrl && servers.some(server => server.id === selected && server.subscription === sub.id)) disconnect();
-    Object.assign(sub,{url,name,policy,userinfo:usageHeader(subscriptionHeaders(url)),lastUpdated:changedUrl ? Date.now() : sub.lastUpdated,status:servers.filter(server => server.subscription === sub.id).length+' серверов'});
+    Object.assign(sub,{url,name,userinfo:usageHeader(subscriptionHeaders(url)),lastUpdated:changedUrl ? Date.now() : sub.lastUpdated,status:servers.filter(server => server.subscription === sub.id).length+' серверов'});
   } else {
     const id = 'demo'+(++nextSubscription);
-    subscriptions.push({id,url,name,policy,userinfo:usageHeader(subscriptionHeaders(url)),lastUpdated:Date.now(),status:'2 сервера'});
+    subscriptions.push({id,url,name,userinfo:usageHeader(subscriptionHeaders(url)),lastUpdated:Date.now(),status:'2 сервера'});
     servers.push({id:id+'nl',name:'Амстердам · '+name,country:'Нидерланды',code:'NL',protocol:'VLESS',subscription:id,config:exampleConfig('vless','nl.example.com')},{id:id+'de',name:'Франкфурт · '+name,country:'Германия',code:'DE',protocol:'VLESS',subscription:id,config:exampleConfig('vless','de.example.com')});
     if(!selected) selected = servers.at(-2).id;
   }
@@ -758,14 +756,17 @@ function refreshSubscription(sub,now = Date.now()) {
   },600);
   return true;
 }
-function refreshDueSubscriptions(now = Date.now(),startup = false) {
+let lastSubscriptionsRefresh = Date.now();
+function refreshDueSubscriptions(now = Date.now()) {
+  if(!$('#subscriptions-auto-update').checked || now-lastSubscriptionsRefresh < 3600000) return 0;
+  lastSubscriptionsRefresh = now;
   let count = 0;
   subscriptions.forEach(sub => {
-    const due = (startup && sub.policy === 'startup') || (sub.policy === 'daily' && now-sub.lastUpdated >= 86400000);
-    if(due && refreshSubscription(sub,now)) count++;
+    if(refreshSubscription(sub,now)) count++;
   });
   return count;
 }
+$('#subscriptions-auto-update').addEventListener('change',()=>{lastSubscriptionsRefresh=Date.now();});
 $('#subscription-list').addEventListener('click', event => {
   const link = event.target.closest('[data-sub-servers]');
   if(link) {
@@ -940,7 +941,7 @@ renderServers();
 renderSubscriptions();
 renderConnection();
 logEvent('INFO','Приложение готово');
-refreshDueSubscriptions(Date.now(),true);
+refreshDueSubscriptions();
 setInterval(() => {refreshDueSubscriptions();},60000);
 document.addEventListener('visibilitychange',() => {if(!document.hidden) refreshDueSubscriptions();});
 </script>

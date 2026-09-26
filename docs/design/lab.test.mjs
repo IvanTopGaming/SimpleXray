@@ -701,34 +701,51 @@ test('subscription usage handles missing values, exceeded quotas and expiry with
   assert.match(await evaluate('document.querySelector(".subscription-card .expiry").textContent'),/истёк/);
 });
 
-test('subscription update policy saves independently and daily update runs only when due', async () => {
+test('global subscription auto-update refreshes every subscription on one hourly schedule', async () => {
+  await click('#tab-settings');
+  assert.equal(await evaluate('document.querySelector("#subscriptions-auto-update")?.checked'),true);
+  assert.match(await evaluate('document.querySelector("#subscriptions-auto-update").closest("label").textContent'),/каждый час/);
   await click('#tab-subscriptions');
   await click('[data-edit-sub="sample"]');
-  assert.equal(await value('#sub-refresh','daily'),true);
-  await evaluate('document.querySelector("#subscription-form").requestSubmit()');
-  await click('[data-edit-sub="sample"]');
-  assert.equal(await evaluate('document.querySelector("#sub-refresh").value'),'daily');
-  await value('#sub-refresh','startup');
+  assert.equal(await evaluate('document.querySelector("#sub-refresh")'),null);
   await click('[data-close="subscription-dialog"]');
-  await click('[data-edit-sub="sample"]');
-  assert.equal(await evaluate('document.querySelector("#sub-refresh").value'),'daily');
-  await click('[data-close="subscription-dialog"]');
-  assert.equal(await evaluate('typeof refreshDueSubscriptions'),'function');
-  assert.equal(await evaluate('refreshDueSubscriptions(Date.now(),false)'),0);
-  assert.equal(await evaluate('refreshDueSubscriptions(Date.now()+86400001,false)'),1);
-  await wait(750);
-  assert.match(await evaluate('document.querySelector(".subscription-card").textContent'),/Обновлено/);
-  assert.equal(await evaluate('refreshDueSubscriptions(Date.now(),true)'),0);
-  await click('[data-edit-sub="sample"]');
-  await value('#sub-refresh','startup');
+  await click('#add-subscription');
+  await value('#sub-url','https://second.example.com/sub');
   await evaluate('document.querySelector("#subscription-form").requestSubmit()');
-  assert.equal(await evaluate('refreshDueSubscriptions(Date.now(),false)'),0);
-  assert.equal(await evaluate('refreshDueSubscriptions(Date.now(),true)'),1);
+  assert.equal(await evaluate('document.querySelector(".update-policy")'),null);
+  const start = await evaluate('lastSubscriptionsRefresh');
+  assert.equal(await evaluate(`refreshDueSubscriptions(${start}+3599999)`),0);
+  await evaluate(`subscriptions[1].lastUpdated=${start}+3599999`);
+  assert.equal(await evaluate(`refreshDueSubscriptions(${start}+3600000)`),2);
+  assert.equal(await evaluate(`refreshDueSubscriptions(${start}+3600000)`),0);
   await wait(750);
-  await click('[data-edit-sub="sample"]');
-  await value('#sub-refresh','manual');
-  await evaluate('document.querySelector("#subscription-form").requestSubmit()');
-  assert.equal(await evaluate('refreshDueSubscriptions(Date.now()+86400001,true)'),0);
+  assert.deepEqual(await evaluate('subscriptions.map(sub=>sub.lastUpdated)'),[start+3600000,start+3600000]);
+  assert.equal(await evaluate(`refreshDueSubscriptions(${start}+7199999)`),0);
+  assert.equal(await evaluate(`refreshDueSubscriptions(${start}+7200000)`),2);
+  await wait(750);
+  await click('#tab-settings');
+  await click('#subscriptions-auto-update');
+  assert.equal(await evaluate(`refreshDueSubscriptions(${start}+10800000)`),0);
+  await click('#tab-subscriptions');
+  await click('[data-refresh="sample"]');
+  assert.equal(await evaluate('subscriptions[0].busy'),true);
+  await wait(750);
+  await click('#tab-settings');
+  await click('#subscriptions-auto-update');
+  assert.equal(await evaluate('refreshDueSubscriptions(Date.now())'),0);
+  assert.equal(await evaluate('refreshDueSubscriptions(lastSubscriptionsRefresh+3600000)'),2);
+});
+
+test('Pixel 10 Pro is the default frame and preserves its screen proportions at every viewport', async () => {
+  assert.match(await evaluate('document.querySelector("#size").selectedOptions[0].textContent'),/Pixel 10 Pro/);
+  for(const [width,height] of [[1440,1100],[538,656],[390,844],[360,800]]) {
+    await send('Emulation.setDeviceMetricsOverride',{width,height,deviceScaleFactor:1,mobile:width<500});
+    await evaluate('new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve)))');
+    const geometry=await evaluate('(()=>{const r=screen.getBoundingClientRect();return {ratio:r.width/r.height,width:r.width,overflow:document.documentElement.scrollWidth>innerWidth}})()');
+    assert.ok(Math.abs(geometry.ratio-1280/2856)<0.001,`Pixel proportions at ${width}`);
+    assert.ok(geometry.width<=412.1);
+    assert.equal(geometry.overflow,false);
+  }
 });
 
 test('all page content stays on the display axis with and without scrollbars', async () => {
