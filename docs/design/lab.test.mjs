@@ -748,11 +748,24 @@ test('Pixel 10 Pro is the default frame and preserves its screen proportions at 
   }
 });
 
+test('Redmi 10C can be selected with its own proportions without replacing the Pixel default', async () => {
+  assert.match(await evaluate('document.querySelector("#size").selectedOptions[0].textContent'),/Pixel 10 Pro/);
+  const preset=await evaluate('Array.from(document.querySelector("#size").options).find(option=>option.textContent.includes("Redmi 10C"))?.value');
+  assert.equal(preset,'360,825');
+  await value('#size',preset);
+  for(const [width,height] of [[1440,1100],[538,656],[390,844]]) {
+    await send('Emulation.setDeviceMetricsOverride',{width,height,deviceScaleFactor:1,mobile:width<500});
+    await evaluate('new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve)))');
+    assert.ok(await evaluate('(()=>{const r=screen.getBoundingClientRect();return Math.abs(r.width/r.height-720/1650)<0.001})()'));
+    assert.equal(await evaluate('document.querySelector("#dimensions").textContent'),'360 × 825');
+  }
+});
+
 test('all page content stays on the display axis with and without scrollbars', async () => {
   for(const [width,height,mobile] of [[1440,1100,false],[538,656,false],[390,844,true],[360,800,true]]) {
     await send('Emulation.setDeviceMetricsOverride',{width,height,deviceScaleFactor:1,mobile});
     await evaluate('new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve)))');
-    for(const size of ['393,852','360,800','412,915']) {
+    for(const size of ['412,919','360,825','393,852','360,800','412,915']) {
       await value('#size',size);
       await evaluate('new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve)))');
       for(const page of ['home','servers','subscriptions','settings','routing','advanced','diagnostics']) {
