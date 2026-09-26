@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>SimpleXray — дизайн</title>
+<title>SimpleXray</title>
 <style>
 :root{font-family:Inter,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;color:#292a2d;background:#f4f3ef;font-synthesis:none}
 *{box-sizing:border-box}
@@ -61,7 +61,7 @@ footer span{width:5px;height:5px;border-radius:50%;background:#87a38b}
 .page{gap:18px;padding:24px 18px}.screen button,.screen input,.screen select{font:inherit;font-size:12px}
 .screen button{min-height:44px}.screen button:disabled{cursor:default;opacity:.55}
 .screen button:focus-visible,.screen input:focus-visible,.screen select:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
-.demo-banner{padding:9px 12px;text-align:center;background:var(--surface);border-bottom:1px solid var(--line);font-size:10px;line-height:1.4;color:var(--muted);flex-shrink:0}
+.caption:empty{display:none}
 .screen .tab{font-size:10px}.page-title{justify-content:space-between}.page-title h2{flex:1}
 .screen .primary{background:var(--accent);color:var(--paper);border-color:var(--accent);font-weight:600}
 .screen .secondary{background:var(--surface);color:var(--ink);border-color:var(--line)}
@@ -99,7 +99,7 @@ footer span{width:5px;height:5px;border-radius:50%;background:#87a38b}
 </head>
 <body>
 <header>
-<div class="brand"><div class="brand-mark" aria-hidden="true">S</div><div><h1>SimpleXray</h1><div class="subtitle">Рабочий холст · интерактивное демо</div></div></div>
+<div class="brand"><div class="brand-mark" aria-hidden="true">S</div><div><h1>SimpleXray</h1></div></div>
 <div class="tools" aria-label="Настройки холста">
 <select id="size" aria-label="Размер экрана"><option value="393,852">393 × 852</option><option value="360,800">360 × 800</option><option value="412,915">412 × 915</option></select>
 <button id="theme" aria-pressed="false">Тёмный фон</button>
@@ -112,7 +112,7 @@ footer span{width:5px;height:5px;border-radius:50%;background:#87a38b}
 <main>
 <div class="workspace">
 <div class="canvas-label"><strong id="screen-name">Главная</strong><span id="dimensions">393 × 852</span></div>
-<div class="device"><div class="screen" id="screen" tabindex="0" aria-label="Макет приложения SimpleXray">
+<div class="device"><div class="screen" id="screen" tabindex="0" aria-label="SimpleXray">
 <svg aria-hidden="true" style="display:none"><defs>
 <symbol id="i-home" viewBox="0 0 24 24"><path d="m3 10 9-7 9 7v10a1 1 0 0 1-1 1h-5v-7H9v7H4a1 1 0 0 1-1-1Z"/></symbol>
 <symbol id="i-servers" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="7" rx="2"/><rect x="3" y="14" width="18" height="7" rx="2"/><path d="M7 6.5h.01M7 17.5h.01M12 6.5h5M12 17.5h5"/></symbol>
@@ -122,32 +122,30 @@ footer span{width:5px;height:5px;border-radius:50%;background:#87a38b}
 <symbol id="i-route" viewBox="0 0 24 24"><circle cx="6" cy="5" r="2"/><circle cx="18" cy="19" r="2"/><path d="M6 7v8a4 4 0 0 0 4 4h6M9 5h6a3 3 0 0 1 0 6H9"/></symbol>
 <symbol id="i-power" viewBox="0 0 24 24"><path d="M12 2v10M6 5a9 9 0 1 0 12 0"/></symbol>
 </defs></svg>
-<div class="demo-banner">ДЕМО · VPN не запускается · данные вымышлены</div>
 <div class="pages">
 <section class="page" id="page-home" role="tabpanel" aria-labelledby="tab-home">
 <h2>Главная</h2>
 <div><p class="eyebrow">Выбранный сервер</p><button class="server-slot" data-open="servers"><svg aria-hidden="true"><use href="#i-servers"/></svg><div><span id="selected-name">Амстердам</span><small id="selected-detail">Нидерланды · VLESS</small></div><svg class="chevron" aria-hidden="true"><use href="#i-arrow"/></svg></button></div>
-<div class="status-area" id="connection" data-state="disconnected"><button class="status-orbit" id="connect" type="button" aria-label="Подключиться · демо" aria-pressed="false" aria-describedby="connection-status"><svg aria-hidden="true"><use href="#i-power"/></svg></button><h3 id="connection-status" role="status">Отключено</h3><p class="note" id="connection-hint">Нажми на кружок для подключения</p></div>
-<div class="stats"><div class="stat"><small>↓ Получено · демо</small><strong id="download">0 МБ</strong></div><div class="stat"><small>↑ Отправлено · демо</small><strong id="upload">0 МБ</strong></div><div class="stat wide"><small>Время демо-сессии</small><strong id="uptime">00:00</strong></div></div>
+<div class="status-area" id="connection" data-state="disconnected"><button class="status-orbit" id="connect" type="button" aria-label="Подключиться" aria-pressed="false" aria-describedby="connection-status"><svg aria-hidden="true"><use href="#i-power"/></svg></button><h3 id="connection-status" role="status">Отключено</h3></div>
+<div class="stats"><div class="stat"><small>↓ Получено</small><strong id="download">0 МБ</strong></div><div class="stat"><small>↑ Отправлено</small><strong id="upload">0 МБ</strong></div><div class="stat wide"><small>Время подключения</small><strong id="uptime">00:00</strong></div></div>
 </section>
-<section class="page" id="page-servers" role="tabpanel" aria-labelledby="tab-servers" hidden><h2>Серверы</h2><p class="note">Выбери сервер для главного экрана. Все адреса и результаты здесь демонстрационные.</p><button class="secondary" id="check-servers">Проверить доступность · демо</button><p class="note" id="server-results" role="status">Проверка ещё не запускалась</p><div id="server-list" class="server-list"></div></section>
-<section class="page" id="page-subscriptions" role="tabpanel" aria-labelledby="tab-subscriptions" hidden><div class="page-title"><h2>Подписки</h2><button class="secondary" id="add-subscription" aria-label="Добавить подписку">＋ Добавить</button></div><p class="note">Используй тестовую ссылку. Макет не обращается к ней и не сохраняет её после добавления.</p><div id="subscription-list" class="stack"></div></section>
+<section class="page" id="page-servers" role="tabpanel" aria-labelledby="tab-servers" hidden><h2>Серверы</h2><button class="secondary" id="check-servers">Проверить доступность</button><p class="note" id="server-results" role="status">Проверка ещё не запускалась</p><div id="server-list" class="server-list"></div></section>
+<section class="page" id="page-subscriptions" role="tabpanel" aria-labelledby="tab-subscriptions" hidden><div class="page-title"><h2>Подписки</h2><button class="secondary" id="add-subscription" aria-label="Добавить подписку">＋ Добавить</button></div><div id="subscription-list" class="stack"></div></section>
 <section class="page" id="page-settings" role="tabpanel" aria-labelledby="tab-settings" hidden><h2>Настройки</h2>
 <div class="setting-group"><h3>Оформление</h3><label class="field"><span>Тема</span><select id="app-theme"><option value="light">Светлая</option><option value="dark">Тёмная</option><option value="auto">Системная</option></select></label></div>
-<div class="setting-group"><h3>Соединение</h3><label class="switch-row"><span>IPv6<small>Разрешить IPv6 в VPN-интерфейсе</small></span><input type="checkbox" id="ipv6" role="switch"></label><label class="field"><span>DNS · IPv4</span><input id="dns-ipv4" value="8.8.8.8" required aria-describedby="settings-note"></label><label class="field"><span>DNS · IPv6</span><input id="dns-ipv6" value="2001:4860:4860::8888" required disabled></label></div>
+<div class="setting-group"><h3>Соединение</h3><label class="switch-row"><span>IPv6<small>Разрешить IPv6 в VPN-интерфейсе</small></span><input type="checkbox" id="ipv6" role="switch"></label><label class="field"><span>DNS · IPv4</span><input id="dns-ipv4" value="8.8.8.8" required></label><label class="field"><span>DNS · IPv6</span><input id="dns-ipv6" value="2001:4860:4860::8888" required disabled></label></div>
 <div><button class="setting-row" data-open="routing"><svg aria-hidden="true"><use href="#i-route"/></svg><span>Роутинг</span><svg aria-hidden="true"><use href="#i-arrow"/></svg></button><button class="setting-row" data-open="advanced"><svg aria-hidden="true"><use href="#i-settings"/></svg><span>Дополнительно</span><svg aria-hidden="true"><use href="#i-arrow"/></svg></button></div>
-<p class="note" id="settings-note">Настройки действуют только в макете. После перезагрузки страницы всё сбросится.</p>
 </section>
 <section class="page" id="page-advanced" aria-labelledby="advanced-title" hidden><div class="page-title"><button class="back" data-open="settings" aria-label="Назад в настройки">‹</button><h2 id="advanced-title">Дополнительно</h2></div>
 <div class="setting-group"><h3>Конфигурация</h3><label class="switch-row"><span>Использовать шаблон<small>Собирать конфигурацию из настроек</small></span><input type="checkbox" checked role="switch"></label><label class="switch-row"><span>Без VPN-интерфейса<small>Только локальный прокси</small></span><input id="disable-vpn" type="checkbox" role="switch"></label></div>
 <div class="setting-group"><h3>Локальный SOCKS</h3><label class="field"><span>Адрес</span><input value="127.0.0.1" required></label><label class="field"><span>Порт<small>От 1 до 65535</small></span><input id="socks-port" type="number" min="1" max="65535" step="1" value="10808" required></label><label class="field"><span>Имя пользователя</span><input autocomplete="off" placeholder="Не задано"></label><label class="field"><span>Пароль</span><input type="password" autocomplete="new-password" placeholder="Не задан"></label><label class="switch-row"><span>HTTP-прокси</span><input type="checkbox" checked role="switch"></label></div>
-<div class="setting-group"><h3>Проверка соединения</h3><label class="field"><span>Тестовый URL<small>Запросы из макета не выполняются</small></span><input type="url" pattern="https?://.+" value="https://example.com/" required></label><label class="field"><span>Тайм-аут, мс</span><input type="number" min="100" max="60000" step="100" value="5000" required></label></div>
+<div class="setting-group"><h3>Проверка соединения</h3><label class="field"><span>URL проверки</span><input type="url" pattern="https?://.+" value="https://example.com/" required></label><label class="field"><span>Тайм-аут, мс</span><input type="number" min="100" max="60000" step="100" value="5000" required></label></div>
 </section>
 <section class="page" id="page-routing" aria-labelledby="routing-title" hidden><div class="page-title"><button class="back" data-open="settings" aria-label="Назад в настройки">‹</button><h2 id="routing-title">Роутинг</h2></div>
 <label class="switch-row"><span>Обход локальной сети<small>Локальные адреса — напрямую</small></span><input id="bypass-lan" type="checkbox" checked role="switch"></label>
-<div class="setting-group"><h3>Приложения · пример</h3><label class="field"><span>Режим</span><select id="app-mode"><option value="exclude">Исключить</option><option value="include">Только выбранные</option></select></label><p class="note" id="app-mode-note">Выбранные приложения обходят VPN.</p><label class="switch-row"><span>Браузер</span><input id="app-browser" type="checkbox" role="switch"></label><label class="switch-row"><span>Мессенджер</span><input type="checkbox" role="switch"></label><label class="switch-row"><span>Видеоплеер</span><input type="checkbox" role="switch"></label></div>
-<div class="setting-group"><h3>Базы правил</h3><div class="card"><h3>GeoIP</h3><p class="note" id="geoip-status" role="status">Встроенная база · демо</p><button class="text-button" data-rule="geoip">Обновить · демо</button></div><div class="card"><h3>GeoSite</h3><p class="note" id="geosite-status" role="status">Встроенная база · демо</p><button class="text-button" data-rule="geosite">Обновить · демо</button></div></div>
-<p class="note">Список приложений вымышленный. Правила не применяются к системе.</p></section>
+<div class="setting-group"><h3>Приложения</h3><label class="field"><span>Режим</span><select id="app-mode"><option value="exclude">Исключить</option><option value="include">Только выбранные</option></select></label><p class="note" id="app-mode-note">Выбранные приложения обходят VPN.</p><label class="switch-row"><span>Браузер</span><input id="app-browser" type="checkbox" role="switch"></label><label class="switch-row"><span>Мессенджер</span><input type="checkbox" role="switch"></label><label class="switch-row"><span>Видеоплеер</span><input type="checkbox" role="switch"></label></div>
+<div class="setting-group"><h3>Базы правил</h3><div class="card"><h3>GeoIP</h3><p class="note" id="geoip-status" role="status">Встроенная база</p><button class="text-button" data-rule="geoip">Обновить</button></div><div class="card"><h3>GeoSite</h3><p class="note" id="geosite-status" role="status">Встроенная база</p><button class="text-button" data-rule="geosite">Обновить</button></div></div>
+</section>
 </div>
 <div class="toast" id="notice" role="status" aria-live="polite"></div>
 <nav class="tabs" role="tablist" aria-label="Разделы приложения">
@@ -156,11 +154,10 @@ footer span{width:5px;height:5px;border-radius:50%;background:#87a38b}
 <button class="tab" id="tab-subscriptions" role="tab" aria-selected="false" aria-controls="page-subscriptions" data-tab="subscriptions" tabindex="-1"><svg aria-hidden="true"><use href="#i-subs"/></svg>Подписки</button>
 <button class="tab" id="tab-settings" role="tab" aria-selected="false" aria-controls="page-settings" data-tab="settings" tabindex="-1"><svg aria-hidden="true"><use href="#i-settings"/></svg>Настройки</button>
 </nav>
-<dialog id="subscription-dialog" aria-labelledby="subscription-title"><form id="subscription-form"><h3 id="subscription-title">Добавить подписку</h3><p class="note">Только демонстрация. Не вставляй личную ссылку; можно оставить example.com.</p><label>Название<input id="sub-name" required maxlength="60" placeholder="Моя подписка" autocomplete="off"></label><label>Тестовая ссылка<input id="sub-url" type="url" pattern="https?://.+" required value="https://example.com/subscription" autocomplete="off"></label><p id="sub-error" class="error" role="alert"></p><div class="actions"><button type="button" class="secondary" data-close="subscription-dialog">Отмена</button><button class="primary" type="submit">Добавить</button></div></form></dialog>
-<dialog id="delete-dialog" aria-labelledby="delete-title"><h3 id="delete-title">Удалить подписку?</h3><p class="note">Из макета также исчезнут её демонстрационные серверы.</p><div class="actions"><button class="secondary" data-close="delete-dialog">Отмена</button><button class="secondary danger" id="confirm-delete">Удалить</button></div></dialog>
+<dialog id="subscription-dialog" aria-labelledby="subscription-title"><form id="subscription-form"><h3 id="subscription-title">Добавить подписку</h3><label>Название<input id="sub-name" required maxlength="60" placeholder="Моя подписка" autocomplete="off"></label><label>Ссылка подписки<input id="sub-url" type="url" pattern="https?://.+" required value="https://example.com/subscription" autocomplete="off"></label><p id="sub-error" class="error" role="alert"></p><div class="actions"><button type="button" class="secondary" data-close="subscription-dialog">Отмена</button><button class="primary" type="submit">Добавить</button></div></form></dialog>
+<dialog id="delete-dialog" aria-labelledby="delete-title"><h3 id="delete-title">Удалить подписку?</h3><p class="note">Все серверы этой подписки также будут удалены.</p><div class="actions"><button class="secondary" data-close="delete-dialog">Отмена</button><button class="secondary danger" id="confirm-delete">Удалить</button></div></dialog>
 <span class="pin" id="pin" aria-hidden="true">1</span></div></div>
-<p class="caption" id="caption" aria-live="polite">Выбирай серверы и меняй настройки. Всё работает только внутри демо.</p>
-<footer><span></span>ДЕМО · НЕ ИЗМЕНЯЕТ НАСТРОЙКИ ПРИЛОЖЕНИЯ</footer>
+<p class="caption" id="caption" aria-live="polite"></p>
 </div>
 </main>
 <script>
@@ -173,7 +170,7 @@ let height = 852;
 let marking = false;
 let currentPage = 'home';
 const pageNames = {home:'Главная',servers:'Серверы',subscriptions:'Подписки',settings:'Настройки',routing:'Роутинг',advanced:'Дополнительно'};
-const defaultCaption = 'Выбирай серверы и меняй настройки. Всё работает только внутри демо.';
+const defaultCaption = '';
 function openPage(name) {
   currentPage = name;
   document.querySelectorAll('.page').forEach(page => {page.hidden = page.id !== 'page-'+name;});
@@ -234,7 +231,7 @@ function resetPin() {
 }
 clear.addEventListener('click', () => {resetPin();announce('layout-pin-clear',{screen:currentPage});});
 const $ = selector => document.querySelector(selector);
-const subscriptions = [{id:'sample',name:'Тестовая подписка',status:'3 сервера · демонстрационные данные'}];
+const subscriptions = [{id:'sample',name:'Основная подписка',status:'3 сервера'}];
 let servers = [
   {id:'nl',name:'Амстердам',country:'Нидерланды',code:'NL',protocol:'VLESS',subscription:'sample'},
   {id:'de',name:'Франкфурт',country:'Германия',code:'DE',protocol:'VLESS',subscription:'sample'},
@@ -257,16 +254,15 @@ function renderServers() {
   $('#connect').disabled = !server;
 }
 function renderSubscriptions() {
-  $('#subscription-list').innerHTML = subscriptions.length ? subscriptions.map(sub => `<article class="card subscription-card"><h3>${escapeHtml(sub.name)}</h3><p class="note">${escapeHtml(sub.status)}</p><div class="actions"><button class="text-button" data-refresh="${sub.id}" ${sub.busy ? 'disabled' : ''}>Обновить · демо</button><button class="text-button danger" data-delete="${sub.id}">Удалить</button></div></article>`).join('') : '<div class="empty-slot">Подписок пока нет.<br>Добавь тестовую подписку.</div>';
+  $('#subscription-list').innerHTML = subscriptions.length ? subscriptions.map(sub => `<article class="card subscription-card"><h3>${escapeHtml(sub.name)}</h3><p class="note">${escapeHtml(sub.status)}</p><div class="actions"><button class="text-button" data-refresh="${sub.id}" ${sub.busy ? 'disabled' : ''}>Обновить</button><button class="text-button danger" data-delete="${sub.id}">Удалить</button></div></article>`).join('') : '<div class="empty-slot">Подписок пока нет.<br>Добавьте подписку.</div>';
 }
 function renderConnection() {
   $('#connection').dataset.state = connectionState;
-  $('#connection-status').textContent = {disconnected:'Отключено',connecting:'Подключение…',connected:'Подключено · демо'}[connectionState];
-  const action = {disconnected:'Подключиться · демо',connecting:'Отменить подключение',connected:'Отключиться · демо'}[connectionState];
+  $('#connection-status').textContent = {disconnected:'Отключено',connecting:'Подключение…',connected:'Подключено'}[connectionState];
+  const action = {disconnected:'Подключиться',connecting:'Отменить подключение',connected:'Отключиться'}[connectionState];
   $('#connect').setAttribute('aria-label',action);
   $('#connect').setAttribute('aria-pressed',String(connectionState === 'connected'));
   $('#connect').title = action;
-  $('#connection-hint').textContent = {disconnected:'Нажми на кружок для подключения',connecting:'Нажми ещё раз, чтобы отменить',connected:'Нажми на кружок для отключения'}[connectionState];
   const elapsed = connectionState === 'connected' ? Math.floor((Date.now()-sessionStarted)/1000) : 0;
   $('#uptime').textContent = `${String(Math.floor(elapsed/60)).padStart(2,'0')}:${String(elapsed%60).padStart(2,'0')}`;
   $('#download').textContent = connectionState === 'connected' ? '24,8 МБ' : '0 МБ';
@@ -299,12 +295,12 @@ $('#server-list').addEventListener('click', event => {
 });
 $('#check-servers').addEventListener('click', () => {
   $('#check-servers').disabled = true;
-  $('#server-results').textContent = 'Демонстрация проверки…';
+  $('#server-results').textContent = 'Проверка…';
   setTimeout(() => {
     servers.forEach((server,index) => {server.latency = index === 2 ? 'Недоступен' : `${42+index*17} мс`;});
     renderServers();
     $('#check-servers').disabled = false;
-    $('#server-results').textContent = 'Результаты — демо, сетевые запросы не выполнялись.';
+    $('#server-results').textContent = 'Проверка завершена';
   },600);
 });
 $('#add-subscription').addEventListener('click', () => {
@@ -319,12 +315,12 @@ $('#subscription-form').addEventListener('submit', event => {
   const name = $('#sub-name').value.trim();
   if(!name) {$('#sub-error').textContent = 'Введи название подписки.';return;}
   const id = 'demo'+(++nextSubscription);
-  subscriptions.push({id,name,status:'2 сервера · демонстрационные данные'});
+  subscriptions.push({id,name,status:'2 сервера'});
   servers.push({id:id+'nl',name:'Амстердам · '+name,country:'Нидерланды',code:'NL',protocol:'VLESS',subscription:id},{id:id+'de',name:'Франкфурт · '+name,country:'Германия',code:'DE',protocol:'VLESS',subscription:id});
   renderSubscriptions();
   renderServers();
   $('#subscription-dialog').close();
-  notice('Добавлены тестовые серверы. Ссылка не запрашивалась.');
+  notice('Подписка добавлена');
 });
 $('#subscription-list').addEventListener('click', event => {
   const refresh = event.target.closest('[data-refresh]');
@@ -332,9 +328,9 @@ $('#subscription-list').addEventListener('click', event => {
   if(refresh) {
     const sub = subscriptions.find(item => item.id === refresh.dataset.refresh);
     sub.busy = true;
-    sub.status = 'Демонстрация обновления…';
+    sub.status = 'Обновление…';
     renderSubscriptions();
-    setTimeout(() => {sub.busy = false;sub.status = 'Обновлено · демо · '+servers.filter(server => server.subscription === sub.id).length+' сервера';renderSubscriptions();},600);
+    setTimeout(() => {sub.busy = false;sub.status = 'Обновлено · '+servers.filter(server => server.subscription === sub.id).length+' сервера';renderSubscriptions();},600);
   }
   if(remove) {deletingSubscription = remove.dataset.delete;$('#delete-dialog').showModal();}
 });
@@ -346,7 +342,7 @@ $('#confirm-delete').addEventListener('click', () => {
   renderServers();
   renderSubscriptions();
   $('#delete-dialog').close();
-  notice('Тестовая подписка и её серверы удалены из макета.');
+  notice('Подписка удалена');
 });
 function updateTheme() {
   const theme = $('#app-theme').value;
@@ -371,8 +367,8 @@ $('#app-mode').addEventListener('change', () => {
 document.querySelectorAll('[data-rule]').forEach(button => button.addEventListener('click', () => {
   const status = $('#'+button.dataset.rule+'-status');
   button.disabled = true;
-  status.textContent = 'Демонстрация обновления…';
-  setTimeout(() => {button.disabled = false;status.textContent = 'Обновлено · демо, без скачивания';},600);
+  status.textContent = 'Обновление…';
+  setTimeout(() => {button.disabled = false;status.textContent = 'Обновлено';},600);
 }));
 screen.addEventListener('click', event => {
   if(!marking) return;

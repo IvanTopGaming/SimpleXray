@@ -95,11 +95,11 @@ test('power circle is the only connection button and supports connect, disconnec
   assert.equal(await evaluate('document.querySelector(".status-orbit").getAttribute("aria-pressed")'), 'false');
 });
 
-test('availability check produces explicitly simulated results', async () => {
+test('availability check completes and displays results', async () => {
   await click('#tab-servers');
   await click('#check-servers');
   await wait(750);
-  assert.match(await evaluate('document.querySelector("#server-results")?.textContent'), /демо/i);
+  assert.match(await evaluate('document.querySelector("#server-results")?.textContent'), /Проверка завершена/);
   assert.match(await evaluate('document.querySelector("#server-list")?.textContent'), /мс/);
 });
 
@@ -117,7 +117,7 @@ test('subscription form validates and adds, refreshes and deletes only demo data
   assert.equal(await evaluate('document.querySelector("#subscription-list").textContent.includes("private-token")'), false);
   await click('#subscription-list .subscription-card:last-child [data-refresh]');
   await wait(750);
-  assert.match(await evaluate('document.querySelector("#subscription-list .subscription-card:last-child").textContent'), /Обновлено.*демо/);
+  assert.match(await evaluate('document.querySelector("#subscription-list .subscription-card:last-child").textContent'), /Обновлено/);
   await click('#subscription-list .subscription-card:last-child [data-delete]');
   await click('#confirm-delete');
   assert.equal(await evaluate('document.querySelectorAll("#subscription-list .subscription-card").length'), 1);
@@ -149,7 +149,7 @@ test('routing offers app selection and simulated database update', async () => {
   assert.equal(await evaluate('document.querySelector("#app-browser")?.checked'), true);
   await click('[data-rule="geoip"]');
   await wait(750);
-  assert.match(await evaluate('document.querySelector("#geoip-status")?.textContent'), /Обновлено.*демо/);
+  assert.match(await evaluate('document.querySelector("#geoip-status")?.textContent'), /Обновлено/);
 });
 
 test('deleting the active subscription disconnects and selects the remaining manual server', async () => {
@@ -211,4 +211,17 @@ test('long subscription names wrap inside server cards on narrow screens', async
 test('no script errors or external network calls occur', () => {
   assert.deepEqual(errors, []);
   assert.deepEqual(requests.filter(request => !request.startsWith('file:') && !/^https?:\/\/(localhost|127\.0\.0\.1)(:|\/)/.test(request)), []);
+});
+
+test('app screens and dialogs use product copy without prototype instructions', async () => {
+  const copy = await evaluate(`(() => {
+    const app = document.querySelector('#screen');
+    return app.textContent + [...app.querySelectorAll('[aria-label],[title]')].map(el => el.getAttribute('aria-label') || el.title).join(' ');
+  })()`);
+  assert.doesNotMatch(copy, /демо|демонстрац|макет|вымышлен|нажми|тестов.*подписк/iu);
+  assert.equal(await evaluate('document.querySelector("#connection-hint") === null'), true);
+  await click('#connect');
+  await wait(750);
+  assert.equal(await evaluate('document.querySelector("#connection-status").textContent'), 'Подключено');
+  assert.equal(await evaluate('document.querySelector("#connect").getAttribute("aria-label")'), 'Отключиться');
 });
