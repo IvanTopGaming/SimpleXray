@@ -60,11 +60,49 @@ footer span{width:5px;height:5px;border-radius:50%;background:#87a38b}
 @media(hover:hover){button:hover{background:#eeeee8}button[aria-pressed="true"]:hover{background:#41433d}}
 @media(max-width:650px){header{padding:14px 16px;flex-direction:column;align-items:flex-start;gap:12px}.tools{gap:6px}.separator{display:none}button,select{font-size:12px;padding:7px 9px}main{min-height:auto;padding-top:20px}.screen{height:min(65svh,700px)}}
 @media(prefers-reduced-motion:reduce){button{transition:none}button:active{transform:none}}
+.screen{--muted:#6f766e;min-width:280px}.screen.dark{--muted:#a4ada2;color-scheme:dark}
+.page{gap:18px;padding:24px 18px}.screen button,.screen input,.screen select{font:inherit;font-size:12px}
+.screen button{min-height:44px}.screen button:disabled{cursor:default;opacity:.55}
+.screen button:focus-visible,.screen input:focus-visible,.screen select:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.demo-banner{padding:9px 12px;text-align:center;background:var(--surface);border-bottom:1px solid var(--line);font-size:10px;line-height:1.4;color:var(--muted);flex-shrink:0}
+.screen .tab{font-size:10px}.page-title{justify-content:space-between}.page-title h2{flex:1}
+.screen .primary{background:var(--accent);color:var(--paper);border-color:var(--accent);font-weight:600}
+.screen .secondary{background:var(--surface);color:var(--ink);border-color:var(--line)}
+.screen .text-button{border:0;background:transparent;color:var(--accent);padding:6px 0;text-align:left}
+.screen .danger{color:#b65449}.screen.dark .danger{color:#ffaea3}
+.note{font-size:11px;line-height:1.6;color:var(--muted);margin:0}.stack{display:flex;flex-direction:column;gap:10px;min-width:0}
+.card{border:1px solid var(--line);border-radius:15px;padding:15px;background:var(--paper);min-width:0}
+.card h3{font-size:13px;margin:0 0 6px;font-weight:600;overflow-wrap:anywhere}.card p{margin:0}
+.server-slot{border-style:solid;background:var(--surface)}.server-slot div{min-width:0}.server-slot span{overflow-wrap:anywhere}
+.status-area{text-align:center;padding:12px 0 4px}.status-orbit{margin:0 auto 16px;width:68px;height:68px;border-radius:50%;border:1px solid var(--line);display:grid;place-items:center;background:var(--surface);color:var(--muted)}
+.status-orbit svg{width:28px;height:28px}.status-area[data-state="connected"] .status-orbit{color:var(--accent);border-color:var(--accent)}
+.status-area h3{font-size:19px;margin:0 0 7px}.stats{display:grid;grid-template-columns:1fr 1fr;gap:10px}.stat{padding:13px;border-radius:12px;background:var(--surface)}
+.stat small{display:block;font-size:10px;color:var(--muted);margin-bottom:7px}.stat strong{font-size:16px;font-weight:500;font-variant-numeric:tabular-nums}.stat.wide{grid-column:1/-1}
+.connect-button{cursor:pointer}.connection-space{min-height:0}.server-list{display:flex;flex-direction:column;gap:9px}
+.screen .server-card{display:flex;align-items:center;gap:10px;width:100%;text-align:left;border:1px solid var(--line);border-radius:13px;background:var(--paper);color:var(--ink);padding:13px}
+.screen .server-card[aria-pressed="true"]{background:var(--surface);border-color:var(--accent)}
+.server-info{flex:1;min-width:0}.server-info strong{display:block;font-size:12px;font-weight:600;overflow-wrap:anywhere}.server-info small{display:block;font-size:10px;margin-top:5px;color:var(--muted)}
+.location{border-radius:9px;background:var(--surface);padding:8px;font-size:10px;color:var(--muted)}.latency{font-size:10px;color:var(--accent);white-space:nowrap}
+.actions{display:flex;align-items:center;gap:14px;flex-wrap:wrap;margin-top:8px}.actions button{flex:1}
+.setting-group{display:flex;flex-direction:column;gap:0}.setting-group h3{font-size:10px;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);margin:0 0 8px}
+.field,.switch-row{display:flex;align-items:center;justify-content:space-between;gap:12px;border-bottom:1px solid var(--line);padding:13px 0;font-size:12px;min-width:0}
+.field{flex-wrap:wrap}.field span,.switch-row span{flex:1;min-width:0}.field small,.switch-row small{display:block;color:var(--muted);font-size:10px;line-height:1.5;margin-top:5px}
+.screen input:not([type="checkbox"]),.screen select{min-height:40px;border:1px solid var(--line);border-radius:9px;background:var(--surface);color:var(--ink);padding:9px;min-width:0;max-width:100%}
+.field input:not([type="checkbox"]){width:100%}.field select{max-width:55%}.screen input:disabled{opacity:.45}.screen input:invalid{border-color:#bb685d}
+.switch-row input{appearance:none;flex-shrink:0;width:36px;height:22px;border-radius:20px;background:var(--line);margin:0;cursor:pointer;position:relative;border:1px solid var(--muted)}
+.switch-row input:before{content:"";position:absolute;left:3px;top:3px;width:14px;height:14px;border-radius:50%;background:var(--muted)}
+.switch-row input:checked{background:var(--accent);border-color:var(--accent)}.switch-row input:checked:before{left:17px;background:var(--paper)}
+.screen .setting-row{margin-top:10px}.toast{font-size:11px;line-height:1.5;padding:8px 12px;color:var(--accent);background:var(--surface);border-top:1px solid var(--line)}.toast:empty{display:none}
+.screen dialog{background:var(--paper);color:var(--ink);border:1px solid var(--line);border-radius:20px;padding:22px;width:340px;max-width:calc(100vw - 32px);max-height:85svh;overflow:auto}
+.screen dialog::backdrop{background:#10161066}.screen dialog h3{margin:0 0 10px;font-size:19px}.screen dialog form{display:flex;flex-direction:column;gap:12px}.screen dialog label{font-size:12px;display:flex;flex-direction:column;gap:7px}
+.screen dialog .actions{justify-content:flex-end}.screen dialog .actions button{flex:initial}.error{color:#b65449;font-size:11px;margin:0;min-height:15px}
+@media(hover:hover){.screen button:hover{background:var(--surface)}.screen .primary:hover{background:var(--accent);filter:brightness(.95)}}
+@media(max-width:650px){.screen{height:min(76svh,760px);min-width:280px}.page{padding:20px 15px}.tabs{padding-bottom:9px}}
 </style>
 </head>
 <body>
 <header>
-<div class="brand"><div class="brand-mark" aria-hidden="true">S</div><div><h1>SimpleXray</h1><div class="subtitle">Рабочий холст · навигация</div></div></div>
+<div class="brand"><div class="brand-mark" aria-hidden="true">S</div><div><h1>SimpleXray</h1><div class="subtitle">Рабочий холст · интерактивное демо</div></div></div>
 <div class="tools" aria-label="Настройки холста">
 <select id="size" aria-label="Размер экрана"><option value="393,852">393 × 852</option><option value="360,800">360 × 800</option><option value="412,915">412 × 915</option></select>
 <button id="theme" aria-pressed="false">Тёмный фон</button>
@@ -87,27 +125,47 @@ footer span{width:5px;height:5px;border-radius:50%;background:#87a38b}
 <symbol id="i-route" viewBox="0 0 24 24"><circle cx="6" cy="5" r="2"/><circle cx="18" cy="19" r="2"/><path d="M6 7v8a4 4 0 0 0 4 4h6M9 5h6a3 3 0 0 1 0 6H9"/></symbol>
 <symbol id="i-power" viewBox="0 0 24 24"><path d="M12 2v10M6 5a9 9 0 1 0 12 0"/></symbol>
 </defs></svg>
+<div class="demo-banner">ДЕМО · VPN не запускается · данные вымышлены</div>
 <div class="pages">
 <section class="page" id="page-home" role="tabpanel" aria-labelledby="tab-home">
 <h2>Главная</h2>
-<div><p class="eyebrow">Сервер</p><button class="server-slot" data-open="servers"><svg aria-hidden="true"><use href="#i-servers"/></svg><div><span>Выбранный сервер</span><small>Выбрать из списка</small></div><svg class="chevron" aria-hidden="true"><use href="#i-arrow"/></svg></button></div>
+<div><p class="eyebrow">Выбранный сервер</p><button class="server-slot" data-open="servers"><svg aria-hidden="true"><use href="#i-servers"/></svg><div><span id="selected-name">Амстердам</span><small id="selected-detail">Нидерланды · VLESS</small></div><svg class="chevron" aria-hidden="true"><use href="#i-arrow"/></svg></button></div>
+<div class="status-area" id="connection" data-state="disconnected"><div class="status-orbit"><svg aria-hidden="true"><use href="#i-power"/></svg></div><h3 id="connection-status" role="status">Отключено</h3><p class="note">Демонстрация состояния подключения</p></div>
+<div class="stats"><div class="stat"><small>↓ Получено · демо</small><strong id="download">0 МБ</strong></div><div class="stat"><small>↑ Отправлено · демо</small><strong id="upload">0 МБ</strong></div><div class="stat wide"><small>Время демо-сессии</small><strong id="uptime">00:00</strong></div></div>
 <div class="connection-space"></div>
-<button class="connect-button" disabled><svg aria-hidden="true"><use href="#i-power"/></svg>Подключиться</button>
+<button class="connect-button primary" id="connect">Подключиться · демо</button>
 </section>
-<section class="page" id="page-servers" role="tabpanel" aria-labelledby="tab-servers" hidden><h2>Серверы</h2><div class="empty-slot">Место для полного<br>списка серверов</div></section>
-<section class="page" id="page-subscriptions" role="tabpanel" aria-labelledby="tab-subscriptions" hidden><h2>Подписки</h2><div class="empty-slot">Место для подписок<br>и их обновления</div></section>
-<section class="page" id="page-settings" role="tabpanel" aria-labelledby="tab-settings" hidden><h2>Настройки</h2><button class="setting-row" data-open="routing"><svg aria-hidden="true"><use href="#i-route"/></svg><span>Роутинг</span><svg aria-hidden="true"><use href="#i-arrow"/></svg></button></section>
-<section class="page" id="page-routing" aria-labelledby="routing-title" hidden><div class="page-title"><button class="back" data-open="settings" aria-label="Назад в настройки"><svg aria-hidden="true" style="transform:rotate(180deg)"><use href="#i-arrow"/></svg></button><h2 id="routing-title">Роутинг</h2></div><div class="empty-slot">Место для правил<br>маршрутизации</div></section>
+<section class="page" id="page-servers" role="tabpanel" aria-labelledby="tab-servers" hidden><h2>Серверы</h2><p class="note">Выбери сервер для главного экрана. Все адреса и результаты здесь демонстрационные.</p><button class="secondary" id="check-servers">Проверить доступность · демо</button><p class="note" id="server-results" role="status">Проверка ещё не запускалась</p><div id="server-list" class="server-list"></div></section>
+<section class="page" id="page-subscriptions" role="tabpanel" aria-labelledby="tab-subscriptions" hidden><div class="page-title"><h2>Подписки</h2><button class="secondary" id="add-subscription" aria-label="Добавить подписку">＋ Добавить</button></div><p class="note">Используй тестовую ссылку. Макет не обращается к ней и не сохраняет её после добавления.</p><div id="subscription-list" class="stack"></div></section>
+<section class="page" id="page-settings" role="tabpanel" aria-labelledby="tab-settings" hidden><h2>Настройки</h2>
+<div class="setting-group"><h3>Оформление</h3><label class="field"><span>Тема</span><select id="app-theme"><option value="light">Светлая</option><option value="dark">Тёмная</option><option value="auto">Системная</option></select></label></div>
+<div class="setting-group"><h3>Соединение</h3><label class="switch-row"><span>IPv6<small>Разрешить IPv6 в VPN-интерфейсе</small></span><input type="checkbox" id="ipv6" role="switch"></label><label class="field"><span>DNS · IPv4</span><input id="dns-ipv4" value="8.8.8.8" required aria-describedby="settings-note"></label><label class="field"><span>DNS · IPv6</span><input id="dns-ipv6" value="2001:4860:4860::8888" required disabled></label></div>
+<div><button class="setting-row" data-open="routing"><svg aria-hidden="true"><use href="#i-route"/></svg><span>Роутинг</span><svg aria-hidden="true"><use href="#i-arrow"/></svg></button><button class="setting-row" data-open="advanced"><svg aria-hidden="true"><use href="#i-settings"/></svg><span>Дополнительно</span><svg aria-hidden="true"><use href="#i-arrow"/></svg></button></div>
+<p class="note" id="settings-note">Настройки действуют только в макете. После перезагрузки страницы всё сбросится.</p>
+</section>
+<section class="page" id="page-advanced" aria-labelledby="advanced-title" hidden><div class="page-title"><button class="back" data-open="settings" aria-label="Назад в настройки">‹</button><h2 id="advanced-title">Дополнительно</h2></div>
+<div class="setting-group"><h3>Конфигурация</h3><label class="switch-row"><span>Использовать шаблон<small>Собирать конфигурацию из настроек</small></span><input type="checkbox" checked role="switch"></label><label class="switch-row"><span>Без VPN-интерфейса<small>Только локальный прокси</small></span><input id="disable-vpn" type="checkbox" role="switch"></label></div>
+<div class="setting-group"><h3>Локальный SOCKS</h3><label class="field"><span>Адрес</span><input value="127.0.0.1" required></label><label class="field"><span>Порт<small>От 1 до 65535</small></span><input id="socks-port" type="number" min="1" max="65535" step="1" value="10808" required></label><label class="field"><span>Имя пользователя</span><input autocomplete="off" placeholder="Не задано"></label><label class="field"><span>Пароль</span><input type="password" autocomplete="new-password" placeholder="Не задан"></label><label class="switch-row"><span>HTTP-прокси</span><input type="checkbox" checked role="switch"></label></div>
+<div class="setting-group"><h3>Проверка соединения</h3><label class="field"><span>Тестовый URL<small>Запросы из макета не выполняются</small></span><input type="url" pattern="https?://.+" value="https://example.com/" required></label><label class="field"><span>Тайм-аут, мс</span><input type="number" min="100" max="60000" step="100" value="5000" required></label></div>
+</section>
+<section class="page" id="page-routing" aria-labelledby="routing-title" hidden><div class="page-title"><button class="back" data-open="settings" aria-label="Назад в настройки">‹</button><h2 id="routing-title">Роутинг</h2></div>
+<label class="switch-row"><span>Обход локальной сети<small>Локальные адреса — напрямую</small></span><input id="bypass-lan" type="checkbox" checked role="switch"></label>
+<div class="setting-group"><h3>Приложения · пример</h3><label class="field"><span>Режим</span><select id="app-mode"><option value="exclude">Исключить</option><option value="include">Только выбранные</option></select></label><p class="note" id="app-mode-note">Выбранные приложения обходят VPN.</p><label class="switch-row"><span>Браузер</span><input id="app-browser" type="checkbox" role="switch"></label><label class="switch-row"><span>Мессенджер</span><input type="checkbox" role="switch"></label><label class="switch-row"><span>Видеоплеер</span><input type="checkbox" role="switch"></label></div>
+<div class="setting-group"><h3>Базы правил</h3><div class="card"><h3>GeoIP</h3><p class="note" id="geoip-status" role="status">Встроенная база · демо</p><button class="text-button" data-rule="geoip">Обновить · демо</button></div><div class="card"><h3>GeoSite</h3><p class="note" id="geosite-status" role="status">Встроенная база · демо</p><button class="text-button" data-rule="geosite">Обновить · демо</button></div></div>
+<p class="note">Список приложений вымышленный. Правила не применяются к системе.</p></section>
 </div>
+<div class="toast" id="notice" role="status" aria-live="polite"></div>
 <nav class="tabs" role="tablist" aria-label="Разделы приложения">
 <button class="tab" id="tab-home" role="tab" aria-selected="true" aria-controls="page-home" data-tab="home"><svg aria-hidden="true"><use href="#i-home"/></svg>Главная</button>
 <button class="tab" id="tab-servers" role="tab" aria-selected="false" aria-controls="page-servers" data-tab="servers" tabindex="-1"><svg aria-hidden="true"><use href="#i-servers"/></svg>Серверы</button>
 <button class="tab" id="tab-subscriptions" role="tab" aria-selected="false" aria-controls="page-subscriptions" data-tab="subscriptions" tabindex="-1"><svg aria-hidden="true"><use href="#i-subs"/></svg>Подписки</button>
 <button class="tab" id="tab-settings" role="tab" aria-selected="false" aria-controls="page-settings" data-tab="settings" tabindex="-1"><svg aria-hidden="true"><use href="#i-settings"/></svg>Настройки</button>
 </nav>
+<dialog id="subscription-dialog" aria-labelledby="subscription-title"><form id="subscription-form"><h3 id="subscription-title">Добавить подписку</h3><p class="note">Только демонстрация. Не вставляй личную ссылку; можно оставить example.com.</p><label>Название<input id="sub-name" required maxlength="60" placeholder="Моя подписка" autocomplete="off"></label><label>Тестовая ссылка<input id="sub-url" type="url" pattern="https?://.+" required value="https://example.com/subscription" autocomplete="off"></label><p id="sub-error" class="error" role="alert"></p><div class="actions"><button type="button" class="secondary" data-close="subscription-dialog">Отмена</button><button class="primary" type="submit">Добавить</button></div></form></dialog>
+<dialog id="delete-dialog" aria-labelledby="delete-title"><h3 id="delete-title">Удалить подписку?</h3><p class="note">Из макета также исчезнут её демонстрационные серверы.</p><div class="actions"><button class="secondary" data-close="delete-dialog">Отмена</button><button class="secondary danger" id="confirm-delete">Удалить</button></div></dialog>
 <span class="pin" id="pin" aria-hidden="true">1</span></div></div>
-<p class="caption" id="caption" aria-live="polite">Четыре вкладки. Нажми на любую, чтобы посмотреть её каркас.</p>
-<footer><span></span>МАКЕТ ИНТЕРФЕЙСА</footer>
+<p class="caption" id="caption" aria-live="polite">Выбирай серверы и меняй настройки. Всё работает только внутри демо.</p>
+<footer><span></span>ДЕМО · НЕ ИЗМЕНЯЕТ НАСТРОЙКИ ПРИЛОЖЕНИЯ</footer>
 </div>
 </main>
 <script>
@@ -119,13 +177,13 @@ let width = 393;
 let height = 852;
 let marking = false;
 let currentPage = 'home';
-const pageNames = {home:'Главная',servers:'Серверы',subscriptions:'Подписки',settings:'Настройки',routing:'Роутинг'};
-const defaultCaption = 'Четыре вкладки. Нажми на любую, чтобы посмотреть её каркас.';
+const pageNames = {home:'Главная',servers:'Серверы',subscriptions:'Подписки',settings:'Настройки',routing:'Роутинг',advanced:'Дополнительно'};
+const defaultCaption = 'Выбирай серверы и меняй настройки. Всё работает только внутри демо.';
 function openPage(name) {
   currentPage = name;
   document.querySelectorAll('.page').forEach(page => {page.hidden = page.id !== 'page-'+name;});
   document.querySelectorAll('[data-tab]').forEach(tab => {
-    const active = tab.dataset.tab === (name === 'routing' ? 'settings' : name);
+    const active = tab.dataset.tab === (['routing','advanced'].includes(name) ? 'settings' : name);
     tab.setAttribute('aria-selected',String(active));
     tab.tabIndex = active ? 0 : -1;
   });
@@ -133,6 +191,7 @@ function openPage(name) {
   document.querySelector('.pages').scrollTop = 0;
   resetPin();
   announce('navigation',{screen:name});
+  document.querySelector('#notice').textContent = '';
 }
 document.querySelectorAll('[data-tab],[data-open]').forEach(button => {
   button.addEventListener('click',() => {if(!marking) openPage(button.dataset.tab || button.dataset.open);});
@@ -156,7 +215,9 @@ function toggle(button, className) {
   return active;
 }
 document.querySelector('#theme').addEventListener('click', event => {
-  announce('canvas-theme', {dark:toggle(event.currentTarget, 'dark')});
+  const dark = toggle(event.currentTarget, 'dark');
+  document.querySelector('#app-theme').value = dark ? 'dark' : 'light';
+  announce('canvas-theme', {dark});
 });
 document.querySelector('#grid').addEventListener('click', event => toggle(event.currentTarget, 'grid'));
 document.querySelector('#size').addEventListener('change', event => {
@@ -171,24 +232,166 @@ document.querySelector('#mark').addEventListener('click', event => {
   marking = toggle(event.currentTarget, 'marking');
   caption.textContent = marking ? 'Нажми на экран, чтобы указать место для элемента. Затем опиши его в чате.' : defaultCaption;
 });
-screen.addEventListener('click', event => {
-  if (!marking) return;
-  const rect = screen.getBoundingClientRect();
-  const x = (event.clientX-rect.left)/rect.width;
-  const y = (event.clientY-rect.top)/rect.height;
-  pin.style.left = (x*100)+'%';
-  pin.style.top = (y*100)+'%';
-  pin.classList.add('visible');
-  clear.hidden = false;
-  caption.textContent = 'Метка 1 · '+Math.round(x*width)+', '+Math.round(y*height)+'. Напиши в чате, что здесь разместим.';
-  announce('layout-pin',{screen:currentPage,x:Math.round(x*width),y:Math.round(y*height),width,height});
-});
 function resetPin() {
   pin.classList.remove('visible');
   clear.hidden = true;
   caption.textContent = marking ? 'Нажми на экран, чтобы указать место для элемента.' : defaultCaption;
 }
 clear.addEventListener('click', () => {resetPin();announce('layout-pin-clear',{screen:currentPage});});
+const $ = selector => document.querySelector(selector);
+const subscriptions = [{id:'sample',name:'Тестовая подписка',status:'3 сервера · демонстрационные данные'}];
+let servers = [
+  {id:'nl',name:'Амстердам',country:'Нидерланды',code:'NL',protocol:'VLESS',subscription:'sample'},
+  {id:'de',name:'Франкфурт',country:'Германия',code:'DE',protocol:'VLESS',subscription:'sample'},
+  {id:'fi',name:'Хельсинки',country:'Финляндия',code:'FI',protocol:'Trojan',subscription:'sample'},
+  {id:'manual',name:'Личный сервер',country:'Ручная конфигурация',code:'01',protocol:'VMess',subscription:null}
+];
+let selected = 'nl';
+let connectionState = 'disconnected';
+let connectionTimer;
+let sessionStarted = 0;
+let nextSubscription = 0;
+let deletingSubscription = null;
+const escapeHtml = value => String(value).replace(/[&<>"']/g, character => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[character]));
+function notice(message) { $('#notice').textContent = message; }
+function renderServers() {
+  $('#server-list').innerHTML = servers.map(server => `<button class="server-card" data-server="${server.id}" aria-pressed="${selected === server.id}"><span class="location">${server.code}</span><span class="server-info"><strong>${escapeHtml(server.name)}</strong><small>${escapeHtml(server.country)} · ${server.protocol}</small></span><span class="latency">${server.latency || (selected === server.id ? '✓' : '—')}</span></button>`).join('');
+  const server = servers.find(item => item.id === selected);
+  $('#selected-name').textContent = server?.name || 'Выбери сервер';
+  $('#selected-detail').textContent = server ? `${server.country} · ${server.protocol}` : 'Открыть список';
+  $('#connect').disabled = !server;
+}
+function renderSubscriptions() {
+  $('#subscription-list').innerHTML = subscriptions.length ? subscriptions.map(sub => `<article class="card subscription-card"><h3>${escapeHtml(sub.name)}</h3><p class="note">${escapeHtml(sub.status)}</p><div class="actions"><button class="text-button" data-refresh="${sub.id}" ${sub.busy ? 'disabled' : ''}>Обновить · демо</button><button class="text-button danger" data-delete="${sub.id}">Удалить</button></div></article>`).join('') : '<div class="empty-slot">Подписок пока нет.<br>Добавь тестовую подписку.</div>';
+}
+function renderConnection() {
+  $('#connection').dataset.state = connectionState;
+  $('#connection-status').textContent = {disconnected:'Отключено',connecting:'Подключение…',connected:'Подключено · демо'}[connectionState];
+  $('#connect').textContent = {disconnected:'Подключиться · демо',connecting:'Отменить',connected:'Отключиться · демо'}[connectionState];
+  const elapsed = connectionState === 'connected' ? Math.floor((Date.now()-sessionStarted)/1000) : 0;
+  $('#uptime').textContent = `${String(Math.floor(elapsed/60)).padStart(2,'0')}:${String(elapsed%60).padStart(2,'0')}`;
+  $('#download').textContent = connectionState === 'connected' ? '24,8 МБ' : '0 МБ';
+  $('#upload').textContent = connectionState === 'connected' ? '1,2 МБ' : '0 МБ';
+}
+function disconnect() {
+  clearTimeout(connectionTimer);
+  connectionState = 'disconnected';
+  renderConnection();
+}
+$('#connect').addEventListener('click', () => {
+  if(connectionState !== 'disconnected') return disconnect();
+  if(!servers.some(server => server.id === selected)) return;
+  connectionState = 'connecting';
+  renderConnection();
+  connectionTimer = setTimeout(() => {
+    connectionState = 'connected';
+    sessionStarted = Date.now();
+    renderConnection();
+  },600);
+});
+setInterval(() => {if(connectionState === 'connected') renderConnection();},1000);
+$('#server-list').addEventListener('click', event => {
+  const button = event.target.closest('[data-server]');
+  if(!button) return;
+  if(selected !== button.dataset.server) disconnect();
+  selected = button.dataset.server;
+  renderServers();
+  openPage('home');
+});
+$('#check-servers').addEventListener('click', () => {
+  $('#check-servers').disabled = true;
+  $('#server-results').textContent = 'Демонстрация проверки…';
+  setTimeout(() => {
+    servers.forEach((server,index) => {server.latency = index === 2 ? 'Недоступен' : `${42+index*17} мс`;});
+    renderServers();
+    $('#check-servers').disabled = false;
+    $('#server-results').textContent = 'Результаты — демо, сетевые запросы не выполнялись.';
+  },600);
+});
+$('#add-subscription').addEventListener('click', () => {
+  $('#subscription-form').reset();
+  $('#sub-error').textContent = '';
+  $('#subscription-dialog').showModal();
+});
+document.querySelectorAll('[data-close]').forEach(button => button.addEventListener('click', () => $('#'+button.dataset.close).close()));
+$('#subscription-dialog').addEventListener('close', () => $('#subscription-form').reset());
+$('#subscription-form').addEventListener('submit', event => {
+  event.preventDefault();
+  const name = $('#sub-name').value.trim();
+  if(!name) {$('#sub-error').textContent = 'Введи название подписки.';return;}
+  const id = 'demo'+(++nextSubscription);
+  subscriptions.push({id,name,status:'2 сервера · демонстрационные данные'});
+  servers.push({id:id+'nl',name:'Амстердам · '+name,country:'Нидерланды',code:'NL',protocol:'VLESS',subscription:id},{id:id+'de',name:'Франкфурт · '+name,country:'Германия',code:'DE',protocol:'VLESS',subscription:id});
+  renderSubscriptions();
+  renderServers();
+  $('#subscription-dialog').close();
+  notice('Добавлены тестовые серверы. Ссылка не запрашивалась.');
+});
+$('#subscription-list').addEventListener('click', event => {
+  const refresh = event.target.closest('[data-refresh]');
+  const remove = event.target.closest('[data-delete]');
+  if(refresh) {
+    const sub = subscriptions.find(item => item.id === refresh.dataset.refresh);
+    sub.busy = true;
+    sub.status = 'Демонстрация обновления…';
+    renderSubscriptions();
+    setTimeout(() => {sub.busy = false;sub.status = 'Обновлено · демо · '+servers.filter(server => server.subscription === sub.id).length+' сервера';renderSubscriptions();},600);
+  }
+  if(remove) {deletingSubscription = remove.dataset.delete;$('#delete-dialog').showModal();}
+});
+$('#confirm-delete').addEventListener('click', () => {
+  const index = subscriptions.findIndex(sub => sub.id === deletingSubscription);
+  if(index >= 0) subscriptions.splice(index,1);
+  servers = servers.filter(server => server.subscription !== deletingSubscription);
+  if(!servers.some(server => server.id === selected)) {disconnect();selected = servers[0]?.id || null;}
+  renderServers();
+  renderSubscriptions();
+  $('#delete-dialog').close();
+  notice('Тестовая подписка и её серверы удалены из макета.');
+});
+function updateTheme() {
+  const theme = $('#app-theme').value;
+  const dark = theme === 'dark' || (theme === 'auto' && matchMedia('(prefers-color-scheme: dark)').matches);
+  screen.classList.toggle('dark',dark);
+  $('#theme').setAttribute('aria-pressed',String(dark));
+}
+$('#app-theme').addEventListener('change',updateTheme);
+matchMedia('(prefers-color-scheme: dark)').addEventListener('change',updateTheme);
+function updateVpnControls() {
+  const disabled = $('#disable-vpn').checked;
+  $('#ipv6').disabled = disabled;
+  $('#dns-ipv4').disabled = disabled;
+  $('#dns-ipv6').disabled = disabled || !$('#ipv6').checked;
+  $('#bypass-lan').disabled = disabled;
+}
+$('#ipv6').addEventListener('change',updateVpnControls);
+$('#disable-vpn').addEventListener('change',updateVpnControls);
+$('#app-mode').addEventListener('change', () => {
+  $('#app-mode-note').textContent = $('#app-mode').value === 'exclude' ? 'Выбранные приложения обходят VPN.' : 'Только выбранные приложения используют VPN.';
+});
+document.querySelectorAll('[data-rule]').forEach(button => button.addEventListener('click', () => {
+  const status = $('#'+button.dataset.rule+'-status');
+  button.disabled = true;
+  status.textContent = 'Демонстрация обновления…';
+  setTimeout(() => {button.disabled = false;status.textContent = 'Обновлено · демо, без скачивания';},600);
+}));
+screen.addEventListener('click', event => {
+  if(!marking) return;
+  event.preventDefault();
+  event.stopImmediatePropagation();
+  const rect = screen.getBoundingClientRect();
+  const x = Math.max(0,Math.min(1,(event.clientX-rect.left)/rect.width));
+  const y = Math.max(0,Math.min(1,(event.clientY-rect.top)/rect.height));
+  pin.style.left = x*100+'%';
+  pin.style.top = y*100+'%';
+  pin.classList.add('visible');
+  clear.hidden = false;
+  caption.textContent = 'Метка 1 · '+Math.round(x*width)+', '+Math.round(y*height)+'. Напиши в чате, что здесь разместим.';
+  announce('layout-pin',{screen:currentPage,x:Math.round(x*width),y:Math.round(y*height),width,height});
+},true);
+renderServers();
+renderSubscriptions();
+renderConnection();
 </script>
 </body>
 </html>
