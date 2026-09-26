@@ -153,6 +153,10 @@ footer span{width:5px;height:5px;border-radius:50%;background:#87a38b}
 .page-title{min-width:0}
 .page-title h2{min-width:0}
 .page-title>button:not(.back){flex-shrink:0}
+.add-actions{position:relative;flex-shrink:0}
+.add-menu{position:absolute;right:0;top:calc(100% + 6px);z-index:10;width:180px;padding:4px;border:1px solid var(--line);border-radius:14px;background:var(--paper);box-shadow:0 8px 24px #0002}
+.screen .add-menu button{display:block;width:100%;border:0;background:transparent;color:var(--ink);text-align:left;border-radius:10px;padding:12px}
+.screen .add-menu button:hover,.screen .add-menu button:focus-visible{background:var(--surface)}
 .input-action button{min-width:48px}
 @container (max-width:370px){.page{padding:20px 14px;gap:16px}.screen .server-entry .server-card{display:grid;grid-template-columns:auto minmax(0,1fr);gap:6px 8px}.server-entry .latency{grid-column:2}.server-entry .location{grid-row:1/3}.server-slot{flex-wrap:wrap}.server-slot div{flex-basis:calc(100% - 42px)}.server-slot .home-ping{margin-left:31px}.server-slot .chevron{margin-left:auto}.screen .server-filters select{font-size:14px}.screen .tab{font-size:11px}.page-title{gap:6px}.page-title h2{font-size:21px}}
 .app-view{background:#fff;overflow:hidden}
@@ -204,8 +208,8 @@ footer span{width:5px;height:5px;border-radius:50%;background:#87a38b}
 <div class="status-area" id="connection" data-state="disconnected"><button class="status-orbit" id="connect" type="button" aria-label="Подключиться" aria-pressed="false" aria-describedby="connection-status"><svg aria-hidden="true"><use href="#i-power"/></svg></button><h3 id="connection-status" role="status">Отключено</h3></div>
 <div class="live-speeds"><div><small>↓ Загрузка</small><strong id="speed-down">0 КБ/с</strong></div><div><small>↑ Отдача</small><strong id="speed-up">0 КБ/с</strong></div></div><div class="session-totals"><span>↓ <span id="download">0 МБ</span></span><span>↑ <span id="upload">0 МБ</span></span><span id="uptime" aria-label="Время подключения">00:00</span></div>
 </section>
-<section class="page" id="page-servers" role="tabpanel" aria-labelledby="tab-servers" hidden><div class="page-title"><h2>Серверы</h2><button class="secondary" id="add-server" aria-label="Добавить сервер">＋ Добавить</button></div><button class="secondary" id="import-server">Импорт из буфера</button><div class="server-tools"><div class="input-action"><input type="search" id="server-search" aria-label="Поиск серверов" placeholder="Сервер, страна или подписка"><button class="secondary" id="clear-search" aria-label="Очистить поиск" hidden>✕</button></div><button id="clear-sub-filter" class="filter-chip" aria-label="Сбросить фильтр подписки" hidden><span id="sub-filter-name"></span><span aria-hidden="true">✕</span></button><div class="server-filters"><label>Группировка<select id="server-group"><option value="subscription">По подпискам</option><option value="country">По странам</option></select></label><label>Сортировка<select id="server-sort"><option value="name">По имени</option><option value="ping">По пингу</option></select></label></div></div><button class="secondary" id="check-servers">Проверить доступность</button><p class="note" id="server-results" role="status">Проверка ещё не запускалась</p><div id="server-list" class="server-list"></div></section>
-<section class="page" id="page-subscriptions" role="tabpanel" aria-labelledby="tab-subscriptions" hidden><div class="page-title"><h2>Подписки</h2><button class="secondary" id="add-subscription" aria-label="Добавить подписку">＋ Добавить</button></div><button class="secondary" id="import-subscription">Импорт из буфера</button><div id="subscription-list" class="stack"></div></section>
+<section class="page" id="page-servers" role="tabpanel" aria-labelledby="tab-servers" hidden><div class="page-title"><h2>Серверы</h2><div class="add-actions"><button class="secondary" id="add-server" aria-label="Добавить сервер" aria-haspopup="menu" aria-expanded="false" aria-controls="add-server-menu">＋ Добавить</button><div class="add-menu" id="add-server-menu" role="menu" aria-labelledby="add-server" hidden><button id="manual-server" role="menuitem" tabindex="-1">Вручную</button><button id="import-server" role="menuitem" tabindex="-1">Из буфера</button></div></div></div><div class="server-tools"><div class="input-action"><input type="search" id="server-search" aria-label="Поиск серверов" placeholder="Сервер, страна или подписка"><button class="secondary" id="clear-search" aria-label="Очистить поиск" hidden>✕</button></div><button id="clear-sub-filter" class="filter-chip" aria-label="Сбросить фильтр подписки" hidden><span id="sub-filter-name"></span><span aria-hidden="true">✕</span></button><div class="server-filters"><label>Группировка<select id="server-group"><option value="subscription">По подпискам</option><option value="country">По странам</option></select></label><label>Сортировка<select id="server-sort"><option value="name">По имени</option><option value="ping">По пингу</option></select></label></div></div><button class="secondary" id="check-servers">Проверить доступность</button><p class="note" id="server-results" role="status">Проверка ещё не запускалась</p><div id="server-list" class="server-list"></div></section>
+<section class="page" id="page-subscriptions" role="tabpanel" aria-labelledby="tab-subscriptions" hidden><div class="page-title"><h2>Подписки</h2><div class="add-actions"><button class="secondary" id="add-subscription" aria-label="Добавить подписку" aria-haspopup="menu" aria-expanded="false" aria-controls="add-subscription-menu">＋ Добавить</button><div class="add-menu" id="add-subscription-menu" role="menu" aria-labelledby="add-subscription" hidden><button id="manual-subscription" role="menuitem" tabindex="-1">Вручную</button><button id="import-subscription" role="menuitem" tabindex="-1">Из буфера</button></div></div></div><div id="subscription-list" class="stack"></div></section>
 <section class="page" id="page-diagnostics" aria-labelledby="diagnostics-title" hidden><div class="page-title"><button class="back" data-open="settings" aria-label="Назад в настройки">‹</button><h2 id="diagnostics-title">Журнал и отладка</h2></div><p class="note">Последние события соединения. Ключи и ссылки не записываются в журнал.</p><textarea id="diagnostic-log" readonly aria-label="Журнал событий" spellcheck="false"></textarea><button class="secondary" id="copy-log">Скопировать журнал</button><p class="note" id="log-status" role="status"></p></section>
 </div>
 <div class="toast" id="notice" role="status" aria-live="polite"></div>
@@ -303,7 +307,52 @@ let currentPage = 'home';
 const pageNames = {home:'Главная',servers:'Серверы',subscriptions:'Подписки',settings:'Настройки',...Object.fromEntries(settingsSections.map(s=>[s[0],s[1]]))};
 let appliedSettings;
 const defaultCaption = '';
+function closeAddMenus(restoreFocus = false) {
+  document.querySelectorAll('.add-actions').forEach(actions => {
+    const trigger = actions.querySelector('[aria-haspopup]');
+    const menu = actions.querySelector('[role=menu]');
+    if(menu.hidden) return;
+    menu.hidden = true;
+    trigger.setAttribute('aria-expanded','false');
+    if(restoreFocus) trigger.focus();
+  });
+}
+document.querySelectorAll('.add-actions').forEach(actions => {
+  const trigger = actions.querySelector('[aria-haspopup]');
+  const menu = actions.querySelector('[role=menu]');
+  const items = Array.from(menu.querySelectorAll('[role=menuitem]'));
+  const show = (last = false) => {
+    closeAddMenus();
+    menu.hidden = false;
+    trigger.setAttribute('aria-expanded','true');
+    items[last ? items.length-1 : 0].focus();
+  };
+  trigger.addEventListener('click',() => {
+    if(menu.hidden) show(); else closeAddMenus(true);
+  });
+  menu.addEventListener('click',event => {
+    if(event.target.closest('[role=menuitem]')) closeAddMenus(true);
+  },true);
+  actions.addEventListener('keydown',event => {
+    if(marking) return;
+    if(event.key === 'Escape') {event.preventDefault();closeAddMenus(true);return;}
+    if(event.key === 'Tab') {closeAddMenus(true);return;}
+    if(!['ArrowDown','ArrowUp','Home','End'].includes(event.key)) return;
+    event.preventDefault();
+    if(menu.hidden) {show(event.key === 'ArrowUp' || event.key === 'End');return;}
+    const index = items.indexOf(document.activeElement);
+    const next = event.key === 'Home' ? 0 : event.key === 'End' ? items.length-1 : (index+(event.key === 'ArrowUp' ? -1 : 1)+items.length)%items.length;
+    items[next].focus();
+  });
+  actions.addEventListener('focusout',event => {
+    if(!actions.contains(event.relatedTarget)) closeAddMenus();
+  });
+});
+document.addEventListener('click',event => {
+  if(!event.target.closest('.add-actions')) closeAddMenus();
+});
 function openPage(name) {
+  closeAddMenus();
   currentPage = name;
   document.querySelectorAll('.page').forEach(page => {page.hidden = page.id !== 'page-'+name;});
   document.querySelectorAll('[data-tab]').forEach(tab => {
@@ -685,7 +734,7 @@ function openServer(id = null) {
   $('#server-error').textContent = '';
   $('#server-dialog').showModal();
 }
-$('#add-server').addEventListener('click', () => openServer());
+$('#manual-server').addEventListener('click', () => openServer());
 function previewServerLink() {
   serverInputMode='link';
   try {$('#server-config').value=parseServerLink($('#server-link').value).config;}
@@ -782,7 +831,7 @@ function openSubscription(id = null) {
   $('#sub-error').textContent = '';
   $('#subscription-dialog').showModal();
 }
-$('#add-subscription').addEventListener('click', () => openSubscription());
+$('#manual-subscription').addEventListener('click', () => openSubscription());
 $('#welcome-subscription').addEventListener('click',()=>openSubscription());
 $('#welcome-server').addEventListener('click',()=>openServer());
 document.querySelectorAll('[data-close]').forEach(button => button.addEventListener('click', () => $('#'+button.dataset.close).close()));

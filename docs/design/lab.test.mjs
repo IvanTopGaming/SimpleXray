@@ -18,6 +18,10 @@ const evaluate = async expression => {
   return result.result.value;
 };
 const click = selector => evaluate(`document.querySelector(${JSON.stringify(selector)})?.click()`);
+const chooseAdd = async (kind, source = 'manual') => {
+  await click('#add-'+kind);
+  await click('#'+source+'-'+kind);
+};
 const value = (selector, value) => evaluate(`(() => {
   const input = document.querySelector(${JSON.stringify(selector)});
   if (!input) return false;
@@ -133,7 +137,7 @@ test('availability check completes and displays results', async () => {
 
 test('subscription form validates and adds, refreshes and deletes only demo data', async () => {
   await click('#tab-subscriptions');
-  await click('#add-subscription');
+  await chooseAdd('subscription');
   await value('#sub-url', 'javascript:alert(1)');
   await evaluate('document.querySelector("#subscription-form")?.requestSubmit()');
   assert.equal(await evaluate('document.querySelector("#subscription-form")?.checkValidity()'), false);
@@ -231,7 +235,7 @@ test('marking does not toggle controls; narrow screens keep four tabs inside the
 test('long subscription names wrap inside server cards on narrow screens', async () => {
   await send('Emulation.setDeviceMetricsOverride', { width: 390, height: 844, deviceScaleFactor: 1, mobile: true });
   await click('#tab-subscriptions');
-  await click('#add-subscription');
+  await chooseAdd('subscription');
   await value('#sub-url', 'https://'+'x'.repeat(60)+'.example.com/subscription');
   await evaluate('document.querySelector("#subscription-form").requestSubmit()');
   await click('#tab-servers');
@@ -253,7 +257,7 @@ test('app screens and dialogs use product copy without prototype instructions', 
 
 test('manual servers can be added, selected and edited with JSON validation', async () => {
   await click('#tab-servers');
-  await click('#add-server');
+  await chooseAdd('server');
   await click('#advanced-input summary');
   assert.equal(await evaluate('document.querySelector("#server-dialog")?.open'), true);
   await value('#server-name', '<img src=x onerror=alert(1)>');
@@ -317,7 +321,7 @@ test('manual deletion confirms, disconnects and reveals onboarding after the las
 
 test('share links import credentials and transport without silently discarding unsupported fields', async () => {
   await click('#tab-servers');
-  await click('#add-server');
+  await chooseAdd('server');
   assert.equal(await evaluate('document.querySelector("#advanced-input")?.open'),false);
   assert.equal(await value('#server-link','vless://00000000-0000-4000-8000-000000000001@vpn.example.com:443?type=ws&security=tls&sni=edge.example.com&path=%2Fvpn&host=cdn.example.com#%D0%9C%D0%BE%D0%B9'),true);
   await evaluate('document.querySelector("#server-form").requestSubmit()');
@@ -327,17 +331,17 @@ test('share links import credentials and transport without silently discarding u
   assert.equal(config.streamSettings.wsSettings.path,'/vpn');
   assert.equal(config.streamSettings.wsSettings.headers.Host,'cdn.example.com');
   assert.equal(config.streamSettings.tlsSettings.serverName,'edge.example.com');
-  await click('#add-server');
+  await chooseAdd('server');
   await value('#server-link','trojan://p%40ss%3Aword@[2001:db8::1]:8443?security=tls#Private');
   await evaluate('document.querySelector("#server-form").requestSubmit()');
   assert.deepEqual(await evaluate('JSON.parse(servers.at(-1).config).outbounds[0].settings.servers[0]'),{address:'2001:db8::1',port:8443,password:'p@ss:word'});
   const vmess = 'vmess://'+Buffer.from(JSON.stringify({v:'2',ps:'VMess',add:'vm.example.com',port:'443',id:'00000000-0000-4000-8000-000000000001',aid:'0',scy:'auto',net:'ws',type:'none',host:'cdn.example.com',path:'/ws',tls:'tls',sni:'vm.example.com'})).toString('base64');
-  await click('#add-server');
+  await chooseAdd('server');
   await value('#server-link',vmess);
   await evaluate('document.querySelector("#server-form").requestSubmit()');
   assert.equal(await evaluate('JSON.parse(servers.at(-1).config).outbounds[0].protocol'),'vmess');
   for(const link of ['vless://bad@vpn.example.com:443','vless://00000000-0000-4000-8000-000000000001@vpn.example.com:443?unknown=secret','vmess://not-base64','trojan://pass@vpn.example.com:0']) {
-    await click('#add-server');
+    await chooseAdd('server');
     await value('#server-link',link);
     await evaluate('document.querySelector("#server-form").requestSubmit()');
     assert.equal(await evaluate('document.querySelector("#server-dialog").open'),true);
@@ -384,7 +388,7 @@ test('clipboard is explicit, routes to a review form and fails without losing ty
   assert.equal(await evaluate('subscriptions.length'),0);
   await click('[data-close="subscription-dialog"]');
   await click('#tab-servers');
-  await click('#add-server');
+  await chooseAdd('server');
   assert.equal(await evaluate('window.clipboardReads'),1);
   await value('#server-link','trojan://keep@vpn.example.com:443');
   await evaluate('navigator.clipboard.readText=async()=>{throw new DOMException("denied","NotAllowedError")}');
@@ -410,7 +414,7 @@ test('error state offers retry and server selection and diagnostics never includ
   await click('#connect');
   await click('#choose-other-server');
   assert.equal(await evaluate('document.querySelector("#page-servers").hidden'),false);
-  await click('#add-server');
+  await chooseAdd('server');
   await value('#server-link','trojan://DO-NOT-LOG@vpn.example.com:443#SECRET-NAME');
   await evaluate('document.querySelector("#server-form").requestSubmit()');
   await click('#tab-settings');
@@ -426,7 +430,7 @@ test('error state offers retry and server selection and diagnostics never includ
 test('QR unsupported fallback keeps manual input usable without requesting a camera', async () => {
   await evaluate('window.BarcodeDetector=undefined');
   await click('#tab-servers');
-  await click('#add-server');
+  await chooseAdd('server');
   assert.equal(await evaluate('Boolean(document.querySelector("#scan-qr"))'),true);
   await click('#scan-qr');
   await waitFor('document.querySelector("#qr-status")?.textContent.includes("Вставьте")');
@@ -440,7 +444,7 @@ test('QR camera result fills the review form and releases camera tracks', async 
     window.testCamera=qrCanvas.captureStream(1);
     Object.defineProperty(navigator.mediaDevices,'getUserMedia',{configurable:true,value:async()=>testCamera});`);
   await click('#tab-servers');
-  await click('#add-server');
+  await chooseAdd('server');
   await click('#scan-qr');
   await waitFor('document.querySelector("#server-link").value.includes("qr-secret")');
   assert.equal(await evaluate('document.querySelector("#qr-dialog").open'),false);
@@ -453,7 +457,7 @@ test('QR cancellation stops a camera granted after the dialog was closed', async
   await evaluate(`window.BarcodeDetector=class {static async getSupportedFormats(){return ['qr_code']}};
     Object.defineProperty(navigator.mediaDevices,'getUserMedia',{configurable:true,value:()=>new Promise(resolve=>window.grantCamera=resolve)});`);
   await click('#tab-servers');
-  await click('#add-server');
+  await chooseAdd('server');
   await click('#scan-qr');
   await waitFor('typeof window.grantCamera==="function"');
   await click('[data-close="qr-dialog"]');
@@ -465,14 +469,14 @@ test('QR cancellation stops a camera granted after the dialog was closed', async
 test('clipboard late reply cannot overwrite a reopened form or newer typing', async () => {
   await evaluate('Object.defineProperty(navigator,"clipboard",{configurable:true,value:{readText:()=>new Promise(resolve=>window.resolveClipboard=resolve)}})');
   await click('#tab-servers');
-  await click('#add-server');
+  await chooseAdd('server');
   await click('#paste-server');
   await value('#server-link','trojan://typed@vpn.example.com:443');
   await evaluate('resolveClipboard("trojan://late@vpn.example.com:443")');
   assert.equal(await evaluate('document.querySelector("#server-link").value'),'trojan://typed@vpn.example.com:443');
   await click('#paste-server');
   await click('#close-server');
-  await click('#add-server');
+  await chooseAdd('server');
   await evaluate('resolveClipboard("trojan://late@vpn.example.com:443")');
   assert.equal(await evaluate('document.querySelector("#server-link").value'),'');
 });
@@ -480,7 +484,7 @@ test('clipboard late reply cannot overwrite a reopened form or newer typing', as
 test('pending clipboard paste cannot overwrite a newer JSON configuration', async () => {
   await evaluate('Object.defineProperty(navigator,"clipboard",{configurable:true,value:{readText:()=>new Promise(resolve=>window.resolveClipboard=resolve)}})');
   await click('#tab-servers');
-  await click('#add-server');
+  await chooseAdd('server');
   await click('#paste-server');
   await click('#advanced-input summary');
   await value('#server-name','Edited JSON');
@@ -505,13 +509,13 @@ test('new modal states stay inside the phone on narrow and desktop viewports', a
 
 test('expanding JSON does not replace a share link and collapsing does not discard JSON edits', async () => {
   await click('#tab-servers');
-  await click('#add-server');
+  await chooseAdd('server');
   await value('#server-link','trojan://preserve@real.example.com:8443#Linked');
   await value('#server-name','My server');
   await click('#advanced-input summary');
   await evaluate('document.querySelector("#server-form").requestSubmit()');
   assert.equal(await evaluate('JSON.parse(servers.at(-1).config).outbounds[0].settings.servers?.[0]?.address'),'real.example.com');
-  await click('#add-server');
+  await chooseAdd('server');
   await click('#advanced-input summary');
   await value('#server-name','JSON');
   await value('#server-config','{"outbounds":[{"protocol":"trojan","settings":{"servers":[{"address":"json.example.com","port":443,"password":"json"}]}}]}');
@@ -590,7 +594,8 @@ test('all dialogs and their backdrops fit the phone display on desktop and mobil
       ['subscriptions','[data-delete="sample"]','delete-dialog']
     ]) {
       await click('#tab-'+tab);
-      await click(trigger);
+      if(trigger.startsWith('#add-')) await chooseAdd(trigger.slice(5));
+      else await click(trigger);
       await wait(80);
       const geometry = await evaluate(`(() => {
         const screen=document.querySelector('#screen').getBoundingClientRect();
@@ -693,7 +698,7 @@ test('subscription usage handles missing values, exceeded quotas and expiry with
   for(const [header,expected] of inputs) assert.deepEqual(await evaluate(`subscriptionUsage(${JSON.stringify(header)},1000000)`),expected);
   await click('#tab-subscriptions');
   assert.ok(await evaluate('document.querySelector(".subscription-card progress")?.value > 0'));
-  await click('#add-subscription');
+  await chooseAdd('subscription');
   await value('#sub-url','https://unknown.example.com/sub');
   await evaluate('document.querySelector("#subscription-form").requestSubmit()');
   assert.equal(await evaluate('document.querySelector(".subscription-card:last-child progress")'),null);
@@ -712,7 +717,7 @@ test('global subscription auto-update refreshes every subscription on one hourly
   await click('[data-edit-sub="sample"]');
   assert.equal(await evaluate('document.querySelector("#sub-refresh")'),null);
   await click('[data-close="subscription-dialog"]');
-  await click('#add-subscription');
+  await chooseAdd('subscription');
   await value('#sub-url','https://second.example.com/sub');
   await evaluate('document.querySelector("#subscription-form").requestSubmit()');
   assert.equal(await evaluate('document.querySelector(".update-policy")'),null);
@@ -1072,6 +1077,53 @@ test('new routing form does not mark untouched required fields as errors', async
   assert.equal(await evaluate('getComputedStyle(document.querySelector("#route-name")).borderTopColor'),await evaluate('getComputedStyle(document.querySelector("#route-port")).borderTopColor'));
 });
 
+test('add menus offer manual and clipboard choices without opening a form immediately', async () => {
+  for(const [page,kind] of [['servers','server'],['subscriptions','subscription']]) {
+    await click('#tab-'+page);
+    assert.equal(await evaluate(`document.querySelector('#import-${kind}').checkVisibility()`),false);
+    await click('#add-'+kind);
+    assert.equal(await evaluate(`document.querySelector('#add-${kind}').getAttribute('aria-expanded')`),'true');
+    assert.equal(await evaluate('document.querySelectorAll("dialog[open]").length'),0);
+    assert.deepEqual(await evaluate(`Array.from(document.querySelectorAll('#add-${kind}-menu [role=menuitem]'),item=>item.textContent.trim())`),['Вручную','Из буфера']);
+    await click('#manual-'+kind);
+    assert.equal(await evaluate(`document.querySelector('#${kind}-dialog').open`),true);
+    assert.equal(await evaluate(`document.querySelector('#add-${kind}').getAttribute('aria-expanded')`),'false');
+    await evaluate(`document.querySelector('#${kind}-dialog').close()`);
+  }
+});
+
+test('add menus close on repeated click, outside click, Escape and navigation', async () => {
+  await click('#tab-servers');
+  for(const action of [
+    "document.querySelector('#add-server').click()",
+    "document.querySelector('#page-servers h2').click()",
+    "document.activeElement.dispatchEvent(new KeyboardEvent('keydown',{key:'Escape',bubbles:true}))",
+    "openPage('subscriptions')"
+  ]) {
+    await click('#tab-servers');await click('#add-server');
+    assert.equal(await evaluate('document.activeElement.id'),'manual-server');
+    await evaluate(action);
+    assert.equal(await evaluate('document.querySelector("#add-server-menu").hidden'),true);
+  }
+  await click('#tab-servers');await click('#add-server');
+  await evaluate("document.activeElement.dispatchEvent(new KeyboardEvent('keydown',{key:'ArrowDown',bubbles:true}))");
+  assert.equal(await evaluate('document.activeElement.id'),'import-server');
+  await evaluate("document.activeElement.dispatchEvent(new KeyboardEvent('keydown',{key:'Escape',bubbles:true}))");
+  assert.equal(await evaluate('document.activeElement.id'),'add-server');
+});
+
+test('add menus fit narrow phone screens with full touch targets', async () => {
+  await send('Emulation.setDeviceMetricsOverride',{width:320,height:640,deviceScaleFactor:1,mobile:true});
+  await send('Page.navigate',{url:(()=>{const target=new URL(url);target.searchParams.set('view','app');return target.href;})()});
+  await waitFor('document.body?.classList.contains("app-view")');
+  for(const [page,kind] of [['servers','server'],['subscriptions','subscription']]) {
+    await click('#tab-'+page);await click('#add-'+kind);
+    const bounds=await evaluate(`(()=>{const menu=document.querySelector('#add-${kind}-menu').getBoundingClientRect(),screen=document.querySelector('.screen').getBoundingClientRect();return {left:menu.left,right:menu.right,bottom:menu.bottom,screenLeft:screen.left,screenRight:screen.right,screenBottom:screen.bottom,heights:Array.from(document.querySelectorAll('#add-${kind}-menu button'),button=>button.getBoundingClientRect().height)};})()`);
+    assert.ok(bounds.left>=bounds.screenLeft && bounds.right<=bounds.screenRight && bounds.bottom<=bounds.screenBottom);
+    assert.ok(bounds.heights.every(height=>height>=48));
+  }
+});
+
 test('clipboard import on server and subscription tabs opens review before adding anything', async () => {
   for(const [page,button,dialog,field,text,count] of [
     ['servers','import-server','server-dialog','server-link','trojan://clipboard-key@vpn.example.com:443#Clipboard','servers.length'],
@@ -1079,6 +1131,7 @@ test('clipboard import on server and subscription tabs opens review before addin
   ]) {
     await evaluate(`Object.defineProperty(navigator,'clipboard',{configurable:true,value:{readText:async()=>${JSON.stringify(text)}}})`);
     await click('#tab-'+page);
+    await click('#add-'+button.slice(7));
     assert.equal(await evaluate(`document.querySelector('#${button}')?.checkVisibility()`),true);
     const before=await evaluate(count);
     await click('#'+button);
@@ -1099,12 +1152,12 @@ test('tab clipboard imports handle denied access and wrong content without addin
     await click('#tab-'+page);
     assert.equal(await evaluate(`!!document.querySelector('#${button}')`),true);
     await evaluate(`Object.defineProperty(navigator,'clipboard',{configurable:true,value:{readText:async()=>{throw new DOMException('denied','NotAllowedError')}}})`);
-    await click('#'+button);
+    await chooseAdd(button.slice(7),'import');
     await waitFor(`document.querySelector('#${error}').textContent.includes('Нет доступа')`);
     assert.equal(await evaluate(`document.querySelector('#${field}').disabled`),false);
     await evaluate(`document.querySelector('#${dialog}').close()`);
     await evaluate("navigator.clipboard.readText=async()=>'not a connection link'");
-    await click('#'+button);
+    await chooseAdd(button.slice(7),'import');
     await waitFor(`document.querySelector('#${error}').textContent.includes('нет подходящей ссылки')`);
     assert.equal(await evaluate(`document.querySelector('#${field}').value`),'');
     await evaluate(`document.querySelector('#${dialog}').close()`);
@@ -1121,12 +1174,12 @@ test('tab clipboard import ignores a reply after closing or typing a replacement
     await click('#tab-'+page);
     assert.equal(await evaluate(`!!document.querySelector('#${button}')`),true);
     await evaluate("Object.defineProperty(navigator,'clipboard',{configurable:true,value:{readText:()=>new Promise(resolve=>window.clipboardReply=resolve)}})");
-    await click('#'+button);
+    await chooseAdd(button.slice(7),'import');
     await value('#'+field,typed);
     await evaluate(`clipboardReply(${JSON.stringify(typed.replace('typed','late'))})`);
     assert.equal(await evaluate(`document.querySelector('#${field}').value`),typed);
     await evaluate(`document.querySelector('#${dialog}').close()`);
-    await click('#'+button);
+    await chooseAdd(button.slice(7),'import');
     await evaluate(`document.querySelector('#${dialog}').close();clipboardReply(${JSON.stringify(typed)})`);
     assert.equal(await evaluate(`document.querySelector('#${dialog}').open`),false);
   }
