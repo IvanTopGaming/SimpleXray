@@ -26,8 +26,30 @@ main{display:grid;place-items:center;padding:22px 20px 14px;min-height:calc(100s
 .canvas-label{width:100%;display:flex;align-items:center;justify-content:space-between;font-size:11px;color:#7b7c76;letter-spacing:.02em}
 .canvas-label strong{font-weight:500;color:#454642}
 .device{border:1px solid #cbcfc8;border-radius:30px;padding:7px;background:#e9ebe5;box-shadow:0 12px 30px #20251c0b}
-.screen{--w:393;--h:852;position:relative;height:min(72svh,760px);max-width:calc(100vw - 64px);aspect-ratio:var(--w)/var(--h);border-radius:23px;overflow:hidden;background:#fff;outline:none}
-.screen.dark{background:#141517}
+.screen{--w:393;--h:852;--paper:#fff;--ink:#292a2d;--muted:#8a8d86;--line:#e7e8e2;--surface:#f5f6f2;--accent:#417455;position:relative;height:min(72svh,760px);max-width:calc(100vw - 64px);aspect-ratio:var(--w)/var(--h);border-radius:23px;overflow:hidden;background:var(--paper);color:var(--ink);outline:none;display:flex;flex-direction:column}
+.screen.dark{--paper:#141517;--ink:#eceee8;--muted:#8b918b;--line:#30342e;--surface:#20241f;--accent:#9ac9a8}
+.pages{flex:1;min-height:0;position:relative;overflow:auto}
+.page{min-height:100%;padding:30px 20px 22px;display:flex;flex-direction:column;gap:22px}
+.page[hidden]{display:none}
+.page h2{font-size:22px;line-height:1.25;font-weight:600;letter-spacing:-.7px;margin:0}
+.page-title{display:flex;align-items:center;gap:10px}
+.eyebrow{font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin:0 0 8px}
+.server-slot{width:100%;text-align:left;border:1px dashed var(--line);border-radius:15px;padding:18px 15px;background:transparent;color:var(--ink);display:flex;align-items:center;gap:12px}
+.server-slot span{display:block;font-size:13px;font-weight:500}.server-slot small{display:block;margin-top:5px;font-size:11px;color:var(--muted);font-weight:400}
+.server-slot svg{color:var(--muted);flex-shrink:0}
+.server-slot .chevron{margin-left:auto}
+.connection-space{flex:1;min-height:50px}
+.connect-button{width:100%;min-height:46px;background:var(--surface);border-color:var(--line);color:var(--muted);display:flex;justify-content:center;align-items:center;gap:8px;font-size:13px;cursor:default}
+.connect-button:disabled{opacity:.8}
+.empty-slot{border:1px dashed var(--line);border-radius:15px;display:grid;place-content:center;min-height:160px;padding:22px;text-align:center;color:var(--muted);font-size:12px;line-height:1.6}
+.setting-row{display:flex;align-items:center;gap:12px;min-height:56px;width:100%;background:transparent;border:1px solid var(--line);color:var(--ink);padding:14px;border-radius:14px;text-align:left;font-size:13px}
+.setting-row span{flex:1}
+.back{display:grid;place-items:center;min-width:34px;min-height:34px;padding:6px;background:transparent;border:0;color:var(--ink)}
+.tabs{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));padding:8px 6px 14px;border-top:1px solid var(--line);background:var(--paper);gap:2px;flex-shrink:0}
+.tab{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px;min-width:0;min-height:56px;border:0;border-radius:11px;background:transparent;padding:6px 0;color:var(--muted);font-size:10px;line-height:1.2}
+.tab[aria-selected="true"]{background:var(--surface);color:var(--accent);font-weight:600}
+.screen svg{width:21px;height:21px;fill:none;stroke:currentColor;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round}
+.pin{z-index:5}
 .screen.grid{background-image:linear-gradient(#80808012 1px,transparent 1px),linear-gradient(90deg,#80808012 1px,transparent 1px);background-size:calc(100% / 24) calc(100% / 52)}
 .screen.marking{cursor:crosshair}
 .pin{position:absolute;display:none;width:22px;height:22px;border-radius:50%;background:#417455;box-shadow:0 0 0 4px #41745525;transform:translate(-50%,-50%);pointer-events:none;color:white;text-align:center;font-size:12px;line-height:22px}
@@ -42,7 +64,7 @@ footer span{width:5px;height:5px;border-radius:50%;background:#87a38b}
 </head>
 <body>
 <header>
-<div class="brand"><div class="brand-mark" aria-hidden="true">S</div><div><h1>SimpleXray</h1><div class="subtitle">Рабочий холст · первый набросок</div></div></div>
+<div class="brand"><div class="brand-mark" aria-hidden="true">S</div><div><h1>SimpleXray</h1><div class="subtitle">Рабочий холст · навигация</div></div></div>
 <div class="tools" aria-label="Настройки холста">
 <select id="size" aria-label="Размер экрана"><option value="393,852">393 × 852</option><option value="360,800">360 × 800</option><option value="412,915">412 × 915</option></select>
 <button id="theme" aria-pressed="false">Тёмный фон</button>
@@ -54,9 +76,37 @@ footer span{width:5px;height:5px;border-radius:50%;background:#87a38b}
 </header>
 <main>
 <div class="workspace">
-<div class="canvas-label"><strong>Главный экран</strong><span id="dimensions">393 × 852</span></div>
-<div class="device"><div class="screen" id="screen" tabindex="0" aria-label="Пустой макет главного экрана"><span class="pin" id="pin" aria-hidden="true">1</span></div></div>
-<p class="caption" id="caption" aria-live="polite">Чистый экран. Будем собирать его по одному элементу.</p>
+<div class="canvas-label"><strong id="screen-name">Главная</strong><span id="dimensions">393 × 852</span></div>
+<div class="device"><div class="screen" id="screen" tabindex="0" aria-label="Макет приложения SimpleXray">
+<svg aria-hidden="true" style="display:none"><defs>
+<symbol id="i-home" viewBox="0 0 24 24"><path d="m3 10 9-7 9 7v10a1 1 0 0 1-1 1h-5v-7H9v7H4a1 1 0 0 1-1-1Z"/></symbol>
+<symbol id="i-servers" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="7" rx="2"/><rect x="3" y="14" width="18" height="7" rx="2"/><path d="M7 6.5h.01M7 17.5h.01M12 6.5h5M12 17.5h5"/></symbol>
+<symbol id="i-subs" viewBox="0 0 24 24"><path d="M9 15a5 5 0 0 0 7 0l4-4a5 5 0 0 0-7-7l-2 2M15 9a5 5 0 0 0-7 0l-4 4a5 5 0 0 0 7 7l2-2"/></symbol>
+<symbol id="i-settings" viewBox="0 0 24 24"><path d="M4 6h16M4 12h16M4 18h16"/><circle cx="9" cy="6" r="2" fill="var(--paper)"/><circle cx="15" cy="12" r="2" fill="var(--paper)"/><circle cx="9" cy="18" r="2" fill="var(--paper)"/></symbol>
+<symbol id="i-arrow" viewBox="0 0 24 24"><path d="m9 5 7 7-7 7"/></symbol>
+<symbol id="i-route" viewBox="0 0 24 24"><circle cx="6" cy="5" r="2"/><circle cx="18" cy="19" r="2"/><path d="M6 7v8a4 4 0 0 0 4 4h6M9 5h6a3 3 0 0 1 0 6H9"/></symbol>
+<symbol id="i-power" viewBox="0 0 24 24"><path d="M12 2v10M6 5a9 9 0 1 0 12 0"/></symbol>
+</defs></svg>
+<div class="pages">
+<section class="page" id="page-home" role="tabpanel" aria-labelledby="tab-home">
+<h2>Главная</h2>
+<div><p class="eyebrow">Сервер</p><button class="server-slot" data-open="servers"><svg aria-hidden="true"><use href="#i-servers"/></svg><div><span>Выбранный сервер</span><small>Выбрать из списка</small></div><svg class="chevron" aria-hidden="true"><use href="#i-arrow"/></svg></button></div>
+<div class="connection-space"></div>
+<button class="connect-button" disabled><svg aria-hidden="true"><use href="#i-power"/></svg>Подключиться</button>
+</section>
+<section class="page" id="page-servers" role="tabpanel" aria-labelledby="tab-servers" hidden><h2>Серверы</h2><div class="empty-slot">Место для полного<br>списка серверов</div></section>
+<section class="page" id="page-subscriptions" role="tabpanel" aria-labelledby="tab-subscriptions" hidden><h2>Подписки</h2><div class="empty-slot">Место для подписок<br>и их обновления</div></section>
+<section class="page" id="page-settings" role="tabpanel" aria-labelledby="tab-settings" hidden><h2>Настройки</h2><button class="setting-row" data-open="routing"><svg aria-hidden="true"><use href="#i-route"/></svg><span>Роутинг</span><svg aria-hidden="true"><use href="#i-arrow"/></svg></button></section>
+<section class="page" id="page-routing" aria-labelledby="routing-title" hidden><div class="page-title"><button class="back" data-open="settings" aria-label="Назад в настройки"><svg aria-hidden="true" style="transform:rotate(180deg)"><use href="#i-arrow"/></svg></button><h2 id="routing-title">Роутинг</h2></div><div class="empty-slot">Место для правил<br>маршрутизации</div></section>
+</div>
+<nav class="tabs" role="tablist" aria-label="Разделы приложения">
+<button class="tab" id="tab-home" role="tab" aria-selected="true" aria-controls="page-home" data-tab="home"><svg aria-hidden="true"><use href="#i-home"/></svg>Главная</button>
+<button class="tab" id="tab-servers" role="tab" aria-selected="false" aria-controls="page-servers" data-tab="servers" tabindex="-1"><svg aria-hidden="true"><use href="#i-servers"/></svg>Серверы</button>
+<button class="tab" id="tab-subscriptions" role="tab" aria-selected="false" aria-controls="page-subscriptions" data-tab="subscriptions" tabindex="-1"><svg aria-hidden="true"><use href="#i-subs"/></svg>Подписки</button>
+<button class="tab" id="tab-settings" role="tab" aria-selected="false" aria-controls="page-settings" data-tab="settings" tabindex="-1"><svg aria-hidden="true"><use href="#i-settings"/></svg>Настройки</button>
+</nav>
+<span class="pin" id="pin" aria-hidden="true">1</span></div></div>
+<p class="caption" id="caption" aria-live="polite">Четыре вкладки. Нажми на любую, чтобы посмотреть её каркас.</p>
 <footer><span></span>МАКЕТ ИНТЕРФЕЙСА</footer>
 </div>
 </main>
@@ -68,6 +118,34 @@ const clear = document.querySelector('#clear');
 let width = 393;
 let height = 852;
 let marking = false;
+let currentPage = 'home';
+const pageNames = {home:'Главная',servers:'Серверы',subscriptions:'Подписки',settings:'Настройки',routing:'Роутинг'};
+const defaultCaption = 'Четыре вкладки. Нажми на любую, чтобы посмотреть её каркас.';
+function openPage(name) {
+  currentPage = name;
+  document.querySelectorAll('.page').forEach(page => {page.hidden = page.id !== 'page-'+name;});
+  document.querySelectorAll('[data-tab]').forEach(tab => {
+    const active = tab.dataset.tab === (name === 'routing' ? 'settings' : name);
+    tab.setAttribute('aria-selected',String(active));
+    tab.tabIndex = active ? 0 : -1;
+  });
+  document.querySelector('#screen-name').textContent = pageNames[name];
+  document.querySelector('.pages').scrollTop = 0;
+  resetPin();
+  announce('navigation',{screen:name});
+}
+document.querySelectorAll('[data-tab],[data-open]').forEach(button => {
+  button.addEventListener('click',() => {if(!marking) openPage(button.dataset.tab || button.dataset.open);});
+});
+document.querySelector('.tabs').addEventListener('keydown',event => {
+  const tabs = [...document.querySelectorAll('[data-tab]')];
+  const index = tabs.indexOf(document.activeElement);
+  if(index < 0 || !['ArrowLeft','ArrowRight','Home','End'].includes(event.key)) return;
+  event.preventDefault();
+  const next = event.key === 'Home' ? 0 : event.key === 'End' ? tabs.length-1 : (index+(event.key === 'ArrowRight'?1:-1)+tabs.length)%tabs.length;
+  tabs[next].focus();
+  if(!marking) openPage(tabs[next].dataset.tab);
+});
 function announce(type, values) {
   window.brainstorm?.send({type, ...values});
 }
@@ -91,7 +169,7 @@ document.querySelector('#size').addEventListener('change', event => {
 });
 document.querySelector('#mark').addEventListener('click', event => {
   marking = toggle(event.currentTarget, 'marking');
-  caption.textContent = marking ? 'Нажми на экран, чтобы указать место для элемента. Затем опиши его в чате.' : 'Чистый экран. Будем собирать его по одному элементу.';
+  caption.textContent = marking ? 'Нажми на экран, чтобы указать место для элемента. Затем опиши его в чате.' : defaultCaption;
 });
 screen.addEventListener('click', event => {
   if (!marking) return;
@@ -103,14 +181,14 @@ screen.addEventListener('click', event => {
   pin.classList.add('visible');
   clear.hidden = false;
   caption.textContent = 'Метка 1 · '+Math.round(x*width)+', '+Math.round(y*height)+'. Напиши в чате, что здесь разместим.';
-  announce('layout-pin',{screen:'home',x:Math.round(x*width),y:Math.round(y*height),width,height});
+  announce('layout-pin',{screen:currentPage,x:Math.round(x*width),y:Math.round(y*height),width,height});
 });
 function resetPin() {
   pin.classList.remove('visible');
   clear.hidden = true;
-  caption.textContent = marking ? 'Нажми на экран, чтобы указать место для элемента.' : 'Чистый экран. Будем собирать его по одному элементу.';
+  caption.textContent = marking ? 'Нажми на экран, чтобы указать место для элемента.' : defaultCaption;
 }
-clear.addEventListener('click', () => {resetPin();announce('layout-pin-clear',{screen:'home'});});
+clear.addEventListener('click', () => {resetPin();announce('layout-pin-clear',{screen:currentPage});});
 </script>
 </body>
 </html>
