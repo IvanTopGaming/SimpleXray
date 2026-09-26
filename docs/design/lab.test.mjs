@@ -106,7 +106,6 @@ test('availability check completes and displays results', async () => {
 test('subscription form validates and adds, refreshes and deletes only demo data', async () => {
   await click('#tab-subscriptions');
   await click('#add-subscription');
-  await value('#sub-name', '<img src=x onerror=alert(1)>');
   await value('#sub-url', 'javascript:alert(1)');
   await evaluate('document.querySelector("#subscription-form")?.requestSubmit()');
   assert.equal(await evaluate('document.querySelector("#subscription-form")?.checkValidity()'), false);
@@ -202,15 +201,10 @@ test('long subscription names wrap inside server cards on narrow screens', async
   await send('Emulation.setDeviceMetricsOverride', { width: 390, height: 844, deviceScaleFactor: 1, mobile: true });
   await click('#tab-subscriptions');
   await click('#add-subscription');
-  await value('#sub-name', 'x'.repeat(60));
+  await value('#sub-url', 'https://'+'x'.repeat(60)+'.example.com/subscription');
   await evaluate('document.querySelector("#subscription-form").requestSubmit()');
   await click('#tab-servers');
   assert.equal(await evaluate('document.querySelector(".pages").scrollWidth <= document.querySelector(".pages").clientWidth'), true);
-});
-
-test('no script errors or external network calls occur', () => {
-  assert.deepEqual(errors, []);
-  assert.deepEqual(requests.filter(request => !request.startsWith('file:') && !/^https?:\/\/(localhost|127\.0\.0\.1)(:|\/)/.test(request)), []);
 });
 
 test('app screens and dialogs use product copy without prototype instructions', async () => {
@@ -224,4 +218,96 @@ test('app screens and dialogs use product copy without prototype instructions', 
   await wait(750);
   assert.equal(await evaluate('document.querySelector("#connection-status").textContent'), 'Подключено');
   assert.equal(await evaluate('document.querySelector("#connect").getAttribute("aria-label")'), 'Отключиться');
+});
+
+test('manual servers can be added, selected and edited with JSON validation', async () => {
+  await click('#tab-servers');
+  await click('#add-server');
+  assert.equal(await evaluate('document.querySelector("#server-dialog")?.open'), true);
+  await value('#server-name', '<img src=x onerror=alert(1)>');
+  await value('#server-config', '{broken');
+  await evaluate('document.querySelector("#server-form").requestSubmit()');
+  assert.match(await evaluate('document.querySelector("#server-error").textContent'), /JSON/);
+  await value('#server-config', '{"outbounds":[{"protocol":"vless","settings":{}}]}');
+  await evaluate('document.querySelector("#server-form").requestSubmit()');
+  assert.equal(await evaluate('document.querySelectorAll("[data-server]").length'), 5);
+  assert.equal(await evaluate('document.querySelectorAll("#server-list img").length'), 0);
+  const id = await evaluate('document.querySelector("#server-list .server-entry:last-child [data-server]").dataset.server');
+  await click(`[data-server="${id}"]`);
+  await click('#connect');
+  await wait(750);
+  await click('#tab-servers');
+  await click(`[data-config="${id}"]`);
+  await value('#server-name', 'Новый сервер');
+  await value('#server-config', '{"outbounds":[{"protocol":"trojan","settings":{}}]}');
+  await evaluate('document.querySelector("#server-form").requestSubmit()');
+  await click('#tab-home');
+  assert.equal(await evaluate('document.querySelector("#selected-name").textContent'), 'Новый сервер');
+  assert.match(await evaluate('document.querySelector("#selected-detail").textContent'), /TROJAN/);
+  assert.equal(await evaluate('document.querySelector("#connection-status").textContent'), 'Отключено');
+  await click('#tab-servers');
+  await click(`[data-config="${id}"]`);
+  assert.match(await evaluate('document.querySelector("#server-config").value'), /trojan/);
+  await value('#server-name', 'Не сохранять');
+  await click('[data-close="server-dialog"]');
+  assert.doesNotMatch(await evaluate('document.querySelector("#server-list").textContent'), /Не сохранять/);
+});
+
+test('subscription server config is read-only and a forced submit cannot change it', async () => {
+  await click('#tab-servers');
+  await click('[data-config="nl"]');
+  assert.equal(await evaluate('document.querySelector("#server-config")?.readOnly'), true);
+  assert.equal(await evaluate('document.querySelector("#server-name")?.readOnly'), true);
+  assert.equal(await evaluate('document.querySelector("#save-server")?.hidden'), true);
+  const original = await evaluate('document.querySelector("#server-config").value');
+  await value('#server-config', '{"outbounds":[{"protocol":"freedom"}]}');
+  await value('#server-name', 'Changed');
+  await evaluate('document.querySelector("#server-form").requestSubmit()');
+  await click('[data-close="server-dialog"]');
+  await click('[data-config="nl"]');
+  assert.equal(await evaluate('document.querySelector("#server-config").value'), original);
+  assert.equal(await evaluate('document.querySelector("#server-name").value'), 'Амстердам');
+});
+
+test('subscription URL edit is prefilled, cancellable and derives the name from the new domain', async () => {
+  await click('#tab-subscriptions');
+  await click('[data-edit-sub="sample"]');
+  assert.equal(await evaluate('document.querySelector("#subscription-dialog")?.open'), true);
+  assert.equal(await evaluate('document.querySelector("#sub-name")'), null);
+  assert.equal(await evaluate('document.querySelector("#sub-url").value'), 'https://connect.example.com/subscription');
+  await value('#sub-url', 'https://cancel.example.com/sub');
+  await click('[data-close="subscription-dialog"]');
+  await click('[data-edit-sub="sample"]');
+  assert.equal(await evaluate('document.querySelector("#sub-url").value'), 'https://connect.example.com/subscription');
+  await value('#sub-url', 'https://new.example.com/private-token');
+  await evaluate('document.querySelector("#subscription-form").requestSubmit()');
+  assert.equal(await evaluate('document.querySelector(".subscription-card h3").textContent'), 'new.example.com');
+  assert.equal(await evaluate('document.querySelectorAll(".subscription-card").length'), 1);
+  assert.equal(await evaluate('document.querySelectorAll("[data-server]").length'), 4);
+  await click('[data-refresh="sample"]');
+  await wait(750);
+  assert.equal(await evaluate('document.querySelector(".subscription-card h3").textContent'), 'new.example.com');
+  await click('[data-edit-sub="sample"]');
+  assert.equal(await evaluate('document.querySelector("#sub-url").value'), 'https://new.example.com/private-token');
+});
+
+test('subscription title prefers response headers, decodes UTF-8 and falls back to hostname', async () => {
+  assert.equal(await evaluate('typeof subscriptionTitle'), 'function');
+  for (const [headers, expected] of [
+    [{'pRoFiLe-TiTlE':'Provider'}, 'Provider'],
+    [{'Profile-Title':'base64:0J/RgNC40LLQtdGC'}, 'Привет'],
+    [{'Profile-Title':'Top','Content-Disposition':'attachment; filename="Other.txt"'}, 'Top'],
+    [{'Content-Disposition':'attachment; filename="My VPN.txt"'}, 'My VPN'],
+    [{"Content-Disposition":"attachment; filename*=UTF-8''%D0%9F%D1%80%D0%B8%D0%B2%D0%B5%D1%82.txt"}, 'Привет'],
+    [{'Profile-Title':'base64:???'}, 'sub.example.com'],
+    [{'Profile-Title':'   '}, 'sub.example.com'],
+    [{}, 'sub.example.com']
+  ]) {
+    assert.equal(await evaluate(`subscriptionTitle('https://sub.example.com:8443/private?token=secret',${JSON.stringify(headers)})`), expected);
+  }
+});
+
+test('no script errors or external network calls occur', () => {
+  assert.deepEqual(errors, []);
+  assert.deepEqual(requests.filter(request => !request.startsWith('file:') && !/^https?:\/\/(localhost|127\.0\.0\.1)(:|\/)/.test(request)), []);
 });
