@@ -162,6 +162,9 @@ footer span{width:5px;height:5px;border-radius:50%;background:#87a38b}
 .app-view .device{border:0;border-radius:0;padding:0;box-shadow:none;background:none}
 .app-view .screen{position:fixed;top:var(--app-top,0px);left:0;width:100%;max-width:none;height:var(--app-height,100dvh);aspect-ratio:auto;border-radius:0;padding:env(safe-area-inset-top,0px) env(safe-area-inset-right,0px) env(safe-area-inset-bottom,0px) env(safe-area-inset-left,0px)}
 .app-view dialog::backdrop{border-radius:0}
+.screen .settings-section .back{font-size:28px}
+.screen #route-dialog input:invalid:not(:user-invalid){border-color:var(--line)}
+.settings-section{gap:20px}.settings-section .field{align-items:flex-start;flex-direction:column;gap:10px}.settings-section .field select,.settings-section .field input{width:100%;max-width:100%}.settings-section .setting-group{border:1px solid var(--line);border-radius:16px;padding:4px 14px}.settings-section .setting-group>h3{padding-top:14px}.settings-section .setting-group>:last-child{border-bottom:0}.settings-section .setting-group>.note{padding:8px 0 14px}.settings-section .switch-row small,.settings-section .field small{font-weight:400;letter-spacing:0;text-transform:none}.settings-menu{border:1px solid var(--line);border-radius:16px;overflow:hidden}.screen .settings-link{display:flex;align-items:center;gap:12px;width:100%;padding:15px 14px;border:0;border-bottom:1px solid var(--line);border-radius:0;background:var(--paper);color:var(--ink);text-align:left}.settings-link:last-child{border-bottom:0}.settings-link>span{flex:1;min-width:0}.settings-link strong{display:block;font-size:14px;font-weight:550;overflow-wrap:anywhere}.settings-link small{display:block;font-size:12px;line-height:1.5;color:var(--muted);margin-top:4px}.settings-link svg{flex-shrink:0}.section-intro{margin:0;font-size:13px;line-height:1.6;color:var(--muted)}.settings-savebar{flex-shrink:0;padding:10px 14px;border-top:1px solid var(--line);background:var(--paper)}.settings-savebar .actions{margin-top:6px;gap:8px}.settings-savebar p{font-size:12px;margin:0;line-height:1.4}.settings-savebar .error:empty{display:none}.settings-savebar .error{max-height:54px;overflow:auto}.screen #settings-savebar[hidden]{display:none}.settings-status{color:var(--muted)}.settings-warning{font-size:12px;line-height:1.6;padding:12px;border-radius:12px;background:var(--surface);color:var(--ink);margin:0}.core-details{border:1px solid var(--line);border-radius:16px;padding:0 14px}.core-details>summary{cursor:pointer;min-height:60px;display:flex;align-items:center;justify-content:space-between;gap:12px;font-size:14px;font-weight:550;list-style:none}.core-details>summary::after{content:'＋';color:var(--muted)}.core-details[open]>summary::after{content:'−'}.core-details>summary::-webkit-details-marker{display:none}.core-details .setting-group{border:0;padding:0}.core-details>.note{padding-bottom:12px}.route-entry{border:1px solid var(--line);border-radius:14px;overflow:hidden}.screen .route-heading{display:block;width:100%;padding:12px;text-align:left;border:0;background:var(--paper);border-radius:0;color:var(--ink)}.route-heading strong{display:block;font-size:14px;overflow-wrap:anywhere}.route-heading small{display:block;margin-top:5px;font-size:12px;color:var(--muted);overflow-wrap:anywhere}.route-controls{display:flex;align-items:center;gap:6px;border-top:1px solid var(--line);padding:4px 8px}.route-controls .switch-row{flex:1;border:0;padding:0;min-height:48px}.route-controls button{min-width:48px;padding:8px}.route-state{font-size:12px;color:var(--accent)}.route-entry[data-enabled="false"] .route-heading{color:var(--muted)}.route-empty{padding:20px 12px;text-align:center}.profile-json{min-height:300px!important}.screen .settings-section textarea{min-height:140px}.settings-section code{font-size:12px;overflow-wrap:anywhere}.settings-section input[type=search]{width:100%}.settings-section fieldset{min-width:0;border:0;padding:0;margin:0}.settings-section fieldset:disabled{opacity:.55}.settings-section .page-title{justify-content:flex-start}.settings-section .page-title h2{font-size:21px;line-height:1.3}.settings-section .compact-status{font-size:12px;color:var(--accent)}
 </style>
 </head>
 <body>
@@ -203,26 +206,10 @@ footer span{width:5px;height:5px;border-radius:50%;background:#87a38b}
 </section>
 <section class="page" id="page-servers" role="tabpanel" aria-labelledby="tab-servers" hidden><div class="page-title"><h2>Серверы</h2><button class="secondary" id="add-server" aria-label="Добавить сервер">＋ Добавить</button></div><div class="server-tools"><div class="input-action"><input type="search" id="server-search" aria-label="Поиск серверов" placeholder="Сервер, страна или подписка"><button class="secondary" id="clear-search" aria-label="Очистить поиск" hidden>✕</button></div><button id="clear-sub-filter" class="filter-chip" aria-label="Сбросить фильтр подписки" hidden><span id="sub-filter-name"></span><span aria-hidden="true">✕</span></button><div class="server-filters"><label>Группировка<select id="server-group"><option value="subscription">По подпискам</option><option value="country">По странам</option></select></label><label>Сортировка<select id="server-sort"><option value="name">По имени</option><option value="ping">По пингу</option></select></label></div></div><button class="secondary" id="check-servers">Проверить доступность</button><p class="note" id="server-results" role="status">Проверка ещё не запускалась</p><div id="server-list" class="server-list"></div></section>
 <section class="page" id="page-subscriptions" role="tabpanel" aria-labelledby="tab-subscriptions" hidden><div class="page-title"><h2>Подписки</h2><button class="secondary" id="add-subscription" aria-label="Добавить подписку">＋ Добавить</button></div><div id="subscription-list" class="stack"></div></section>
-<section class="page" id="page-settings" role="tabpanel" aria-labelledby="tab-settings" hidden><h2>Настройки</h2>
-<div class="setting-group"><h3>Подписки</h3><label class="switch-row"><span>Автообновление подписок<small>Все подписки, каждый час</small></span><input type="checkbox" id="subscriptions-auto-update" role="switch" checked></label></div>
-<button class="setting-row" data-open="diagnostics"><svg aria-hidden="true"><use href="#i-info"/></svg><span>Журнал и отладка</span><svg aria-hidden="true"><use href="#i-arrow"/></svg></button>
-<div class="setting-group"><h3>Оформление</h3><label class="field"><span>Тема</span><select id="app-theme"><option value="light">Светлая</option><option value="dark">Тёмная</option><option value="auto">Системная</option></select></label></div>
-<div class="setting-group"><h3>Соединение</h3><label class="switch-row"><span>IPv6<small>Разрешить IPv6 в VPN-интерфейсе</small></span><input type="checkbox" id="ipv6" role="switch"></label><label class="field"><span>DNS · IPv4</span><input id="dns-ipv4" value="8.8.8.8" required></label><label class="field"><span>DNS · IPv6</span><input id="dns-ipv6" value="2001:4860:4860::8888" required disabled></label></div>
-<div><button class="setting-row" data-open="routing"><svg aria-hidden="true"><use href="#i-route"/></svg><span>Роутинг</span><svg aria-hidden="true"><use href="#i-arrow"/></svg></button><button class="setting-row" data-open="advanced"><svg aria-hidden="true"><use href="#i-settings"/></svg><span>Дополнительно</span><svg aria-hidden="true"><use href="#i-arrow"/></svg></button></div>
-</section>
 <section class="page" id="page-diagnostics" aria-labelledby="diagnostics-title" hidden><div class="page-title"><button class="back" data-open="settings" aria-label="Назад в настройки">‹</button><h2 id="diagnostics-title">Журнал и отладка</h2></div><p class="note">Последние события соединения. Ключи и ссылки не записываются в журнал.</p><textarea id="diagnostic-log" readonly aria-label="Журнал событий" spellcheck="false"></textarea><button class="secondary" id="copy-log">Скопировать журнал</button><p class="note" id="log-status" role="status"></p></section>
-<section class="page" id="page-advanced" aria-labelledby="advanced-title" hidden><div class="page-title"><button class="back" data-open="settings" aria-label="Назад в настройки">‹</button><h2 id="advanced-title">Дополнительно</h2></div>
-<div class="setting-group"><h3>Конфигурация</h3><label class="switch-row"><span>Использовать шаблон<small>Собирать конфигурацию из настроек</small></span><input type="checkbox" checked role="switch"></label><label class="switch-row"><span>Без VPN-интерфейса<small>Только локальный прокси</small></span><input id="disable-vpn" type="checkbox" role="switch"></label></div>
-<div class="setting-group"><h3>Локальный SOCKS</h3><label class="field"><span>Адрес</span><input value="127.0.0.1" required></label><label class="field"><span>Порт<small>От 1 до 65535</small></span><input id="socks-port" type="number" min="1" max="65535" step="1" value="10808" required></label><label class="field"><span>Имя пользователя</span><input autocomplete="off" placeholder="Не задано"></label><label class="field"><span>Пароль</span><input type="password" autocomplete="new-password" placeholder="Не задан"></label><label class="switch-row"><span>HTTP-прокси</span><input type="checkbox" checked role="switch"></label></div>
-<div class="setting-group"><h3>Проверка соединения</h3><label class="field"><span>URL проверки</span><input type="url" pattern="https?://.+" value="https://example.com/" required></label><label class="field"><span>Тайм-аут, мс</span><input type="number" min="100" max="60000" step="100" value="5000" required></label></div>
-</section>
-<section class="page" id="page-routing" aria-labelledby="routing-title" hidden><div class="page-title"><button class="back" data-open="settings" aria-label="Назад в настройки">‹</button><h2 id="routing-title">Роутинг</h2></div>
-<label class="switch-row"><span>Обход локальной сети<small>Локальные адреса — напрямую</small></span><input id="bypass-lan" type="checkbox" checked role="switch"></label>
-<div class="setting-group"><h3>Приложения</h3><label class="field"><span>Режим</span><select id="app-mode"><option value="exclude">Исключить</option><option value="include">Только выбранные</option></select></label><p class="note" id="app-mode-note">Выбранные приложения обходят VPN.</p><label class="switch-row"><span>Браузер</span><input id="app-browser" type="checkbox" role="switch"></label><label class="switch-row"><span>Мессенджер</span><input type="checkbox" role="switch"></label><label class="switch-row"><span>Видеоплеер</span><input type="checkbox" role="switch"></label></div>
-<div class="setting-group"><h3>Базы правил</h3><div class="card"><h3>GeoIP</h3><p class="note" id="geoip-status" role="status">Встроенная база</p><button class="text-button" data-rule="geoip">Обновить</button></div><div class="card"><h3>GeoSite</h3><p class="note" id="geosite-status" role="status">Встроенная база</p><button class="text-button" data-rule="geosite">Обновить</button></div></div>
-</section>
 </div>
 <div class="toast" id="notice" role="status" aria-live="polite"></div>
+<div class="settings-savebar" id="settings-savebar" hidden><p class="settings-status">Есть несохранённые изменения</p><p class="error" id="settings-error" role="alert"></p><div class="actions"><button class="secondary" id="discard-settings">Отменить</button><button class="primary" id="apply-settings">Сохранить</button></div></div>
 <nav class="tabs" role="tablist" aria-label="Разделы приложения">
 <button class="tab" id="tab-home" role="tab" aria-selected="true" aria-controls="page-home" data-tab="home"><svg aria-hidden="true"><use href="#i-home"/></svg>Главная</button>
 <button class="tab" id="tab-servers" role="tab" aria-selected="false" aria-controls="page-servers" data-tab="servers" tabindex="-1"><svg aria-hidden="true"><use href="#i-servers"/></svg>Серверы</button>
@@ -240,6 +227,40 @@ footer span{width:5px;height:5px;border-radius:50%;background:#87a38b}
 </div>
 </main>
 <script>
+const settingsSections = [
+  ['connection','Подключение','VPN, IPv6, MTU и проверка сети','i-power'],
+  ['dns','DNS','Резолверы, кэш и стратегия запросов','i-servers'],
+  ['routing','Роутинг','Правила, приоритеты и исключения','i-route'],
+  ['apps','Приложения','Кто использует VPN','i-home'],
+  ['advanced','Входящие подключения','Локальный SOCKS и HTTP-прокси','i-subs'],
+  ['kernel','Ядро Xray','Sniffing, Mux, Sockopt и лимиты','i-settings'],
+  ['geodata','Базы маршрутизации','GeoIP, GeoSite и источники','i-servers'],
+  ['profile','Профиль и JSON','Предпросмотр и переопределения','i-edit'],
+  ['diagnostics','Журнал и отладка','Последние события соединения','i-info']
+];
+function settingsIcon(id) {return `<svg aria-hidden="true"><use href="#${id}"/></svg>`;}
+function settingsLink(section) {return `<button class="settings-link" data-open="${section[0]}">${settingsIcon(section[3])}<span><strong>${section[1]}</strong><small>${section[2]}</small></span>${settingsIcon('i-arrow')}</button>`;}
+function settingToggle(id,title,help='',checked=false) {return `<label class="switch-row"><span>${title}${help ? `<small>${help}</small>` : ''}</span><input type="checkbox" role="switch" id="${id}" data-setting ${checked?'checked':''}></label>`;}
+function settingInput(id,title,value,help='',attributes='') {return `<label class="field"><span>${title}${help?`<small>${help}</small>`:''}</span><input id="${id}" data-setting value="${value}" autocomplete="off" spellcheck="false" ${attributes}></label>`;}
+function settingSelect(id,title,options,help='') {return `<label class="field"><span>${title}${help?`<small>${help}</small>`:''}</span><select id="${id}" data-setting>${options.map(([value,label])=>`<option value="${value}">${label}</option>`).join('')}</select></label>`;}
+function settingNumber(id,title,value,min,max,help='') {return settingInput(id,title,value,help,`type="number" inputmode="numeric" min="${min}" max="${max}" step="1" required`);}
+function settingGroup(title,content) {return `<div class="setting-group"><h3>${title}</h3>${content}</div>`;}
+function settingDetails(title,content,open=false) {return `<details class="core-details" ${open?'open':''}><summary>${title}</summary>${content}</details>`;}
+const appChoices = [['browser','Браузер','com.android.chrome'],['messenger','Telegram','org.telegram.messenger'],['video','YouTube','com.google.android.youtube'],['bank','Банк','com.example.bank'],['maps','Карты','com.google.android.apps.maps'],['mail','Почта','com.google.android.gm']];
+const directionOptions = [['proxy','Через прокси'],['direct','Напрямую'],['block','Блокировать']];
+const settingsContents = {
+  connection:settingGroup('Режим работы',settingToggle('disable-vpn','Только локальный прокси','Без VPN-интерфейса. Фильтр приложений не действует.')+settingToggle('ipv6','IPv6','Адреса IPv6 в VPN-интерфейсе.')+settingNumber('vpn-mtu','MTU',1500,1280,9000,'Размер пакета VPN. Меньше — при проблемах с сетью.'))+settingGroup('DNS интерфейса',settingInput('dns-ipv4','DNS · IPv4','8.8.8.8','Адрес DNS, объявленный Android VPN. Не настройка DoH.', 'required')+settingInput('dns-ipv6','DNS · IPv6','2001:4860:4860::8888','','required'))+settingGroup('Проверка соединения',settingInput('test-url','URL проверки','https://example.com/','HTTP(S) адрес для проверки доступности.','type="url" required')+settingNumber('test-timeout','Тайм-аут, мс',5000,100,60000)),
+  dns:settingGroup('Резолверы Xray',settingInput('dns-primary','Основной DNS','https://1.1.1.1/dns-query','IP-адрес (UDP) или HTTPS URL (DoH).','required')+settingToggle('dns-fallback-enabled','Резервный DNS','Дополнительный резолвер при неудачном ответе.')+settingInput('dns-fallback','Резервный адрес','https://8.8.8.8/dns-query','','required')+settingSelect('dns-route','Маршрут DNS',[['proxy','Через прокси'],['direct','Напрямую']],'Отдельное правило выше пользовательских правил.'))+settingGroup('Разрешение имён',settingSelect('dns-strategy','Тип запросов',[['UseIPv4','Только IPv4'],['UseIP','IPv4 и IPv6'],['UseIPv6','Только IPv6']])+settingToggle('dns-cache','Кэшировать ответы','Снижает число повторных запросов.',true)+settingInput('dns-bootstrap','Bootstrap IP','','Для доменного имени основного резолвера.')+settingInput('dns-fallback-bootstrap','Bootstrap резервного DNS','','Для доменного имени резервного резолвера.'))+'<p class="settings-warning">IP-адрес без HTTPS использует незашифрованный DNS. Маршрут «напрямую» обходит прокси.</p>',
+  routing:settingGroup('Маршрутизация',settingSelect('routing-mode','Режим',[['rules','По правилам'],['global','Всё через прокси']])+settingSelect('route-default','Остальной трафик',directionOptions,'Маршрут, если ничего не совпало.')+settingToggle('bypass-lan','Обход локальной сети','Приватные IP — напрямую, до пользовательских правил.',true)+settingSelect('route-strategy','Domain strategy',[['AsIs','AsIs'],['IPIfNonMatch','IPIfNonMatch'],['IPOnDemand','IPOnDemand']],'AsIs — без DNS; IPIfNonMatch — IP при отсутствии совпадения; IPOnDemand — при проверке IP-правил.'))+'<p class="note" id="routing-mode-note">Приоритет: маршрут DNS → локальная сеть → ваши правила → остальной трафик.</p><div class="page-title"><h2>Ваши правила</h2><button class="secondary" id="add-route">＋ Правило</button></div><p class="note">Первое совпадение побеждает. Стрелки меняют порядок.</p><div id="route-list" class="stack"></div>'+settingsLink(settingsSections.find(s=>s[0]==='geodata')),
+  apps:settingGroup('VPN для приложений',settingSelect('app-mode','Режим',[['all','Все приложения'],['exclude','Кроме выбранных'],['include','Только выбранные']])+'<p class="note" id="app-mode-note">Все приложения используют VPN.</p>')+'<input id="app-search" type="search" placeholder="Найти приложение" aria-label="Найти приложение"><div id="app-list" class="setting-group">'+appChoices.map(([id,name,packageName])=>`<div data-app-name="${name.toLowerCase()} ${packageName}">${settingToggle('app-'+id,name,packageName)}</div>`).join('')+'</div><p class="note" id="app-search-empty" hidden>Приложение не найдено.</p><p class="settings-warning">Исключённые приложения не попадают в Xray: доменные правила к ним не применяются. Системная блокировка соединений без VPN может лишить их доступа к сети.</p>',
+  advanced:settingGroup('Локальный SOCKS',settingInput('socks-address','Адрес прослушивания','127.0.0.1','По умолчанию доступен только этому устройству.','required')+settingNumber('socks-port','Порт SOCKS',10808,1,65535)+settingToggle('socks-udp','UDP','Передавать UDP через SOCKS.',true))+settingGroup('Локальный HTTP',settingToggle('http-enabled','HTTP-прокси','Для приложений с поддержкой HTTP CONNECT.',true)+settingNumber('http-port','Порт HTTP',10809,1,65535))+settingGroup('Доступ из сети',settingToggle('allow-lan-proxy','Разрешить доступ из локальной сети','Нужно явно включить для адреса, отличного от loopback.'))+'<p class="settings-warning">Локальные прокси без авторизации. Не открывайте их в недоверенной сети. TLS, REALITY и параметры удалённого сервера настраиваются в его карточке.</p>',
+  kernel:settingDetails('Sniffing · определение доменов',settingToggle('sniff-enabled','Sniffing','Определять домен по HTTP, TLS и QUIC.',true)+settingToggle('sniff-route-only','Только для маршрутизации','Не подменять исходный адрес назначения.',true)+settingSelect('sniff-protocols','Протоколы',[['http,tls','HTTP + TLS'],['http,tls,quic','HTTP + TLS + QUIC']]),true)+settingDetails('Mux / XUDP',settingToggle('mux-enabled','Мультиплексирование','Объединять соединения. Совместимость зависит от протокола.')+settingNumber('mux-concurrency','Mux · TCP concurrency',8,-1,128,'−1 — без TCP Mux; 0 — значение ядра (8).')+settingNumber('xudp-concurrency','XUDP concurrency',16,-1,1024,'−1 — исходный UDP; 0 — вместе с TCP.')+settingSelect('xudp-443','UDP / 443',[['reject','Отклонять'],['allow','Через Mux'],['skip','Без Mux']])+'<p class="note">Mux не гарантирует ускорение. Проверьте совместимость с транспортом, особенно XTLS Vision.</p>')+settingDetails('Sockopt · параметры сокета',settingSelect('socket-domain','Разрешение адреса сервера',[['AsIs','AsIs'],['UseIP','UseIP'],['UseIPv4','UseIPv4'],['UseIPv6','UseIPv6'],['UseIPv4v6','UseIPv4v6'],['UseIPv6v4','UseIPv6v4']])+settingToggle('tcp-fast-open','TCP Fast Open','Требует поддержки операционной системы и сервера.')+settingNumber('tcp-keepalive','TCP keep-alive, с',0,0,3600,'0 — оставить значение ядра; положительное — интервал.')+settingNumber('tcp-user-timeout','TCP user timeout, мс',0,0,600000,'0 — не переопределять значение ядра.')+settingSelect('tcp-congestion','Алгоритм TCP',[['','Системный'],['cubic','CUBIC'],['bbr','BBR']],'Доступность зависит от ядра ОС.'))+settingDetails('Policy · лимиты соединения',settingNumber('policy-handshake','Handshake, с',60,1,600)+settingNumber('policy-idle','Простой соединения, с',300,1,86400)+settingNumber('policy-uplink','Uplink only, с',1,0,600)+settingNumber('policy-downlink','Downlink only, с',1,0,600)+settingNumber('policy-buffer','Буфер, КиБ',4,0,65536,'На запрос. Большие значения увеличивают расход памяти.'))+settingDetails('Логи и статистика',settingSelect('core-loglevel','Уровень журнала',[['warning','Предупреждения'],['error','Ошибки'],['info','Информация'],['debug','Отладка'],['none','Не записывать']])+settingToggle('core-access-log','Журнал подключений','Может содержать адреса назначений.')+settingToggle('core-dns-log','Журнал DNS','Может содержать доменные имена.')+settingToggle('core-mask-ip','Скрывать IP в логах','Не скрывает доменные имена.',true)+settingToggle('core-stats','Статистика трафика','Счётчики входящих и исходящих соединений.',true)),
+  geodata:['geoip','geosite'].map(name=>settingGroup(name==='geoip'?'GeoIP · IP-сети':'GeoSite · домены',settingInput(name+'-url','Источник HTTPS','https://github.com/Loyalsoldier/v2ray-rules-dat/releases/latest/download/'+name+'.dat','','type="url" required')+`<p class="note" id="${name}-status" role="status">Встроенная база</p><button class="text-button" data-rule="${name}">Обновить</button>`)).join('')+'<p class="settings-warning">Категории зависят от выбранных файлов. Имя GeoSite/GeoIP в правиле должно существовать в базе.</p>',
+  profile:'<p class="settings-warning">Настройки клиента, общие секции core и дополнения outbound к выбранному серверу. При сборке defaultOutboundTag должен стать первым outbound; нужны выходы proxy, direct и block. Это не полный конфиг подключения; ключи сервера сюда не включаются.</p>'+settingDetails('JSON-переопределения','<p class="note">Только log, dns, routing, policy и stats. Указанные секции полностью заменяют значения формы. Проверяется JSON и структура верхнего уровня; совместимость проверяйте установленным ядром.</p><label class="field"><span>Общие секции Xray</span><textarea id="core-overrides" data-setting spellcheck="false" aria-label="JSON-переопределения">{}</textarea></label>')+'<label class="field"><span>Профиль настроек · JSON</span><textarea id="settings-preview" class="profile-json" readonly spellcheck="false"></textarea></label><button class="secondary" id="copy-settings">Скопировать профиль</button><p class="note" id="profile-copy-status" role="status"></p>'
+};
+const settingsHome = `<section class="page settings-section" id="page-settings" role="tabpanel" aria-labelledby="tab-settings" hidden><h2>Настройки</h2><p class="section-intro">От повседневного подключения до параметров ядра.</p><input type="search" id="settings-search" placeholder="Поиск: DNS, Mux, приложения…" aria-label="Поиск настроек"><div id="settings-results" class="settings-menu" hidden></div><p class="note" id="settings-not-found" hidden>Ничего не найдено.</p><div id="settings-home-content" class="stack"><div class="settings-menu">${settingsSections.slice(0,4).map(settingsLink).join('')}</div><div class="settings-menu">${settingsSections.slice(4).map(settingsLink).join('')}</div>${settingGroup('Подписки','<label class="switch-row"><span>Автообновление подписок<small>Все подписки, каждый час</small></span><input type="checkbox" id="subscriptions-auto-update" role="switch" checked></label>')}${settingGroup('Оформление','<label class="field"><span>Тема</span><select id="app-theme"><option value="light">Светлая</option><option value="dark">Тёмная</option><option value="auto">Системная</option></select></label>')}<p class="note">Сетевые настройки сохраняются отдельно и вступают в силу при следующем подключении.</p></div></section>`;
+document.querySelector('.pages').insertAdjacentHTML('beforeend',settingsHome+settingsSections.filter(s=>s[0]!=='diagnostics').map(([id,title,description])=>`<section class="page settings-section" id="page-${id}" aria-labelledby="${id}-title" hidden><div class="page-title"><button class="back" data-open="settings" aria-label="Назад в настройки">‹</button><h2 id="${id}-title">${title}</h2></div><p class="section-intro">${description}</p>${settingsContents[id]}</section>`).join(''));
+document.querySelector('#screen').insertAdjacentHTML('beforeend',`<dialog id="route-dialog" aria-labelledby="route-title"><form id="route-form"><h3 id="route-title">Новое правило</h3><label>Название<input id="route-name" required maxlength="60" autocomplete="off"></label><label>Условие<select id="route-type"><option value="domain">Домен и поддомены</option><option value="full">Точный домен</option><option value="ip">IP / CIDR</option><option value="geosite">Категория GeoSite</option><option value="geoip">Категория GeoIP</option></select></label><label>Значение<input id="route-value" required maxlength="253" placeholder="example.com" autocomplete="off" spellcheck="false"></label><label>Направление<select id="route-action">${directionOptions.map(([v,l])=>`<option value="${v}">${l}</option>`).join('')}</select></label><details class="core-details"><summary>Дополнительные условия</summary><label>Сеть<select id="route-network"><option value="tcp,udp">TCP + UDP</option><option value="tcp">TCP</option><option value="udp">UDP</option></select></label><label>Порты<input id="route-port" placeholder="Любые · 443,1000-2000" maxlength="100"></label><p class="note">Условия домена/IP, сети и портов должны совпасть одновременно.</p></details><p class="error" id="route-error" role="alert"></p><button type="button" class="text-button danger" id="delete-route" hidden>Удалить правило</button><div class="actions"><button type="button" class="secondary" data-close="route-dialog">Отмена</button><button type="submit" class="primary">Сохранить</button></div></form></dialog><dialog id="delete-route-dialog" aria-labelledby="delete-route-title"><h3 id="delete-route-title">Удалить правило?</h3><p class="note">Изменение попадёт в черновик настроек.</p><div class="actions"><button class="secondary" data-close="delete-route-dialog">Отмена</button><button class="secondary danger" id="confirm-delete-route">Удалить</button></div></dialog>`);
 const screen = document.querySelector('#screen');
 const deviceUrl = new URL(location.href);
 deviceUrl.searchParams.set('view','app');
@@ -279,13 +300,14 @@ let width = 412;
 let height = 919;
 let marking = false;
 let currentPage = 'home';
-const pageNames = {home:'Главная',servers:'Серверы',subscriptions:'Подписки',settings:'Настройки',routing:'Роутинг',advanced:'Дополнительно',diagnostics:'Журнал и отладка'};
+const pageNames = {home:'Главная',servers:'Серверы',subscriptions:'Подписки',settings:'Настройки',...Object.fromEntries(settingsSections.map(s=>[s[0],s[1]]))};
+let appliedSettings;
 const defaultCaption = '';
 function openPage(name) {
   currentPage = name;
   document.querySelectorAll('.page').forEach(page => {page.hidden = page.id !== 'page-'+name;});
   document.querySelectorAll('[data-tab]').forEach(tab => {
-    const active = tab.dataset.tab === (['routing','advanced','diagnostics'].includes(name) ? 'settings' : name);
+    const active = tab.dataset.tab === (settingsSections.some(s=>s[0]===name) ? 'settings' : name);
     tab.setAttribute('aria-selected',String(active));
     tab.tabIndex = active ? 0 : -1;
   });
@@ -294,6 +316,7 @@ function openPage(name) {
   resetPin();
   announce('navigation',{screen:name});
   document.querySelector('#notice').textContent = '';
+  if(appliedSettings) refreshSettingsState();
 }
 document.querySelectorAll('[data-tab],[data-open]').forEach(button => {
   button.addEventListener('click',() => {if(!marking) openPage(button.dataset.tab || button.dataset.open);});
@@ -859,13 +882,10 @@ function updateVpnControls() {
   $('#ipv6').disabled = disabled;
   $('#dns-ipv4').disabled = disabled;
   $('#dns-ipv6').disabled = disabled || !$('#ipv6').checked;
-  $('#bypass-lan').disabled = disabled;
+  $('#vpn-mtu').disabled = disabled;
 }
 $('#ipv6').addEventListener('change',updateVpnControls);
 $('#disable-vpn').addEventListener('change',updateVpnControls);
-$('#app-mode').addEventListener('change', () => {
-  $('#app-mode-note').textContent = $('#app-mode').value === 'exclude' ? 'Выбранные приложения обходят VPN.' : 'Только выбранные приложения используют VPN.';
-});
 document.querySelectorAll('[data-rule]').forEach(button => button.addEventListener('click', () => {
   const status = $('#'+button.dataset.rule+'-status');
   button.disabled = true;
@@ -989,6 +1009,208 @@ screen.addEventListener('click', event => {
   caption.textContent = 'Метка 1 · '+Math.round(x*width)+', '+Math.round(y*height)+'. Напиши в чате, что здесь разместим.';
   announce('layout-pin',{screen:currentPage,x:Math.round(x*width),y:Math.round(y*height),width,height});
 },true);
+const settingsInputs = [...document.querySelectorAll('[data-setting]')];
+let routeRules = [];
+let editingRoute = null;
+let nextRouteId = 1;
+function settingsSnapshot() {
+  return {fields:Object.fromEntries(settingsInputs.map(input=>[input.id,input.type==='checkbox' ? input.checked : input.value])),rules:structuredClone(routeRules)};
+}
+function settingsDirty() {return JSON.stringify(settingsSnapshot()) !== JSON.stringify(appliedSettings);}
+function updateSettingsDependencies() {
+  updateVpnControls();
+  $('#dns-fallback').disabled = !$('#dns-fallback-enabled').checked;
+  $('#dns-fallback-bootstrap').disabled = !$('#dns-fallback-enabled').checked;
+  $('#http-port').disabled = !$('#http-enabled').checked;
+  ['mux-concurrency','xudp-concurrency','xudp-443'].forEach(id=>$('#'+id).disabled=!$('#mux-enabled').checked);
+  ['sniff-route-only','sniff-protocols'].forEach(id=>$('#'+id).disabled=!$('#sniff-enabled').checked);
+  const noVpn = $('#disable-vpn').checked;
+  $('#app-mode').disabled = noVpn;
+  appChoices.forEach(([id])=>$('#app-'+id).disabled=noVpn || $('#app-mode').value==='all');
+  $('#app-mode-note').textContent = noVpn ? 'Выбор приложений недоступен без VPN-интерфейса.' : {all:'Все приложения используют VPN.',exclude:'Выбранные приложения обходят VPN.',include:'Только выбранные приложения используют VPN.'}[$('#app-mode').value];
+  const global = $('#routing-mode').value==='global';
+  $('#route-default').disabled=global;
+  $('#bypass-lan').disabled=global;
+  $('#add-route').disabled=global;
+  $('#routing-mode-note').textContent=global ? 'Весь трафик через прокси, кроме явно выбранного маршрута DNS. Пользовательские правила и обход LAN сохранены, но не действуют.' : 'Приоритет: маршрут DNS → локальная сеть → ваши правила → остальной трафик.';
+  document.querySelectorAll('#route-list button,#route-list input').forEach(input=>input.disabled=global || input.dataset.boundary==='true');
+}
+function settingIpVersion(value) {
+  if(/^(0|[1-9]\d{0,2})(\.(0|[1-9]\d{0,2})){3}$/.test(value) && value.split('.').every(part=>Number(part)<=255)) return 4;
+  if(value.includes(':') && !/[\s/%\[\]]/.test(value)) {try {if(new URL('http://['+value+']/').hostname.startsWith('[')) return 6;} catch {}}
+  return 0;
+}
+function settingDomain(value) {
+  if(!value || /[\s/:?#@\\]/u.test(value)) return null;
+  try {const name=new URL('https://'+value).hostname;return name.length<=253 && name.split('.').every(label=>/^[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?$/i.test(label)) ? name : null;} catch {return null;}
+}
+function settingDns(value) {
+  if(settingIpVersion(value)) return {host:value};
+  try {const url=new URL(value);if(url.protocol==='https:' && !url.username && !url.password && !url.hash) return {host:url.hostname.replace(/^\[|\]$/g,'')};} catch {}
+  return null;
+}
+function parseCoreOverrides() {
+  const text=$('#core-overrides').value;
+  if(text.length>65536) throw new Error('JSON: не больше 64 КиБ.');
+  let obj;
+  try {obj=JSON.parse(text || '{}');} catch {throw new Error('JSON: проверьте скобки, кавычки и запятые.');}
+  const object=value=>value!==null && typeof value==='object' && !Array.isArray(value);
+  const safe=value=>!value || typeof value!=='object' || Object.entries(value).every(([key,item])=>!['__proto__','constructor','prototype'].includes(key) && safe(item));
+  if(!object(obj) || !safe(obj) || Object.entries(obj).some(([key,value])=>!['log','dns','routing','policy','stats'].includes(key) || !object(value))) throw new Error('JSON: разрешены только объекты log, dns, routing, policy и stats.');
+  if(obj.log?.loglevel!==undefined && !['debug','info','warning','error','none'].includes(obj.log.loglevel)) throw new Error('JSON: неизвестный уровень loglevel.');
+  if(obj.routing?.rules!==undefined && !Array.isArray(obj.routing.rules)) throw new Error('JSON: routing.rules должен быть массивом.');
+  if(obj.dns?.servers!==undefined && !Array.isArray(obj.dns.servers)) throw new Error('JSON: dns.servers должен быть массивом.');
+  return obj;
+}
+function validateSettings() {
+  for(const input of settingsInputs) {
+    if(input.disabled || input.type==='checkbox') continue;
+    if(!input.checkValidity()) return {id:input.id,message:(input.closest('label')?.querySelector('span')?.firstChild?.textContent || input.id)+': проверьте значение и допустимый диапазон.'};
+  }
+  const s=settingsSnapshot().fields;
+  if(!s['disable-vpn'] && settingIpVersion(s['dns-ipv4'])!==4) return {id:'dns-ipv4',message:'DNS интерфейса: нужен корректный IPv4-адрес.'};
+  if(!s['disable-vpn'] && s.ipv6 && settingIpVersion(s['dns-ipv6'])!==6) return {id:'dns-ipv6',message:'DNS интерфейса: нужен корректный IPv6-адрес.'};
+  if(!/^https?:\/\//i.test(s['test-url'])) return {id:'test-url',message:'Проверка соединения: нужен HTTP(S) адрес.'};
+  for(const id of ['dns-primary',...(s['dns-fallback-enabled']?['dns-fallback']:[])]) {
+    const resolver=settingDns(s[id]);
+    if(!resolver) return {id,message:'DNS: укажите IP-адрес или HTTPS URL без логина и пароля.'};
+    const bootstrapId=id==='dns-primary'?'dns-bootstrap':'dns-fallback-bootstrap';
+    if(!settingIpVersion(resolver.host) && !settingIpVersion(s[bootstrapId])) return {id:bootstrapId,message:'DNS с доменным именем: укажите Bootstrap IP.'};
+  }
+  if(s['dns-bootstrap'] && !settingIpVersion(s['dns-bootstrap'])) return {id:'dns-bootstrap',message:'Bootstrap DNS: нужен IP-адрес.'};
+  if(s['dns-fallback-enabled'] && s['dns-fallback-bootstrap'] && !settingIpVersion(s['dns-fallback-bootstrap'])) return {id:'dns-fallback-bootstrap',message:'Bootstrap DNS: нужен IP-адрес.'};
+  const listen=s['socks-address'];
+  if(!settingIpVersion(listen)) return {id:'socks-address',message:'Адрес прослушивания: нужен IPv4 или IPv6.'};
+  if(!/^127\./.test(listen) && listen!=='::1' && !s['allow-lan-proxy']) return {id:'allow-lan-proxy',message:'Подтвердите доступ из локальной сети или используйте 127.0.0.1.'};
+  if(s['http-enabled'] && Number(s['socks-port'])===Number(s['http-port'])) return {id:'http-port',message:'Порты HTTP и SOCKS должны различаться.'};
+  if(!s['disable-vpn'] && s['app-mode']==='include' && !appChoices.some(([id])=>s['app-'+id])) return {id:'app-mode',message:'Выберите хотя бы одно приложение для режима «Только выбранные».'};
+  for(const id of ['geoip-url','geosite-url']) {
+    try {const url=new URL(s[id]);if(url.protocol!=='https:' || url.username || url.password) throw new Error();} catch {return {id,message:'Источник базы: нужен HTTPS URL без логина и пароля.'};}
+  }
+  try {parseCoreOverrides();} catch(error) {return {id:'core-overrides',message:error.message};}
+  return null;
+}
+function buildSettingsProfile() {
+  const error=validateSettings();
+  if(error) throw new Error(error.message);
+  const s=settingsSnapshot().fields;
+  const num=id=>Number(s[id]);
+  const routingRules=[{type:'field',inboundTag:['dns-internal'],outboundTag:s['dns-route']}];
+  if(s['routing-mode']==='rules') {
+    if(s['bypass-lan']) routingRules.push({type:'field',ip:['geoip:private'],outboundTag:'direct'});
+    for(const rule of routeRules.filter(rule=>rule.enabled)) {
+      const field=['ip','geoip'].includes(rule.type)?'ip':'domain';
+      routingRules.push({type:'field',ruleTag:rule.name,[field]:[rule.type==='ip'?rule.value:rule.type+':'+rule.value],network:rule.network,...(rule.port?{port:rule.port}:{}),outboundTag:rule.action});
+    }
+  }
+  const defaultOutboundTag=s['routing-mode']==='global'?'proxy':s['route-default'];
+  if(s['routing-mode']==='global' || s['route-strategy']!=='IPIfNonMatch') routingRules.push({type:'field',network:'tcp,udp',outboundTag:defaultOutboundTag});
+  const resolvers=[s['dns-primary'],...(s['dns-fallback-enabled']?[s['dns-fallback']]:[])];
+  const hosts=Object.fromEntries(resolvers.map((address,index)=>({host:settingDns(address).host,bootstrap:s[index?'dns-fallback-bootstrap':'dns-bootstrap']})).filter(resolver=>!settingIpVersion(resolver.host)).map(resolver=>[resolver.host,resolver.bootstrap]));
+  const sniffing={enabled:s['sniff-enabled'],...(s['sniff-enabled']?{destOverride:s['sniff-protocols'].split(','),routeOnly:s['sniff-route-only']}:{})};
+  const inbounds=[{tag:'socks-in',listen:s['socks-address'],port:num('socks-port'),protocol:'socks',settings:{auth:'noauth',udp:s['socks-udp'],userLevel:0},sniffing}];
+  if(s['http-enabled']) inbounds.push({tag:'http-in',listen:s['socks-address'],port:num('http-port'),protocol:'http',settings:{userLevel:0},sniffing});
+  const stats=s['core-stats'];
+  const core={
+    log:{loglevel:s['core-loglevel'],access:s['core-access-log']?'':'none',dnsLog:s['core-dns-log'],maskAddress:s['core-mask-ip']?'full':''},
+    dns:{servers:resolvers,hosts,queryStrategy:s['dns-strategy'],disableCache:!s['dns-cache'],tag:'dns-internal'},
+    routing:{domainStrategy:s['route-strategy'],rules:routingRules},
+    inbounds,
+    policy:{levels:{'0':{handshake:num('policy-handshake'),connIdle:num('policy-idle'),uplinkOnly:num('policy-uplink'),downlinkOnly:num('policy-downlink'),bufferSize:num('policy-buffer')}},system:{statsInboundUplink:stats,statsInboundDownlink:stats,statsOutboundUplink:stats,statsOutboundDownlink:stats}},
+    ...(stats?{stats:{}}:{}),...parseCoreOverrides()
+  };
+  const sockopt={domainStrategy:s['socket-domain'],tcpFastOpen:s['tcp-fast-open'],...(num('tcp-keepalive')?{tcpKeepAliveInterval:num('tcp-keepalive')}:{}) ,...(num('tcp-user-timeout')?{tcpUserTimeout:num('tcp-user-timeout')}:{}) ,...(s['tcp-congestion']?{tcpcongestion:s['tcp-congestion']}:{})};
+  return {client:{defaultOutboundTag,mode:s['disable-vpn']?'proxy':'vpn',...(!s['disable-vpn']?{ipv6:s.ipv6,mtu:num('vpn-mtu'),dnsIPv4:s['dns-ipv4'],...(s.ipv6?{dnsIPv6:s['dns-ipv6']}:{}) ,apps:{mode:s['app-mode'],packages:s['app-mode']==='all'?[]:appChoices.filter(([id])=>s['app-'+id]).map(app=>app[2])}}:{}) ,connectivity:{url:s['test-url'],timeout:num('test-timeout')},geodata:{geoip:s['geoip-url'],geosite:s['geosite-url']}},core,outbound:{mux:{enabled:s['mux-enabled'],...(s['mux-enabled']?{concurrency:num('mux-concurrency'),xudpConcurrency:num('xudp-concurrency'),xudpProxyUDP443:s['xudp-443']}:{})},streamSettings:{sockopt}}};
+}
+function refreshSettingsState() {
+  const visible=currentPage==='settings' || settingsSections.some(section=>section[0]===currentPage);
+  $('#settings-savebar').hidden=!visible || !settingsDirty();
+  try {$('#settings-preview').value=JSON.stringify(buildSettingsProfile(),null,2);$('#copy-settings').disabled=false;}
+  catch(error) {$('#settings-preview').value='Исправьте настройки: '+error.message;$('#copy-settings').disabled=true;}
+}
+function renderRouteRules() {
+  $('#route-list').innerHTML=routeRules.length?routeRules.map((rule,index)=>`<article class="route-entry" data-enabled="${rule.enabled}"><button class="route-heading" data-route-edit="${rule.id}" aria-label="Редактировать правило ${escapeHtml(rule.name)}"><strong>${index+1}. ${escapeHtml(rule.name)}</strong><small>${escapeHtml(rule.type+':'+rule.value)}${rule.port?' · '+escapeHtml(rule.port):''}</small></button><div class="route-controls"><label class="switch-row"><span class="route-state">${directionOptions.find(([id])=>id===rule.action)[1]}</span><input type="checkbox" role="switch" data-route-toggle="${rule.id}" aria-label="Включить правило ${escapeHtml(rule.name)}" ${rule.enabled?'checked':''}></label><button class="secondary" data-route-up="${rule.id}" data-boundary="${index===0}" aria-label="Поднять правило">↑</button><button class="secondary" data-route-down="${rule.id}" data-boundary="${index===routeRules.length-1}" aria-label="Опустить правило">↓</button></div></article>`).join(''):'<div class="card route-empty"><h3>Правил пока нет</h3><p class="note">Добавьте домен, IP-сеть или категорию. Остальной трафик пойдёт по выбранному маршруту.</p></div>';
+  updateSettingsDependencies();
+}
+function openRoute(id=null) {
+  editingRoute=id;
+  const rule=routeRules.find(rule=>rule.id===id);
+  $('#route-title').textContent=rule?'Редактировать правило':'Новое правило';
+  $('#route-form').reset();
+  for(const key of ['name','type','value','action','network','port']) if(rule) $('#route-'+key).value=rule[key];
+  $('#route-error').textContent='';$('#delete-route').hidden=!rule;
+  $('#route-dialog').showModal();
+}
+$('#add-route').addEventListener('click',()=>openRoute());
+$('#route-type').addEventListener('change',()=>{$('#route-value').placeholder={domain:'example.com',full:'api.example.com',ip:'10.0.0.0/8',geosite:'category-ads-all',geoip:'private'}[$('#route-type').value];});
+$('#route-list').addEventListener('click',event=>{
+  const button=event.target.closest('button');if(!button || button.disabled) return;
+  if(button.dataset.routeEdit) {openRoute(Number(button.dataset.routeEdit));return;}
+  const up=button.dataset.routeUp;const index=routeRules.findIndex(rule=>rule.id===Number(up || button.dataset.routeDown));
+  const next=index+(up?-1:1);
+  if(index>=0 && next>=0 && next<routeRules.length) {[routeRules[index],routeRules[next]]=[routeRules[next],routeRules[index]];renderRouteRules();refreshSettingsState();$('#route-list [data-route-edit="'+routeRules[next].id+'"]').focus();}
+});
+$('#route-list').addEventListener('change',event=>{
+  const rule=routeRules.find(rule=>rule.id===Number(event.target.dataset.routeToggle));
+  if(rule) {rule.enabled=event.target.checked;event.target.closest('article').dataset.enabled=String(rule.enabled);refreshSettingsState();}
+});
+$('#route-form').addEventListener('submit',event=>{
+  event.preventDefault();
+  const rule=Object.fromEntries(['name','type','value','action','network','port'].map(key=>[key,$('#route-'+key).value.trim()]));
+  const fail=message=>{$('#route-error').textContent=message;};
+  if(!rule.name) {fail('Укажите название.');return;}
+  if(['domain','full'].includes(rule.type)) {const domain=settingDomain(rule.value);if(!domain) {fail('Введите домен без протокола, пути и порта.');return;}rule.value=domain;}
+  else if(rule.type==='ip') {
+    const [ip,prefix,...extra]=rule.value.split('/');const version=settingIpVersion(ip);
+    if(!version || extra.length || (prefix!==undefined && (!/^\d{1,3}$/.test(prefix) || Number(prefix)>(version===4?32:128)))) {fail('Укажите корректный IP или CIDR, например 10.0.0.0/8.');return;}
+  } else if(!/^[a-z0-9][a-z0-9_@.-]*$/i.test(rule.value)) {fail('Укажите имя категории без префикса, например private.');return;}
+  if(rule.port && !rule.port.split(',').every(part=>{if(!/^\d{1,5}(-\d{1,5})?$/.test(part)) return false;const [a,b=a]=part.split('-').map(Number);return a>=1 && b<=65535 && a<=b;})) {fail('Порты: 1–65535, диапазоны через дефис, список через запятую.');return;}
+  const index=routeRules.findIndex(item=>item.id===editingRoute);
+  if(index>=0) routeRules[index]={...rule,id:editingRoute,enabled:routeRules[index].enabled};
+  else routeRules.push({...rule,id:nextRouteId++,enabled:true});
+  $('#route-dialog').close();renderRouteRules();refreshSettingsState();
+});
+$('#delete-route').addEventListener('click',()=>$('#delete-route-dialog').showModal());
+$('#confirm-delete-route').addEventListener('click',()=>{routeRules=routeRules.filter(rule=>rule.id!==editingRoute);$('#delete-route-dialog').close();$('#route-dialog').close();renderRouteRules();refreshSettingsState();});
+settingsInputs.forEach(input=>input.addEventListener('input',()=>{$('#settings-error').textContent='';updateSettingsDependencies();refreshSettingsState();}));
+settingsInputs.forEach(input=>input.addEventListener('change',()=>{updateSettingsDependencies();refreshSettingsState();}));
+$('#apply-settings').addEventListener('click',()=>{
+  const error=validateSettings();
+  if(error) {
+    const field=$('#'+error.id);openPage(field.closest('.page').id.slice(5));
+    for(let parent=field.parentElement;parent;parent=parent.parentElement) if(parent.tagName==='DETAILS') parent.open=true;
+    $('#settings-error').textContent=error.message;field.focus();field.scrollIntoView({block:'center'});return;
+  }
+  appliedSettings=settingsSnapshot();refreshSettingsState();notice('Настройки сохранены. Применятся при следующем подключении.');
+});
+$('#discard-settings').addEventListener('click',()=>{
+  settingsInputs.forEach(input=>{if(input.type==='checkbox') input.checked=appliedSettings.fields[input.id];else input.value=appliedSettings.fields[input.id];});
+  routeRules=structuredClone(appliedSettings.rules);$('#settings-error').textContent='';renderRouteRules();refreshSettingsState();notice('Изменения отменены');
+});
+$('#settings-search').addEventListener('input',()=>{
+  const query=$('#settings-search').value.trim().toLocaleLowerCase('ru');
+  const found=settingsSections.filter(section=>(section[1]+' '+section[2]+' '+(document.querySelector('#page-'+section[0])?.textContent || '')).toLocaleLowerCase('ru').includes(query));
+  const homeFound=[['app-theme','Тема и оформление','Светлая, тёмная или системная','i-settings'],['subscriptions-auto-update','Автообновление подписок','Все подписки, каждый час','i-subs']].filter(item=>(item[1]+' '+item[2]).toLocaleLowerCase('ru').includes(query));
+  const count=found.length+homeFound.length;
+  $('#settings-home-content').hidden=!!query;$('#settings-results').hidden=!query || !count;$('#settings-not-found').hidden=!query || !!count;
+  $('#settings-results').innerHTML=found.map(settingsLink).join('')+homeFound.map(item=>settingsLink(item).replace('data-open=','data-focus-setting=')).join('');
+});
+$('#settings-results').addEventListener('click',event=>{
+  const button=event.target.closest('button');if(!button) return;
+  if(button.dataset.open) openPage(button.dataset.open);
+  else if(button.dataset.focusSetting) {$('#settings-search').value='';$('#settings-search').dispatchEvent(new Event('input'));const field=$('#'+button.dataset.focusSetting);field.focus();field.scrollIntoView({block:'center'});}
+});
+$('#app-search').addEventListener('input',()=>{
+  const query=$('#app-search').value.trim().toLocaleLowerCase('ru');
+  document.querySelectorAll('[data-app-name]').forEach(row=>row.hidden=!row.dataset.appName.includes(query));
+  $('#app-search-empty').hidden=!!document.querySelector('[data-app-name]:not([hidden])');
+});
+$('#copy-settings').addEventListener('click',async()=>{
+  try {const json=JSON.stringify(buildSettingsProfile(),null,2);await navigator.clipboard.writeText(json);$('#profile-copy-status').textContent='Профиль скопирован';}
+  catch {$('#profile-copy-status').textContent='Не удалось скопировать. Проверьте значения или выделите текст вручную.';}
+});
+appliedSettings=settingsSnapshot();
+renderRouteRules();refreshSettingsState();
 renderServers();
 renderSubscriptions();
 renderConnection();

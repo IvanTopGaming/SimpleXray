@@ -172,8 +172,11 @@ test('routing offers app selection and simulated database update', async () => {
   await click('[data-open="routing"]');
   assert.equal(await evaluate('document.querySelector("#bypass-lan")?.checked'), true);
   await click('#bypass-lan');
+  await evaluate("openPage('apps')");
+  await value('#app-mode','exclude');
   await click('#app-browser');
   assert.equal(await evaluate('document.querySelector("#app-browser")?.checked'), true);
+  await evaluate("openPage('geodata')");
   await click('[data-rule="geoip"]');
   await wait(750);
   assert.match(await evaluate('document.querySelector("#geoip-status")?.textContent'), /Обновлено/);
@@ -874,4 +877,197 @@ test('frameless keyboard panning preserves the full visible height and safe area
   await evaluate('visualViewport.scale=2;updateModalBounds()');
   assert.equal(await evaluate('screen.getBoundingClientRect().height'),1100);
   assert.equal(await evaluate('screen.getBoundingClientRect().top'),0);
+});
+
+test('settings search opens the matching section and all expert pages fit narrow screens', async () => {
+  await click('#tab-settings');
+  assert.equal(await value('#settings-search','Mux'),true);
+  assert.equal(await evaluate('document.querySelectorAll("#settings-results button").length'),1);
+  await click('#settings-results button');
+  assert.equal(await evaluate('currentPage'),'kernel');
+  assert.equal(await evaluate('document.querySelector("#tab-settings").getAttribute("aria-selected")'),'true');
+  for(const size of ['360,825','412,919']) {
+    await value('#size',size);
+    for(const page of ['settings','connection','dns','routing','apps','advanced','kernel','geodata','profile']) {
+      await evaluate(`openPage('${page}')`);
+      assert.equal(await evaluate('document.querySelector(".pages").scrollWidth>document.querySelector(".pages").clientWidth'),false,page+' overflow');
+    }
+  }
+});
+
+test('core settings stage validated profile changes and discard restores the applied profile', async () => {
+  assert.equal(await evaluate('typeof buildSettingsProfile'),'function');
+  await evaluate("openPage('kernel')");
+  await click('#mux-enabled');
+  await value('#mux-concurrency','129');
+  await click('#apply-settings');
+  assert.equal(await evaluate('document.querySelector("#settings-savebar").hidden'),false);
+  assert.match(await evaluate('document.querySelector("#settings-error").textContent'),/Mux/);
+  await value('#mux-concurrency','16');
+  await value('#policy-idle','90');
+  await click('#sniff-enabled');
+  assert.equal(await evaluate('document.querySelector("#sniff-route-only").disabled'),true);
+  await click('#apply-settings');
+  assert.equal(await evaluate('document.querySelector("#settings-savebar").hidden'),true);
+  await value('#mux-concurrency','32');
+  await click('#discard-settings');
+  assert.equal(await evaluate('document.querySelector("#mux-concurrency").value'),'16');
+  const profile=await evaluate('buildSettingsProfile()');
+  assert.equal(profile.outbound.mux.concurrency,16);
+  assert.equal(profile.core.policy.levels['0'].connIdle,90);
+  assert.equal(profile.core.inbounds[0].sniffing.enabled,false);
+  assert.equal(profile.core.dns.queryStrategy,'UseIPv4');
+});
+
+test('routing rules validate, edit, reorder, toggle and delete without losing staged changes', async () => {
+  await evaluate("openPage('routing')");
+  assert.equal(await evaluate('!!document.querySelector("#add-route")'),true);
+  for(const [name,target,action] of [['Work','example.com','proxy'],['Block','ads.example.com','block']]) {
+    await click('#add-route');
+    await value('#route-name',name);
+    await value('#route-value',target);
+    await value('#route-action',action);
+    await evaluate('document.querySelector("#route-form").requestSubmit()');
+  }
+  let rules=await evaluate('buildSettingsProfile().core.routing.rules.filter(r=>r.domain)');
+  assert.deepEqual(rules.map(r=>r.domain),[['domain:example.com'],['domain:ads.example.com']]);
+  await click('#route-list article:last-child [data-route-up]');
+  rules=await evaluate('buildSettingsProfile().core.routing.rules.filter(r=>r.domain)');
+  assert.equal(rules[0].outboundTag,'block');
+  await click('#route-list article:first-child [data-route-edit]');
+  await value('#route-type','ip');
+  await value('#route-value','999.1.1.1/99');
+  await evaluate('document.querySelector("#route-form").requestSubmit()');
+  assert.equal(await evaluate('document.querySelector("#route-dialog").open'),true);
+  await value('#route-value','2001:db8::/32');
+  await value('#route-port','443,1000-2000');
+  await evaluate('document.querySelector("#route-form").requestSubmit()');
+  assert.deepEqual(await evaluate('buildSettingsProfile().core.routing.rules.find(r=>r.port)?.ip'),['2001:db8::/32']);
+  await click('#route-list article:first-child [data-route-toggle]');
+  assert.equal(await evaluate('buildSettingsProfile().core.routing.rules.some(r=>r.port)'),false);
+  await click('#route-list article:first-child [data-route-edit]');
+  await click('#delete-route');
+  await click('#confirm-delete-route');
+  assert.equal(await evaluate('document.querySelectorAll("#route-list article").length'),1);
+  await click('#discard-settings');
+  assert.equal(await evaluate('document.querySelectorAll("#route-list article").length'),0);
+});
+
+test('DNS, local listeners and expert overrides reject unsafe or ambiguous settings', async () => {
+  assert.equal(await evaluate('typeof buildSettingsProfile'),'function');
+  await evaluate("openPage('advanced')");
+  await value('#http-port','10808');
+  await click('#apply-settings');
+  assert.match(await evaluate('document.querySelector("#settings-error").textContent'),/порт/i);
+  await value('#http-port','10809');
+  await value('#socks-address','0.0.0.0');
+  await click('#apply-settings');
+  assert.match(await evaluate('document.querySelector("#settings-error").textContent'),/доступ/i);
+  await click('#allow-lan-proxy');
+  await evaluate("openPage('dns')");
+  await value('#dns-primary','javascript:alert(1)');
+  await click('#apply-settings');
+  assert.match(await evaluate('document.querySelector("#settings-error").textContent'),/DNS/);
+  await value('#dns-primary','https://1.1.1.1/dns-query');
+  await evaluate("openPage('profile')");
+  await value('#core-overrides','{"__proto__":{"polluted":true}}');
+  await click('#apply-settings');
+  assert.match(await evaluate('document.querySelector("#settings-error").textContent'),/JSON/);
+  assert.equal(await evaluate('({}).polluted'),undefined);
+  await value('#core-overrides','{"log":{"loglevel":"error"}}');
+  await click('#apply-settings');
+  assert.equal(await evaluate('document.querySelector("#settings-savebar").hidden'),true);
+  assert.equal(await evaluate('buildSettingsProfile().core.log.loglevel'),'error');
+});
+
+test('DNS bootstrap addresses stay separate and Sockopt exports canonical Xray keys', async () => {
+  await evaluate("openPage('dns')");
+  await value('#dns-primary','https://dns.google/dns-query');
+  await value('#dns-bootstrap','8.8.8.8');
+  await click('#dns-fallback-enabled');
+  await value('#dns-fallback','https://cloudflare-dns.com/dns-query');
+  assert.equal(await value('#dns-fallback-bootstrap','1.1.1.1'),true);
+  await evaluate("openPage('kernel')");
+  await value('#tcp-congestion','bbr');
+  await value('#tcp-keepalive','30');
+  await value('#tcp-user-timeout','10000');
+  const result=await evaluate('buildSettingsProfile()');
+  assert.deepEqual(result.core.dns.hosts,{'dns.google':'8.8.8.8','cloudflare-dns.com':'1.1.1.1'});
+  assert.equal(result.outbound.streamSettings.sockopt.tcpcongestion,'bbr');
+  assert.equal(result.outbound.streamSettings.sockopt.tcpKeepAliveInterval,30);
+  assert.equal(result.outbound.streamSettings.sockopt.tcpUserTimeout,10000);
+});
+
+test('global routing suspends custom rules and proxy-only mode suspends per-app filtering', async () => {
+  await evaluate("openPage('routing')");
+  await click('#add-route');
+  await value('#route-name','Local');await value('#route-value','example.com');await value('#route-action','direct');
+  await evaluate('document.querySelector("#route-form").requestSubmit()');
+  await value('#routing-mode','global');
+  assert.equal(await evaluate('buildSettingsProfile().core.routing.rules.length'),2);
+  assert.equal(await evaluate('document.querySelector("#route-list [data-route-edit]").disabled'),true);
+  await value('#routing-mode','rules');
+  assert.equal(await evaluate('buildSettingsProfile().core.routing.rules.some(r=>r.domain)'),true);
+  await evaluate("openPage('apps')");await value('#app-mode','include');
+  await click('#apply-settings');
+  assert.match(await evaluate('document.querySelector("#settings-error").textContent'),/приложение/);
+  await click('#app-browser');await click('#apply-settings');
+  assert.deepEqual(await evaluate('buildSettingsProfile().client.apps.packages'),['com.android.chrome']);
+  await evaluate("openPage('connection')");await click('#disable-vpn');
+  assert.equal(await evaluate('document.querySelector("#app-browser").disabled'),true);
+  assert.equal(await evaluate('buildSettingsProfile().client.apps'),undefined);
+  await click('#disable-vpn');
+  assert.deepEqual(await evaluate('buildSettingsProfile().client.apps.packages'),['com.android.chrome']);
+});
+
+test('IPIfNonMatch leaves unmatched traffic for DNS resolution instead of an early catch-all', async () => {
+  await evaluate("openPage('routing')");
+  await value('#route-strategy','IPIfNonMatch');
+  await value('#route-default','direct');
+  const result=await evaluate('buildSettingsProfile()');
+  assert.equal(result.core.routing.rules.some(rule=>rule.network==='tcp,udp' && !rule.ip && !rule.domain && !rule.inboundTag),false);
+  assert.equal(result.client.defaultOutboundTag,'direct');
+});
+
+test('settings search finds appearance and subscription controls on the settings homepage', async () => {
+  await click('#tab-settings');
+  for(const [query,id] of [['тема','app-theme'],['автообновление','subscriptions-auto-update']]) {
+    await value('#settings-search',query);
+    assert.ok(await evaluate(`!!document.querySelector('[data-focus-setting="${id}"]')`));
+    await click(`[data-focus-setting="${id}"]`);
+    assert.equal(await evaluate(`document.querySelector('#${id}').checkVisibility()`),true);
+    assert.equal(await evaluate('document.activeElement.id'),id);
+  }
+});
+
+test('settings drafts and routing dialogs fit real phone widths and short keyboard windows', async () => {
+  const target=await evaluate('document.querySelector("#device-view").href');
+  await send('Page.navigate',{url:target});
+  await waitFor('document.body.classList.contains("app-view")');
+  for(const [width,height] of [[320,640],[360,825],[412,919],[360,320]]) {
+    await send('Emulation.setDeviceMetricsOverride',{width,height,deviceScaleFactor:1,mobile:true});
+    await wait(60);
+    for(const page of ['connection','dns','apps','kernel','geodata','profile','routing']) {
+      await evaluate(`openPage('${page}')`);
+      await value('#policy-idle','91');
+      assert.equal(await evaluate('document.querySelector(".pages").scrollWidth>document.querySelector(".pages").clientWidth'),false,page+' overflow');
+      assert.ok(await evaluate('(()=>{const r=document.querySelector("#apply-settings").getBoundingClientRect();return r.top>=0 && r.bottom<=innerHeight})()'));
+    }
+    await click('#add-route');
+    await evaluate('document.querySelector("#route-dialog details").open=true');
+    await value('#route-name','Правило с очень длинным названием');
+    await value('#route-value','example.com');
+    await evaluate('document.querySelector("#route-form button[type=submit]").scrollIntoView({block:"nearest"})');
+    assert.ok(await evaluate('(()=>{const d=document.querySelector("#route-dialog"),r=d.getBoundingClientRect();return r.top>=0 && r.bottom<=innerHeight && d.scrollWidth<=d.clientWidth})()'));
+    await evaluate('document.querySelector("#route-form").requestSubmit()');
+    await click('#route-list article:last-child [data-route-edit]');
+    await click('#delete-route');
+    assert.ok(await evaluate('(()=>{const d=document.querySelector("#delete-route-dialog"),r=d.getBoundingClientRect();return r.top>=0 && r.bottom<=innerHeight && d.scrollWidth<=d.clientWidth})()'));
+    await click('#confirm-delete-route');
+  }
+});
+
+test('new routing form does not mark untouched required fields as errors', async () => {
+  await evaluate("openPage('routing')");await click('#add-route');
+  assert.equal(await evaluate('getComputedStyle(document.querySelector("#route-name")).borderTopColor'),await evaluate('getComputedStyle(document.querySelector("#route-port")).borderTopColor'));
 });
