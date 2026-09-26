@@ -27,6 +27,14 @@ const value = (selector, value) => evaluate(`(() => {
   return true;
 })()`);
 const wait = ms => new Promise(resolve => setTimeout(resolve, ms));
+const waitFor = async expression => {
+  const deadline = Date.now()+3500;
+  while(Date.now() < deadline) {
+    if(await evaluate(expression)) return;
+    await wait(50);
+  }
+  assert.fail('Condition did not become true: '+expression);
+};
 
 before(async () => {
   const targets = await (await fetch('http://127.0.0.1:9237/json')).json();
@@ -66,20 +74,21 @@ test('server selection reaches home and switching disconnects the demo', async (
   await wait(750);
   assert.match(await evaluate('document.querySelector("#connection-status")?.textContent'), /Подключено/);
   await click('#tab-servers');
+  assert.equal(await evaluate('document.querySelector("[data-server=nl] .latency").textContent'),'45 мс');
   await click('[data-server="de"]');
   assert.match(await evaluate('document.querySelector("#connection-status")?.textContent'), /Отключено/);
 });
 
-test('server actions use compact accessible chevrons without text labels', async () => {
+test('server actions distinguish read-only information from manual editing', async () => {
   await click('#tab-servers');
   const actions = await evaluate(`Array.from(document.querySelectorAll('[data-config]'),button => ({
     text:button.textContent.trim(),width:button.getBoundingClientRect().width,
-    icon:button.querySelector('use')?.getAttribute('href'),label:button.getAttribute('aria-label'),title:button.title
+    id:button.dataset.config,icon:button.querySelector('use')?.getAttribute('href'),label:button.getAttribute('aria-label'),title:button.title
   }))`);
-  assert.equal(actions.length,4);
+  assert.equal(actions.length,60);
   for(const action of actions) {
     assert.equal(action.text,'');
-    assert.equal(action.icon,'#i-arrow');
+    assert.equal(action.icon,action.id === 'manual' ? '#i-edit' : '#i-info');
     assert.ok(action.width <= 44);
     assert.ok(action.label.length > 0 && action.title.length > 0);
   }
@@ -245,9 +254,9 @@ test('manual servers can be added, selected and edited with JSON validation', as
   assert.match(await evaluate('document.querySelector("#server-error").textContent'), /JSON/);
   await value('#server-config', '{"outbounds":[{"protocol":"vless","settings":{}}]}');
   await evaluate('document.querySelector("#server-form").requestSubmit()');
-  assert.equal(await evaluate('document.querySelectorAll("[data-server]").length'), 5);
+  assert.equal(await evaluate('document.querySelectorAll("[data-server]").length'), 61);
   assert.equal(await evaluate('document.querySelectorAll("#server-list img").length'), 0);
-  const id = await evaluate('document.querySelector("#server-list .server-entry:last-child [data-server]").dataset.server');
+  const id = await evaluate('Array.from(document.querySelectorAll("[data-server]")).find(button => button.textContent.includes("<img")).dataset.server');
   await click(`[data-server="${id}"]`);
   await click('#connect');
   await wait(750);
@@ -298,7 +307,7 @@ test('subscription URL edit is prefilled, cancellable and derives the name from 
   await evaluate('document.querySelector("#subscription-form").requestSubmit()');
   assert.equal(await evaluate('document.querySelector(".subscription-card h3").textContent'), 'new.example.com');
   assert.equal(await evaluate('document.querySelectorAll(".subscription-card").length'), 1);
-  assert.equal(await evaluate('document.querySelectorAll("[data-server]").length'), 4);
+  assert.equal(await evaluate('document.querySelectorAll("[data-server]").length'), 60);
   await click('[data-refresh="sample"]');
   await wait(750);
   assert.equal(await evaluate('document.querySelector(".subscription-card h3").textContent'), 'new.example.com');
@@ -378,4 +387,106 @@ test('an open dialog follows display resizing and page scrolling and remains clo
   })()`),true);
   await click('#close-server');
   assert.equal(await evaluate('document.querySelector("#server-dialog").open'),false);
+});
+
+test('home has a 112px power button, live speeds, ping and reduced-motion support', async () => {
+  assert.equal(await evaluate('document.querySelector("#connect").getBoundingClientRect().width'),112);
+  assert.equal(await evaluate('document.querySelector("#selected-ping")?.textContent'),'—');
+  await click('#tab-servers');
+  await click('#check-servers');
+  await wait(750);
+  await click('#tab-home');
+  assert.equal(await evaluate('document.querySelector("#selected-ping").textContent'),'42 мс');
+  await send('Emulation.setEmulatedMedia',{features:[{name:'prefers-reduced-motion',value:'reduce'}]});
+  await click('#connect');
+  assert.equal(await evaluate('getComputedStyle(document.querySelector("#connect"),"::after").animationName'),'none');
+  await wait(750);
+  const first = await evaluate('document.querySelector("#speed-down").textContent');
+  await waitFor(`document.querySelector('#speed-down').textContent !== ${JSON.stringify(first)}`);
+  const next = await evaluate('document.querySelector("#speed-down").textContent');
+  assert.notEqual(first,next);
+  assert.match(next,/МБ\/с/);
+  await click('#connect');
+  assert.equal(await evaluate('document.querySelector("#speed-down").textContent'),'0 КБ/с');
+  await send('Emulation.setEmulatedMedia',{features:[]});
+});
+
+test('large server list searches all fields, groups, remembers collapse and sorts numeric ping', async () => {
+  await click('#tab-servers');
+  assert.equal(await evaluate('document.querySelectorAll("[data-server]").length'),60);
+  await value('#server-search','Германия');
+  assert.ok(await evaluate('document.querySelectorAll("[data-server]").length > 1'));
+  assert.equal(await evaluate('Array.from(document.querySelectorAll("[data-server]")).every(button=>button.textContent.includes("Германия"))'),true);
+  await value('#server-search','неттакогосервера');
+  assert.equal(await evaluate('document.querySelectorAll("[data-server]").length'),0);
+  assert.match(await evaluate('document.querySelector("#server-list").textContent'),/Ничего не найдено/);
+  await value('#server-search','Основная подписка');
+  assert.equal(await evaluate('document.querySelectorAll("[data-server]").length'),59);
+  await value('#server-search','');
+  await click('#server-list details summary');
+  assert.equal(await evaluate('document.querySelector("#server-list details").open'),false);
+  await value('#server-sort','ping');
+  assert.equal(await evaluate('document.querySelector("#server-list details").open'),false);
+  await value('#server-search','Амстердам');
+  assert.equal(await evaluate('document.querySelector("#server-list details").open'),true);
+  await value('#server-search','');
+  await click('#check-servers');
+  await wait(750);
+  const pings = await evaluate('Array.from(document.querySelectorAll("#server-list details:first-child .latency"),el=>el.textContent)');
+  assert.equal(pings[0],'42 мс');
+  assert.equal(pings.at(-1),'Недоступен');
+  await value('#server-group','country');
+  assert.ok(await evaluate('document.querySelectorAll("#server-list details").length >= 6'));
+});
+
+test('subscription usage handles missing values, exceeded quotas and expiry without invented limits', async () => {
+  assert.equal(await evaluate('typeof subscriptionUsage'),'function');
+  const inputs = [
+    ['',{used:null,total:null,remaining:null,percent:null,expires:null,expired:false,days:null}],
+    ['upload=10; download=20; total=100; expire=2000',{used:30,total:100,remaining:70,percent:30,expires:2000000,expired:false,days:1}],
+    ['upload=100; download=20; total=100; expire=500',{used:120,total:100,remaining:0,percent:100,expires:500000,expired:true,days:0}],
+    ['upload=-1; download=abc; total=0; expire=0',{used:null,total:null,remaining:null,percent:null,expires:null,expired:false,days:null}]
+  ];
+  for(const [header,expected] of inputs) assert.deepEqual(await evaluate(`subscriptionUsage(${JSON.stringify(header)},1000000)`),expected);
+  await click('#tab-subscriptions');
+  assert.ok(await evaluate('document.querySelector(".subscription-card progress")?.value > 0'));
+  await click('#add-subscription');
+  await value('#sub-url','https://unknown.example.com/sub');
+  await evaluate('document.querySelector("#subscription-form").requestSubmit()');
+  assert.equal(await evaluate('document.querySelector(".subscription-card:last-child progress")'),null);
+  assert.equal(await evaluate('document.querySelector(".subscription-card:last-child .expiry")'),null);
+  await evaluate('subscriptions[0].userinfo="upload=120; download=10; total=100; expire=1";renderSubscriptions()');
+  assert.equal(await evaluate('document.querySelector(".subscription-card").dataset.expired'),'true');
+  assert.equal(await evaluate('document.querySelector(".subscription-card progress").value'),100);
+  assert.match(await evaluate('document.querySelector(".subscription-card .expiry").textContent'),/истёк/);
+});
+
+test('subscription update policy saves independently and daily update runs only when due', async () => {
+  await click('#tab-subscriptions');
+  await click('[data-edit-sub="sample"]');
+  assert.equal(await value('#sub-refresh','daily'),true);
+  await evaluate('document.querySelector("#subscription-form").requestSubmit()');
+  await click('[data-edit-sub="sample"]');
+  assert.equal(await evaluate('document.querySelector("#sub-refresh").value'),'daily');
+  await value('#sub-refresh','startup');
+  await click('[data-close="subscription-dialog"]');
+  await click('[data-edit-sub="sample"]');
+  assert.equal(await evaluate('document.querySelector("#sub-refresh").value'),'daily');
+  await click('[data-close="subscription-dialog"]');
+  assert.equal(await evaluate('typeof refreshDueSubscriptions'),'function');
+  assert.equal(await evaluate('refreshDueSubscriptions(Date.now(),false)'),0);
+  assert.equal(await evaluate('refreshDueSubscriptions(Date.now()+86400001,false)'),1);
+  await wait(750);
+  assert.match(await evaluate('document.querySelector(".subscription-card").textContent'),/Обновлено/);
+  assert.equal(await evaluate('refreshDueSubscriptions(Date.now(),true)'),0);
+  await click('[data-edit-sub="sample"]');
+  await value('#sub-refresh','startup');
+  await evaluate('document.querySelector("#subscription-form").requestSubmit()');
+  assert.equal(await evaluate('refreshDueSubscriptions(Date.now(),false)'),0);
+  assert.equal(await evaluate('refreshDueSubscriptions(Date.now(),true)'),1);
+  await wait(750);
+  await click('[data-edit-sub="sample"]');
+  await value('#sub-refresh','manual');
+  await evaluate('document.querySelector("#subscription-form").requestSubmit()');
+  assert.equal(await evaluate('refreshDueSubscriptions(Date.now()+86400001,true)'),0);
 });

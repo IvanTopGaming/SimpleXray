@@ -71,8 +71,13 @@ footer span{width:5px;height:5px;border-radius:50%;background:#87a38b}
 .card{border:1px solid var(--line);border-radius:15px;padding:15px;background:var(--paper);min-width:0}
 .card h3{font-size:13px;margin:0 0 6px;font-weight:600;overflow-wrap:anywhere}.card p{margin:0}
 .server-slot{border-style:solid;background:var(--surface)}.server-slot div{min-width:0}.server-slot span{overflow-wrap:anywhere}
-.status-area{text-align:center;padding:12px 0 4px}.status-orbit{margin:0 auto 16px;width:68px;height:68px;border-radius:50%;border:1px solid var(--line);display:grid;place-items:center;background:var(--surface);color:var(--muted)}
-.status-orbit svg{width:28px;height:28px}.status-area[data-state="connected"] .status-orbit{background:var(--accent);color:var(--paper);border-color:var(--accent)}
+.status-area{text-align:center;padding:16px 0 4px}.status-orbit{position:relative;margin:0 auto 22px;width:112px;height:112px;border-radius:50%;border:1px solid var(--line);display:grid;place-items:center;background:var(--surface);color:var(--muted)}
+.status-orbit svg{width:36px;height:36px}.status-area[data-state="connected"] .status-orbit{background:var(--accent);color:var(--paper);border-color:var(--accent)}
+.status-orbit::after{content:"";position:absolute;inset:-8px;border:2px solid var(--accent);border-radius:50%;opacity:0;pointer-events:none}
+.status-area[data-state="connecting"] .status-orbit::after{animation:connection-pulse 900ms cubic-bezier(.45,0,.55,1) infinite}
+.status-area[data-state="connected"] .status-orbit::after{opacity:.45;box-shadow:0 0 14px color-mix(in srgb,var(--accent) 20%,transparent)}
+@keyframes connection-pulse{0%,100%{transform:scale(.97);opacity:.3}50%{transform:scale(1.06);opacity:.8}}
+@media(prefers-reduced-motion:reduce){.status-area[data-state="connecting"] .status-orbit::after{animation:none;opacity:.6}}
 .status-area h3{font-size:19px;margin:0 0 7px}.stats{display:grid;grid-template-columns:1fr 1fr;gap:10px}.stat{padding:13px;border-radius:12px;background:var(--surface)}
 .stat small{display:block;font-size:10px;color:var(--muted);margin-bottom:7px}.stat strong{font-size:16px;font-weight:500;font-variant-numeric:tabular-nums}.stat.wide{grid-column:1/-1}
 .server-list{display:flex;flex-direction:column;gap:9px}
@@ -98,6 +103,12 @@ footer span{width:5px;height:5px;border-radius:50%;background:#87a38b}
 .screen .server-entry .server-card{border:0;border-radius:0;padding:12px 10px;gap:8px}
 .screen .config-action{border:0;border-left:1px solid var(--line);border-radius:0;background:transparent;color:var(--accent);padding:10px;width:44px;min-width:44px;display:grid;place-items:center}
 .server-entry .location{padding:6px}.server-entry .latency{font-size:9px}
+.live-speeds{display:grid;grid-template-columns:1fr 1fr;gap:10px}.live-speeds small{display:block;color:var(--muted);font-size:10px;margin-bottom:7px}.live-speeds strong{font-size:22px;font-weight:600;letter-spacing:-.5px;font-variant-numeric:tabular-nums;white-space:nowrap}
+.session-totals{display:flex;flex-wrap:wrap;gap:10px 16px;font-size:11px;color:var(--muted);padding-top:14px;border-top:1px solid var(--line);font-variant-numeric:tabular-nums}.session-totals span:last-child{margin-left:auto}
+.home-ping{font-size:10px;color:var(--accent);white-space:nowrap;margin-left:auto}.server-slot .chevron{margin-left:0}
+.server-tools{display:flex;flex-direction:column;gap:10px}.server-filters{display:grid;grid-template-columns:1fr 1fr;gap:8px}.server-filters label{display:flex;flex-direction:column;gap:5px;color:var(--muted);font-size:10px}.server-filters select{width:100%;font-size:11px}
+.server-group{min-width:0}.server-group summary{display:flex;align-items:center;gap:8px;min-height:44px;padding:8px 0;cursor:pointer;font-size:12px;font-weight:600;list-style:none}.server-group summary::-webkit-details-marker{display:none}.server-group summary span{flex:1;min-width:0;overflow-wrap:anywhere}.server-group summary small{font-size:10px;font-weight:400;color:var(--muted)}.server-group summary svg{width:15px;height:15px;transform:rotate(0deg)}.server-group[open] summary svg{transform:rotate(90deg)}.group-servers{display:flex;flex-direction:column;gap:9px}
+.usage{margin-top:14px;font-size:11px;color:var(--muted)}.usage-line{display:flex;justify-content:space-between;gap:8px;margin-bottom:8px}.usage-line strong{color:var(--ink);font-weight:500}progress{display:block;width:100%;height:5px;border:0;border-radius:6px;overflow:hidden;accent-color:var(--accent);background:var(--line)}progress::-webkit-progress-bar{background:var(--line)}progress::-webkit-progress-value{background:var(--accent)}.usage .note{margin-top:7px}.expiry{font-size:11px;color:var(--muted);margin-top:12px!important}.expired{color:#b65449!important}.screen.dark .expired{color:#ffaea3!important}.subscription-card[data-expired="true"]{border-color:#b65449}.update-policy{font-size:10px;color:var(--muted);margin-top:10px!important}
 .screen textarea{width:100%;min-height:220px;resize:vertical;border:1px solid var(--line);border-radius:10px;background:var(--surface);color:var(--ink);font:11px/1.6 ui-monospace,monospace;padding:12px;tab-size:2}
 .screen textarea:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 .screen input[readonly],.screen textarea[readonly]{color:var(--muted)}
@@ -130,15 +141,17 @@ footer span{width:5px;height:5px;border-radius:50%;background:#87a38b}
 <symbol id="i-arrow" viewBox="0 0 24 24"><path d="m9 5 7 7-7 7"/></symbol>
 <symbol id="i-route" viewBox="0 0 24 24"><circle cx="6" cy="5" r="2"/><circle cx="18" cy="19" r="2"/><path d="M6 7v8a4 4 0 0 0 4 4h6M9 5h6a3 3 0 0 1 0 6H9"/></symbol>
 <symbol id="i-power" viewBox="0 0 24 24"><path d="M12 2v10M6 5a9 9 0 1 0 12 0"/></symbol>
+<symbol id="i-info" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 11v6M12 7h.01"/></symbol>
+<symbol id="i-edit" viewBox="0 0 24 24"><path d="m15 4 5 5M4 20l5-1L21 7a2 2 0 0 0-5-5L4 14Z"/></symbol>
 </defs></svg>
 <div class="pages">
 <section class="page" id="page-home" role="tabpanel" aria-labelledby="tab-home">
 <h2>Главная</h2>
-<div><p class="eyebrow">Выбранный сервер</p><button class="server-slot" data-open="servers"><svg aria-hidden="true"><use href="#i-servers"/></svg><div><span id="selected-name">Амстердам</span><small id="selected-detail">Нидерланды · VLESS</small></div><svg class="chevron" aria-hidden="true"><use href="#i-arrow"/></svg></button></div>
+<div><p class="eyebrow">Выбранный сервер</p><button class="server-slot" data-open="servers"><svg aria-hidden="true"><use href="#i-servers"/></svg><div><span id="selected-name">Амстердам</span><small id="selected-detail">Нидерланды · VLESS</small></div><span class="home-ping" id="selected-ping" aria-label="Задержка">—</span><svg class="chevron" aria-hidden="true"><use href="#i-arrow"/></svg></button></div>
 <div class="status-area" id="connection" data-state="disconnected"><button class="status-orbit" id="connect" type="button" aria-label="Подключиться" aria-pressed="false" aria-describedby="connection-status"><svg aria-hidden="true"><use href="#i-power"/></svg></button><h3 id="connection-status" role="status">Отключено</h3></div>
-<div class="stats"><div class="stat"><small>↓ Получено</small><strong id="download">0 МБ</strong></div><div class="stat"><small>↑ Отправлено</small><strong id="upload">0 МБ</strong></div><div class="stat wide"><small>Время подключения</small><strong id="uptime">00:00</strong></div></div>
+<div class="live-speeds"><div><small>↓ Загрузка</small><strong id="speed-down">0 КБ/с</strong></div><div><small>↑ Отдача</small><strong id="speed-up">0 КБ/с</strong></div></div><div class="session-totals"><span>↓ <span id="download">0 МБ</span></span><span>↑ <span id="upload">0 МБ</span></span><span id="uptime" aria-label="Время подключения">00:00</span></div>
 </section>
-<section class="page" id="page-servers" role="tabpanel" aria-labelledby="tab-servers" hidden><div class="page-title"><h2>Серверы</h2><button class="secondary" id="add-server" aria-label="Добавить сервер">＋ Добавить</button></div><button class="secondary" id="check-servers">Проверить доступность</button><p class="note" id="server-results" role="status">Проверка ещё не запускалась</p><div id="server-list" class="server-list"></div></section>
+<section class="page" id="page-servers" role="tabpanel" aria-labelledby="tab-servers" hidden><div class="page-title"><h2>Серверы</h2><button class="secondary" id="add-server" aria-label="Добавить сервер">＋ Добавить</button></div><div class="server-tools"><input type="search" id="server-search" aria-label="Поиск серверов" placeholder="Сервер, страна или подписка"><div class="server-filters"><label>Группировка<select id="server-group"><option value="subscription">По подпискам</option><option value="country">По странам</option></select></label><label>Сортировка<select id="server-sort"><option value="name">По имени</option><option value="ping">По пингу</option></select></label></div></div><button class="secondary" id="check-servers">Проверить доступность</button><p class="note" id="server-results" role="status">Проверка ещё не запускалась</p><div id="server-list" class="server-list"></div></section>
 <section class="page" id="page-subscriptions" role="tabpanel" aria-labelledby="tab-subscriptions" hidden><div class="page-title"><h2>Подписки</h2><button class="secondary" id="add-subscription" aria-label="Добавить подписку">＋ Добавить</button></div><div id="subscription-list" class="stack"></div></section>
 <section class="page" id="page-settings" role="tabpanel" aria-labelledby="tab-settings" hidden><h2>Настройки</h2>
 <div class="setting-group"><h3>Оформление</h3><label class="field"><span>Тема</span><select id="app-theme"><option value="light">Светлая</option><option value="dark">Тёмная</option><option value="auto">Системная</option></select></label></div>
@@ -164,7 +177,7 @@ footer span{width:5px;height:5px;border-radius:50%;background:#87a38b}
 <button class="tab" id="tab-settings" role="tab" aria-selected="false" aria-controls="page-settings" data-tab="settings" tabindex="-1"><svg aria-hidden="true"><use href="#i-settings"/></svg>Настройки</button>
 </nav>
 <dialog id="server-dialog" aria-labelledby="server-title"><form id="server-form"><h3 id="server-title">Добавить сервер</h3><p class="note" id="server-origin"></p><label>Название<input id="server-name" required maxlength="60" autocomplete="off"></label><label>Конфигурация · JSON<textarea id="server-config" required spellcheck="false" autocapitalize="off" autocomplete="off"></textarea></label><p class="error" id="server-error" role="alert"></p><div class="actions"><button type="button" class="secondary" data-close="server-dialog" id="close-server">Отмена</button><button class="primary" type="submit" id="save-server">Сохранить</button></div></form></dialog>
-<dialog id="subscription-dialog" aria-labelledby="subscription-title"><form id="subscription-form"><h3 id="subscription-title">Добавить подписку</h3><label>Ссылка подписки<input id="sub-url" type="url" pattern="https?://.+" required value="https://example.com/subscription" autocomplete="off"></label><p id="sub-error" class="error" role="alert"></p><div class="actions"><button type="button" class="secondary" data-close="subscription-dialog">Отмена</button><button class="primary" type="submit" id="save-subscription">Добавить</button></div></form></dialog>
+<dialog id="subscription-dialog" aria-labelledby="subscription-title"><form id="subscription-form"><h3 id="subscription-title">Добавить подписку</h3><label>Ссылка подписки<input id="sub-url" type="url" pattern="https?://.+" required value="https://example.com/subscription" autocomplete="off"></label><label>Автообновление<select id="sub-refresh"><option value="manual">Вручную</option><option value="startup">При запуске</option><option value="daily">Раз в сутки</option></select></label><p id="sub-error" class="error" role="alert"></p><div class="actions"><button type="button" class="secondary" data-close="subscription-dialog">Отмена</button><button class="primary" type="submit" id="save-subscription">Добавить</button></div></form></dialog>
 <dialog id="delete-dialog" aria-labelledby="delete-title"><h3 id="delete-title">Удалить подписку?</h3><p class="note">Все серверы этой подписки также будут удалены.</p><div class="actions"><button class="secondary" data-close="delete-dialog">Отмена</button><button class="secondary danger" id="confirm-delete">Удалить</button></div></dialog>
 <span class="pin" id="pin" aria-hidden="true">1</span></div></div>
 <p class="caption" id="caption" aria-live="polite"></p>
@@ -275,11 +288,32 @@ function subscriptionTitle(url,headers = {}) {
   title = clean(title).replace(/\.(txt|yaml|yml)$/i,'');
   return title || new URL(url).hostname;
 }
+const subscriptionClock = Date.now();
 function subscriptionHeaders(url) {
-  return url === 'https://connect.example.com/subscription' ? {'Profile-Title':'base64:0J7RgdC90L7QstC90LDRjyDQv9C+0LTQv9C40YHQutCw'} : {};
+  return url === 'https://connect.example.com/subscription' ? {
+    'Profile-Title':'base64:0J7RgdC90L7QstC90LDRjyDQv9C+0LTQv9C40YHQutCw',
+    'Subscription-Userinfo':`upload=12884901888; download=42949672960; total=214748364800; expire=${Math.floor(subscriptionClock/1000)+14*86400}`
+  } : {};
+}
+function subscriptionUsage(header,now = Date.now()) {
+  const fields = {};
+  String(header || '').split(';').forEach(part => {
+    const match = part.trim().match(/^(upload|download|total|expire)\s*=\s*(\d+)$/i);
+    if(match && Number.isSafeInteger(Number(match[2]))) fields[match[1].toLowerCase()] = Number(match[2]);
+  });
+  const sum = fields.upload !== undefined && fields.download !== undefined ? fields.upload+fields.download : null;
+  const used = Number.isSafeInteger(sum) ? sum : null;
+  const total = fields.total > 0 ? fields.total : null;
+  const remaining = total !== null && used !== null ? Math.max(0,total-used) : null;
+  const percent = remaining !== null ? Math.min(100,used/total*100) : null;
+  const expires = fields.expire > 0 && fields.expire <= 8640000000000 ? fields.expire*1000 : null;
+  return {used,total,remaining,percent,expires,expired:expires !== null && expires <= now,days:expires !== null ? Math.max(0,Math.ceil((expires-now)/86400000)) : null};
+}
+function usageHeader(headers) {
+  return Object.entries(headers).find(([key]) => key.toLowerCase() === 'subscription-userinfo')?.[1] || '';
 }
 const sampleUrl = 'https://connect.example.com/subscription';
-const subscriptions = [{id:'sample',url:sampleUrl,name:subscriptionTitle(sampleUrl,subscriptionHeaders(sampleUrl)),status:'3 сервера'}];
+const subscriptions = [{id:'sample',url:sampleUrl,name:subscriptionTitle(sampleUrl,subscriptionHeaders(sampleUrl)),status:'59 серверов',userinfo:usageHeader(subscriptionHeaders(sampleUrl)),policy:'manual',lastUpdated:subscriptionClock}];
 function exampleConfig(protocol,address) {
   const server = {address,port:443};
   if(protocol === 'trojan') server.password = 'example-password';
@@ -292,6 +326,14 @@ let servers = [
   {id:'fi',name:'Хельсинки',country:'Финляндия',code:'FI',protocol:'Trojan',subscription:'sample'},
   {id:'manual',name:'Личный сервер',country:'Ручная конфигурация',code:'01',protocol:'VMess',subscription:null}
 ];
+const locations = [
+  ['Амстердам','Нидерланды','NL'],['Франкфурт','Германия','DE'],['Хельсинки','Финляндия','FI'],
+  ['Париж','Франция','FR'],['Стокгольм','Швеция','SE'],['Варшава','Польша','PL']
+];
+for(let index = 0; index < 56; index++) {
+  const [city,country,code] = locations[index%locations.length];
+  servers.splice(servers.length-1,0,{id:'region'+index,name:city+' '+String(Math.floor(index/6)+2).padStart(2,'0'),country,code,protocol:'VLESS',subscription:'sample'});
+}
 servers.forEach(server => {server.config = exampleConfig(server.protocol.toLowerCase(),server.id+'.example.com');});
 let selected = 'nl';
 let connectionState = 'disconnected';
@@ -304,15 +346,64 @@ let editingServer = null;
 let nextServer = 0;
 const escapeHtml = value => String(value).replace(/[&<>"']/g, character => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[character]));
 function notice(message) { $('#notice').textContent = message; }
+const groupExpansion = new Map();
+function pingLabel(server) {return server?.unavailable ? 'Недоступен' : Number.isFinite(server?.ping) ? server.ping+' мс' : '—';}
+function serverMarkup(server) {
+  return `<div class="server-entry" data-selected="${selected === server.id}"><button class="server-card" data-server="${server.id}" aria-pressed="${selected === server.id}"><span class="location">${server.code}</span><span class="server-info"><strong>${escapeHtml(server.name)}</strong><small>${escapeHtml(server.country)} · ${escapeHtml(server.protocol)}</small></span><span class="latency">${pingLabel(server)}</span></button><button class="config-action" data-config="${server.id}" aria-label="${server.subscription ? 'Посмотреть конфиг' : 'Редактировать сервер'}: ${escapeHtml(server.name)}" title="${server.subscription ? 'Посмотреть конфиг' : 'Редактировать сервер'}"><svg aria-hidden="true"><use href="${server.subscription ? '#i-info' : '#i-edit'}"/></svg></button></div>`;
+}
 function renderServers() {
-  $('#server-list').innerHTML = servers.map(server => `<div class="server-entry" data-selected="${selected === server.id}"><button class="server-card" data-server="${server.id}" aria-pressed="${selected === server.id}"><span class="location">${server.code}</span><span class="server-info"><strong>${escapeHtml(server.name)}</strong><small>${escapeHtml(server.country)} · ${escapeHtml(server.protocol)}</small></span><span class="latency">${server.latency || (selected === server.id ? '✓' : '—')}</span></button><button class="config-action" data-config="${server.id}" aria-label="${server.subscription ? 'Посмотреть конфиг' : 'Редактировать сервер'}: ${escapeHtml(server.name)}" title="${server.subscription ? 'Посмотреть конфиг' : 'Редактировать сервер'}"><svg aria-hidden="true"><use href="#i-arrow"/></svg></button></div>`).join('');
+  const query = $('#server-search').value.trim().toLocaleLowerCase('ru');
+  const mode = $('#server-group').value;
+  const groups = new Map();
+  const matching = servers.filter(server => [server.name,server.country,subscriptions.find(sub => sub.id === server.subscription)?.name || 'Ручные серверы'].join(' ').toLocaleLowerCase('ru').includes(query));
+  matching.sort((a,b) => {
+    if($('#server-sort').value === 'ping') {
+      const rank = server => Number.isFinite(server.ping) && !server.unavailable ? server.ping : Infinity;
+      const difference = rank(a)-rank(b);
+      if(difference && !Number.isNaN(difference)) return difference;
+    }
+    return a.name.localeCompare(b.name,'ru',{numeric:true});
+  });
+  matching.forEach(server => {
+    const key = mode === 'country' ? server.country : server.subscription || 'manual';
+    if(!groups.has(key)) groups.set(key,{name:mode === 'country' ? server.country : subscriptions.find(sub => sub.id === key)?.name || 'Ручные серверы',items:[]});
+    groups.get(key).items.push(server);
+  });
+  $('#server-list').innerHTML = [...groups].map(([key,group]) => {
+    const id = mode+':'+key;
+    const open = Boolean(query) || groupExpansion.get(id) !== false;
+    return `<details class="server-group" data-group="${escapeHtml(id)}" ${open ? 'open' : ''}><summary><svg aria-hidden="true"><use href="#i-arrow"/></svg><span>${escapeHtml(group.name)}</span><small>${group.items.length}</small></summary><div class="group-servers">${group.items.map(serverMarkup).join('')}</div></details>`;
+  }).join('') || '<div class="empty-slot">Ничего не найдено</div>';
+  document.querySelectorAll('.server-group').forEach(group => group.addEventListener('toggle',() => {
+    if(group.isConnected && !$('#server-search').value.trim()) groupExpansion.set(group.dataset.group,group.open);
+  }));
+  updateSelectedServer();
+}
+function updateSelectedServer() {
   const server = servers.find(item => item.id === selected);
   $('#selected-name').textContent = server?.name || 'Выбери сервер';
   $('#selected-detail').textContent = server ? `${server.country} · ${server.protocol}` : 'Открыть список';
+  $('#selected-ping').textContent = pingLabel(server);
   $('#connect').disabled = !server;
 }
+$('#server-search').addEventListener('input',renderServers);
+$('#server-group').addEventListener('change',renderServers);
+$('#server-sort').addEventListener('change',renderServers);
+function formatTraffic(bytes) {return (bytes/1073741824).toLocaleString('ru-RU',{maximumFractionDigits:1})+' ГБ';}
+function subscriptionMetrics(sub) {
+  const usage = subscriptionUsage(sub.userinfo);
+  let html = '';
+  if(usage.used !== null) {
+    html += `<div class="usage"><div class="usage-line"><span>Использовано</span><strong>${formatTraffic(usage.used)}${usage.total !== null ? ' / '+formatTraffic(usage.total) : ''}</strong></div>`;
+    if(usage.percent !== null) html += `<progress max="100" value="${usage.percent}" aria-label="Использовано трафика"></progress><p class="note ${usage.remaining === 0 ? 'expired' : ''}">${usage.remaining === 0 ? 'Лимит исчерпан' : 'Осталось '+formatTraffic(usage.remaining)}</p>`;
+    html += '</div>';
+  }
+  if(usage.expires !== null) html += `<p class="expiry ${usage.expired ? 'expired' : ''}">${usage.expired ? 'Срок истёк' : 'До '+new Date(usage.expires).toLocaleDateString('ru-RU')+' · '+usage.days+' дн.'}</p>`;
+  return html;
+}
+const updatePolicyLabels = {manual:'Вручную',startup:'При запуске',daily:'Раз в сутки'};
 function renderSubscriptions() {
-  $('#subscription-list').innerHTML = subscriptions.length ? subscriptions.map(sub => `<article class="card subscription-card"><h3>${escapeHtml(sub.name)}</h3><p class="note">${escapeHtml(sub.status)}</p><div class="actions"><button class="text-button" data-refresh="${sub.id}" ${sub.busy ? 'disabled' : ''}>Обновить</button><button class="text-button" data-edit-sub="${sub.id}" ${sub.busy ? 'disabled' : ''}>Изменить ссылку</button><button class="text-button danger" data-delete="${sub.id}">Удалить</button></div></article>`).join('') : '<div class="empty-slot">Подписок пока нет.<br>Добавьте подписку.</div>';
+  $('#subscription-list').innerHTML = subscriptions.length ? subscriptions.map(sub => `<article class="card subscription-card" data-expired="${subscriptionUsage(sub.userinfo).expired}"><h3>${escapeHtml(sub.name)}</h3><p class="note">${escapeHtml(sub.status)}</p>${subscriptionMetrics(sub)}<p class="update-policy">Обновление: ${updatePolicyLabels[sub.policy]}</p><div class="actions"><button class="text-button" data-refresh="${sub.id}" ${sub.busy ? 'disabled' : ''}>Обновить</button><button class="text-button" data-edit-sub="${sub.id}" ${sub.busy ? 'disabled' : ''}>Настроить</button><button class="text-button danger" data-delete="${sub.id}">Удалить</button></div></article>`).join('') : '<div class="empty-slot">Подписок пока нет.<br>Добавьте подписку.</div>';
 }
 function renderConnection() {
   $('#connection').dataset.state = connectionState;
@@ -323,8 +414,12 @@ function renderConnection() {
   $('#connect').title = action;
   const elapsed = connectionState === 'connected' ? Math.floor((Date.now()-sessionStarted)/1000) : 0;
   $('#uptime').textContent = `${String(Math.floor(elapsed/60)).padStart(2,'0')}:${String(elapsed%60).padStart(2,'0')}`;
-  $('#download').textContent = connectionState === 'connected' ? '24,8 МБ' : '0 МБ';
-  $('#upload').textContent = connectionState === 'connected' ? '1,2 МБ' : '0 МБ';
+  const downloaded = 2.4*elapsed+3*Math.floor(elapsed/5)+.15*(elapsed%5)*(elapsed%5-1);
+  const uploaded = (320*elapsed+144*Math.floor(elapsed/4)+12*(elapsed%4)*(elapsed%4-1))/1024;
+  $('#download').textContent = downloaded.toLocaleString('ru-RU',{maximumFractionDigits:1})+' МБ';
+  $('#upload').textContent = uploaded.toLocaleString('ru-RU',{maximumFractionDigits:1})+' МБ';
+  $('#speed-down').textContent = connectionState === 'connected' ? (2.4+(elapsed%5)*.3).toLocaleString('ru-RU',{maximumFractionDigits:1})+' МБ/с' : '0 КБ/с';
+  $('#speed-up').textContent = connectionState === 'connected' ? (320+(elapsed%4)*24)+' КБ/с' : '0 КБ/с';
 }
 function disconnect() {
   clearTimeout(connectionTimer);
@@ -339,6 +434,9 @@ $('#connect').addEventListener('click', () => {
   connectionTimer = setTimeout(() => {
     connectionState = 'connected';
     sessionStarted = Date.now();
+    const server = servers.find(item => item.id === selected);
+    if(server && !Number.isFinite(server.ping) && !server.unavailable) server.ping = 45;
+    renderServers();
     renderConnection();
   },600);
 });
@@ -388,7 +486,7 @@ $('#server-form').addEventListener('submit', event => {
   const config = JSON.stringify(parsed,null,2);
   const protocol = parsed.outbounds[0].protocol.toUpperCase();
   if(server) {
-    if(server.config !== config) {if(selected === server.id) disconnect();delete server.latency;}
+    if(server.config !== config) {if(selected === server.id) disconnect();delete server.ping;delete server.unavailable;}
     Object.assign(server,{name,config,protocol});
   } else servers.push({id:'manual'+(++nextServer),name,config,protocol,country:'Ручная конфигурация',code:'01',subscription:null});
   renderServers();
@@ -399,7 +497,7 @@ $('#check-servers').addEventListener('click', () => {
   $('#check-servers').disabled = true;
   $('#server-results').textContent = 'Проверка…';
   setTimeout(() => {
-    servers.forEach((server,index) => {server.latency = index === 2 ? 'Недоступен' : `${42+index*17} мс`;});
+    servers.forEach((server,index) => {server.unavailable = index%13 === 2;server.ping = server.unavailable ? null : 42+index*17;});
     renderServers();
     $('#check-servers').disabled = false;
     $('#server-results').textContent = 'Проверка завершена';
@@ -410,15 +508,15 @@ function openSubscription(id = null) {
   if(id && (!sub || sub.busy)) return;
   editingSubscription = id;
   $('#subscription-form').reset();
-  $('#subscription-title').textContent = sub ? 'Изменить ссылку' : 'Добавить подписку';
+  $('#subscription-title').textContent = sub ? 'Настройки подписки' : 'Добавить подписку';
   $('#save-subscription').textContent = sub ? 'Сохранить' : 'Добавить';
-  if(sub) $('#sub-url').value = sub.url;
+  if(sub) {$('#sub-url').value = sub.url;$('#sub-refresh').value = sub.policy;}
   $('#sub-error').textContent = '';
   $('#subscription-dialog').showModal();
 }
 $('#add-subscription').addEventListener('click', () => openSubscription());
 document.querySelectorAll('[data-close]').forEach(button => button.addEventListener('click', () => $('#'+button.dataset.close).close()));
-$('#subscription-dialog').addEventListener('close', () => $('#subscription-form').reset());
+$('#subscription-dialog').addEventListener('close', () => {if(!$('#subscription-dialog').open) $('#subscription-form').reset();});
 $('#subscription-form').addEventListener('submit', event => {
   event.preventDefault();
   let url;
@@ -428,39 +526,57 @@ $('#subscription-form').addEventListener('submit', event => {
     url = parsed.href;
   } catch {$('#sub-error').textContent = 'Введите корректную HTTP(S) ссылку.';return;}
   const name = subscriptionTitle(url,subscriptionHeaders(url));
+  const policy = $('#sub-refresh').value;
+  if(!Object.hasOwn(updatePolicyLabels,policy)) return;
   const sub = subscriptions.find(item => item.id === editingSubscription);
   if(editingSubscription && (!sub || sub.busy)) return;
   if(sub) {
-    if(sub.url !== url && servers.some(server => server.id === selected && server.subscription === sub.id)) disconnect();
-    Object.assign(sub,{url,name,status:servers.filter(server => server.subscription === sub.id).length+' сервера'});
+    const changedUrl = sub.url !== url;
+    if(changedUrl && servers.some(server => server.id === selected && server.subscription === sub.id)) disconnect();
+    Object.assign(sub,{url,name,policy,userinfo:usageHeader(subscriptionHeaders(url)),lastUpdated:changedUrl ? Date.now() : sub.lastUpdated,status:servers.filter(server => server.subscription === sub.id).length+' серверов'});
   } else {
     const id = 'demo'+(++nextSubscription);
-    subscriptions.push({id,url,name,status:'2 сервера'});
+    subscriptions.push({id,url,name,policy,userinfo:usageHeader(subscriptionHeaders(url)),lastUpdated:Date.now(),status:'2 сервера'});
     servers.push({id:id+'nl',name:'Амстердам · '+name,country:'Нидерланды',code:'NL',protocol:'VLESS',subscription:id,config:exampleConfig('vless','nl.example.com')},{id:id+'de',name:'Франкфурт · '+name,country:'Германия',code:'DE',protocol:'VLESS',subscription:id,config:exampleConfig('vless','de.example.com')});
   }
   renderSubscriptions();
   renderServers();
   $('#subscription-dialog').close();
-  notice(sub ? 'Ссылка сохранена' : 'Подписка добавлена');
+  notice(sub ? 'Настройки сохранены' : 'Подписка добавлена');
 });
+function refreshSubscription(sub,now = Date.now()) {
+  if(!sub || sub.busy || !subscriptions.includes(sub)) return false;
+  sub.busy = true;
+  sub.status = 'Обновление…';
+  renderSubscriptions();
+  setTimeout(() => {
+    if(!subscriptions.includes(sub)) return;
+    sub.busy = false;
+    const headers = subscriptionHeaders(sub.url);
+    sub.name = subscriptionTitle(sub.url,headers);
+    sub.userinfo = usageHeader(headers);
+    sub.lastUpdated = now;
+    sub.status = 'Обновлено · '+servers.filter(server => server.subscription === sub.id).length+' серверов';
+    renderSubscriptions();
+    renderServers();
+  },600);
+  return true;
+}
+function refreshDueSubscriptions(now = Date.now(),startup = false) {
+  let count = 0;
+  subscriptions.forEach(sub => {
+    const due = (startup && sub.policy === 'startup') || (sub.policy === 'daily' && now-sub.lastUpdated >= 86400000);
+    if(due && refreshSubscription(sub,now)) count++;
+  });
+  return count;
+}
 $('#subscription-list').addEventListener('click', event => {
   const refresh = event.target.closest('[data-refresh]');
   const remove = event.target.closest('[data-delete]');
   const edit = event.target.closest('[data-edit-sub]');
   if(edit) {openSubscription(edit.dataset.editSub);return;}
   if(refresh) {
-    const sub = subscriptions.find(item => item.id === refresh.dataset.refresh);
-    if(!sub || sub.busy) return;
-    sub.busy = true;
-    sub.status = 'Обновление…';
-    renderSubscriptions();
-    setTimeout(() => {
-      if(!subscriptions.includes(sub)) return;
-      sub.busy = false;
-      sub.name = subscriptionTitle(sub.url,subscriptionHeaders(sub.url));
-      sub.status = 'Обновлено · '+servers.filter(server => server.subscription === sub.id).length+' сервера';
-      renderSubscriptions();
-    },600);
+    refreshSubscription(subscriptions.find(item => item.id === refresh.dataset.refresh));
   }
   if(remove) {deletingSubscription = remove.dataset.delete;$('#delete-dialog').showModal();}
 });
@@ -517,6 +633,9 @@ screen.addEventListener('click', event => {
 renderServers();
 renderSubscriptions();
 renderConnection();
+refreshDueSubscriptions(Date.now(),true);
+setInterval(() => {refreshDueSubscriptions();},60000);
+document.addEventListener('visibilitychange',() => {if(!document.hidden) refreshDueSubscriptions();});
 </script>
 </body>
 </html>
