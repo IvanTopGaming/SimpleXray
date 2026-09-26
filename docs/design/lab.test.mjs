@@ -1114,7 +1114,8 @@ test('add menus close on repeated click, outside click, Escape and navigation', 
 
 test('add menus fit narrow phone screens with full touch targets', async () => {
   await send('Emulation.setDeviceMetricsOverride',{width:320,height:640,deviceScaleFactor:1,mobile:true});
-  await send('Page.navigate',{url:(()=>{const target=new URL(url);target.searchParams.set('view','app');return target.href;})()});
+  const target=await evaluate('document.querySelector("#device-view").href');
+  await send('Page.navigate',{url:target});
   await waitFor('document.body?.classList.contains("app-view")');
   for(const [page,kind] of [['servers','server'],['subscriptions','subscription']]) {
     await click('#tab-'+page);await click('#add-'+kind);
