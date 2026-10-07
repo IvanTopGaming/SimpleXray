@@ -41,7 +41,7 @@ class KernelCompilerTest {
         val socket = stream.getAsJsonObject("sockopt")
         assertEquals("__sx_chain_1", socket["dialerProxy"].asString)
         assertEquals("AsIs", socket["domainStrategy"].asString)
-        assertFalse(socket.has("tcpFastOpen"))
+        assertTrue(socket["tcpFastOpen"].asBoolean)
         assertFalse(socket.has("tcpKeepAliveInterval"))
         assertFalse(socket.has("tcpCongestion"))
         assertFalse(socket.has("tcpUserTimeout"))
