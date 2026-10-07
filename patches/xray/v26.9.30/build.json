@@ -1,0 +1,5 @@
+{
+  "revision": "b26a91de4f3294e26a0ad0a970b81a386a41f789",
+  "buildSuffix": "simplexray-udpstats",
+  "patches": ["udp-inbound-stats.patch"]
+}

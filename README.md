@@ -1,65 +1,168 @@
-# SimpleXray
+<div align="center">
 
-<img src="https://raw.githubusercontent.com/lhear/SimpleXray/main/metadata/en-US/images/icon.png" alt="icon" width="150">
+<img src="metadata/en-US/images/icon.png" alt="SimpleXray" width="96">
 
-[![GitHub Release](https://img.shields.io/github/v/release/lhear/SimpleXray)](https://github.com/lhear/SimpleXray/releases)
-[![FDroid Release](https://img.shields.io/f-droid/v/com.simplexray.an.svg)](https://f-droid.org/packages/com.simplexray.an)
-[![GitHub License](https://img.shields.io/github/license/lhear/SimpleXray)](LICENSE)
-[![GitHub Actions Workflow Status](https://img.shields.io/github/actions/workflow/status/lhear/SimpleXray/.github%2Fworkflows%2Fbuild.yml)](https://github.com/lhear/SimpleXray/actions)
-![GitHub Downloads (all assets, all releases)](https://img.shields.io/github/downloads/lhear/SimpleXray/total)
+<h1>SimpleXray</h1>
 
-SimpleXray is a high-performance proxy client for Android, **built upon the robust Xray-core ([@XTLS/Xray-core](https://github.com/XTLS/Xray-core))**.
+<p>Android-клиент Xray с гибкой маршрутизацией, SplitDNS и ручной настройкой серверов.</p>
 
-It features an **innovative approach**: **directly executing the official Xray-core binary**, unlike traditional JNI methods. This method isolates core logic from the app layer, boosting stability and maximizing Xray-core's native performance. SimpleXray aims to provide a stable and efficient network experience.
+<p>
+  <img src="https://img.shields.io/badge/Android-10%2B-3DDC84?style=flat-square" alt="Android 10+">
+  <img src="https://img.shields.io/badge/ABI-ARM64%20%7C%20x86__64-03A9F4?style=flat-square" alt="ARM64 и x86_64">
+  <a href="LICENSE"><img src="https://img.shields.io/badge/License-MPL%202.0-DDC760?style=flat-square" alt="MPL 2.0"></a>
+</p>
 
-## Key Features
+<p>
+  <a href="https://github.com/IvanTopGaming/SimpleXray/releases"><b>Скачать APK</b></a>
+  · <a href="#установка">Быстрый старт</a>
+  · <a href="#как-запускается-xray">Как устроено</a>
+  · <a href="metadata/ru-RU/changelogs">Изменения</a>
+  · <a href="https://github.com/IvanTopGaming/SimpleXray/issues">Сообщить об ошибке</a>
+</p>
 
-*   **Enhanced Stability**: By running Xray-core as an independent child process, SimpleXray avoids JNI complexities, potential memory issues, and app crashes linked to core library failures. This isolation significantly improves reliability.
-*   **High Performance**: Leverages Xray-core's native speed and integrates [@heiher/hev-socks5-tunnel](https://github.com/heiher/hev-socks5-tunnel) for efficient Tun2socks, ensuring low latency and high throughput.
-*   **User-Friendly**: Offers a clean, intuitive UI and simplified setup, making it easy for users to configure and manage connections.
+</div>
 
-## Unique Technical Approach
+---
 
-Most Xray-core Android clients use JNI to call a compiled .so library. While easy to integrate, this can cause stability issues like performance overhead, cross-language complexity, and app crashes if the core library fails.
+## Возможности
 
-**SimpleXray's core difference is how it starts and manages the proxy:**
+Импортируй подписку или настрой сервер вручную. Выбери основной профиль,
+задай правила маршрутизации и направь нужные домены через отдельные серверы.
 
-On installation/update, the embedded Xray-core binary (as `libxray.so`) is extracted. When connecting, the app uses standard Android APIs to **run this binary as a separate child process**, not via JNI calls. Communication happens via defined Inter-Process Communication (IPC).
+| Раздел | Что можно настроить |
+| --- | --- |
+| **Серверы и подписки** | Импорт, обновление подписок, проверка доступности и ручной ввод параметров подключения |
+| **Роутинг** | Правила по доменам, IP, GeoSite и GeoIP; отдельный сервер для каждого пользовательского блока |
+| **DNS** | Основной и резервный резолверы, FakeIP и SplitDNS; отдельный DNS для прямых доменов |
+| **Приложения** | VPN для всех приложений, только выбранных или с исключениями |
+| **Профиль и JSON** | Просмотр итогового конфига и переопределение секций `log`, `dns`, `routing`, `policy`, `stats` |
+| **Журнал и статистика** | Логи ядра, скорость соединения и объём переданного трафика |
 
-This design preserves the original Xray-core binary's stability and performance while physically isolating the core process from the main app, enhancing reliability and security.
+В уведомлении доступны имя сервера, домен подписки, скорость, трафик и кнопка
+отключения. Автоподключение после перезагрузки включается в настройках.
+Также доступны локальные SOCKS- и HTTP-прокси.
 
-## Data Files (`geoip.dat` / `geosite.dat`)
+### Протоколы
 
-The project **includes a simplified version** with basic rules (`"geoip:private"`, `"geoip:cn"`, `"geosite:gfw"`) from [@lhear/v2ray-rules-dat](https://github.com/lhear/v2ray-rules-dat).
+**VLESS** · **VMess** · **Trojan** · **Shadowsocks / SS2022** · **SOCKS** · **HTTP** · **WireGuard** · **Hysteria 2**
 
-## Quick Start
+Ручная форма показывает поля выбранного протокола: адрес, учётные данные,
+транспорт, TLS/REALITY и дополнительные параметры подключения.
 
-1.  **Requirement**: Android 10 or higher.
-2.  **Get App**: Download the APK from the [Release Page](https://github.com/lhear/SimpleXray/releases) or get it from [F-Droid](https://f-droid.org/packages/com.simplexray.an).
-3.  **Install**: Install the APK on your device.
-4.  **Configure**: Launch the app, import or manually add server details.
-5.  **Connect**: Select a config and tap connect.
+## Установка
 
-## Build Guide (Developers)
+1. Открой [Releases](https://github.com/IvanTopGaming/SimpleXray/releases) и скачай подходящий APK.
+2. Установи приложение, затем добавь сервер или подписку.
+3. Выбери сервер и нажми **«Подключить»**.
+4. Разреши Android создать VPN-подключение.
 
-1.  **Environment**: Install [Android Studio](https://developer.android.com/studio) and configure the Android SDK.
-2.  **Get Code**: Clone the repo and submodules:
-    ```bash
-    git clone --recursive https://github.com/lhear/SimpleXray
-    ```
-3.  **Import**: Open the project in Android Studio.
-4.  **Integrate Core**: Place the Xray-core binary (`libxray.so`) for your target architecture in `app/src/main/jniLibs/[architecture directory]`. E.g., `app/src/main/jniLibs/arm64-v8a/libxray.so`.
-5.  **Add Data Files**: Place `geoip.dat` and `geosite.dat` files into the `app/src/main/assets/` directory. These are required for routing.
-6.  **Build**: Sync Gradle and run the build task.
+Требуется **Android 10 или новее**.
 
-## Contributing
+| Файл | Архитектура |
+| --- | --- |
+| `simplexray-arm64-v8a.apk` | ARM64 |
+| `simplexray-x86_64.apk` | x86_64 |
+| `simplexray-universal.apk` | ARM64 и x86_64 в одном APK |
 
-Contributions are welcome! You can help by:
-*   Submitting Bug Reports (Issues)
-*   Suggesting Features
-*   Submitting Code (Pull Requests)
-*   Improving Documentation
+## Маршрутизация
 
-## License
+Правила разделены на блоки. Перемещай их стрелками: первое совпадение определяет
+маршрут. Настройка **«Остальной трафик»** задаёт маршрут для остальных адресов.
 
-This project is licensed under the **[Mozilla Public License Version 2.0](LICENSE)**.
+| Блок | Маршрут |
+| --- | --- |
+| **Напрямую** | Прямое соединение |
+| **Прокси** | Основной выбранный сервер |
+| **Блокировать** | Запрет соединения |
+| **Через сервер** | Сервер, выбранный для этого блока |
+
+Правила вводятся текстом, по одному на строку:
+
+```text
+suffix:example.com
+full:api.example.net
+ip:192.0.2.0/24
+```
+
+Поддерживаются префиксы `suffix:`, `full:`, `ip:`, `geoip:` и `geosite:`.
+Для отдельного маршрута нажми **«Добавить блок»**, выбери сервер и впиши правила.
+DNS-запросы соответствующих доменов также направляются через этот сервер.
+
+Меню **«Пресет»** переносит через буфер обмена правила, порядок блоков,
+настройки роутинга и URL геобаз. Серверы для пользовательских блоков выбираются
+после импорта. Формат ссылки — `simplexray://routing/`.
+
+## Как запускается Xray
+
+**Xray работает отдельным дочерним процессом.** Ядро собирается как исполняемый
+файл и упаковывается в APK под именем `libxray.so`, чтобы Android разместил его
+в каталоге нативных файлов приложения. При подключении VPN-служба запускает его
+через `ProcessBuilder`:
+
+```text
+libxray.so run -c stdin:
+```
+
+Собранный JSON-конфиг передаётся через стандартный ввод. Приложение читает вывод
+ядра для журнала, а готовность и статистику получает через локальный gRPC API.
+VPN-служба работает в процессе `:native`, отдельно от интерфейса приложения,
+и управляет запуском, остановкой и перезапуском ядра.
+
+```mermaid
+flowchart LR
+    Apps[Трафик приложений] --> TUN[Android VPN / TUN]
+    TUN --> HEV[hev-socks5-tunnel]
+    HEV -->|Локальный SOCKS5| Xray[Xray: отдельный процесс]
+    Xray --> Route[Выбранный маршрут]
+```
+
+JNI используется для управления `hev-socks5-tunnel`, который передаёт трафик
+VPN-интерфейса в SOCKS-вход Xray. Такой запуск отделяет жизненный цикл ядра
+от интерфейса и позволяет собирать Xray из исходников самостоятельным бинарником.
+
+## Сборка
+
+Нужны **Java 21**, **Android SDK** и версии **Go/NDK**, указанные в
+[version.properties](version.properties). Команды ниже рассчитаны на Linux;
+путь к SDK задаётся через `ANDROID_HOME`.
+
+```sh
+git clone --recursive https://github.com/IvanTopGaming/SimpleXray.git
+cd SimpleXray
+bash scripts/build-xray.sh
+bash gradlew :app:assembleDebug
+```
+
+Готовые APK находятся в `app/build/outputs/apk/debug/`.
+
+<details>
+<summary><b>Запуск тестов с ядром Xray</b></summary>
+
+```sh
+bash scripts/build-xray.sh --host
+SIMPLEXRAY_TEST_CORE="$PWD/.gradle/xray-host/xray" \
+  bash gradlew :app:testDebugUnitTest --max-workers=2 --console=plain
+```
+
+</details>
+
+Релиз собирается вручную через workflow **Build** в GitHub Actions.
+Он проверяет проект и готовит APK для обеих архитектур и universal-сборку.
+Параметр `create_draft` создаёт черновик релиза с APK и контрольными суммами;
+описание берётся из changelog в `metadata/`.
+
+---
+
+## Благодарности
+
+Спасибо авторам и участникам проектов, на которых построен SimpleXray:
+
+- **[XTLS](https://github.com/XTLS)** — за [Xray-core](https://github.com/XTLS/Xray-core),
+  его развитие и поддержку.
+- **[heiher](https://github.com/heiher)** — за
+  [hev-socks5-tunnel](https://github.com/heiher/hev-socks5-tunnel), связывающий
+  VPN-интерфейс с SOCKS-прокси.
+- **[lhear](https://github.com/lhear)** — за исходный
+  [SimpleXray](https://github.com/lhear/SimpleXray), на котором основан этот форк.
+
+Лицензия приложения — [Mozilla Public License 2.0](LICENSE).

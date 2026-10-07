@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<resources>
+    <style
+        name="Theme.SimpleXray"
+        parent="Theme.Material3.DynamicColors.DayNight.NoActionBar"
+    >
+        <item name="android:windowAnimationStyle">@null</item>
+        <item name="android:dialogTheme">@style/Theme.SimpleXray.Dialog</item>
+    </style>
+    <style
+        name="Theme.SimpleXray.Dialog"
+        parent="ThemeOverlay.Material3.Dialog"
+    >
+        <item name="android:windowAnimationStyle">@null</item>
+    </style>
+</resources>

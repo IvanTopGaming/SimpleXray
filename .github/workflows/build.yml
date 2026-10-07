@@ -1,144 +1,184 @@
-name: "Build"
+name: Build
 
 on:
-  workflow_dispatch:
   pull_request:
-    branches: ["main"]
-  release:
-    types:
-      - published
+    branches: [main]
+  workflow_dispatch:
+    inputs:
+      create_draft:
+        description: Create or update a draft GitHub release after verification
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+
+concurrency:
+  group: build-${{ github.ref }}-${{ github.event_name }}
+  cancel-in-progress: false
 
 jobs:
   build:
-    name: Build
+    name: Build and verify
     runs-on: ubuntu-latest
-
+    timeout-minutes: 60
+    outputs:
+      version: ${{ steps.versions.outputs.version }}
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
         with:
-          fetch-depth: 1
-          submodules: true
-
-      - name: Explicit Submodule Update
+          submodules: recursive
+          persist-credentials: false
+      - name: Read pinned versions
+        id: versions
         run: |
-          git submodule sync --recursive
-          git submodule update --init --recursive
-
-      - name: Set up Java 21
-        uses: actions/setup-java@v4
+          python3 - <<'PY'
+          import os
+          from pathlib import Path
+          props = dict(line.split('=', 1) for line in Path('version.properties').read_text().splitlines() if '=' in line)
+          with open(os.environ['GITHUB_ENV'], 'a') as output:
+              output.write(f"GO_VERSION={props['GO_VERSION']}\nNDK_VERSION={props['NDK_VERSION']}\nAPP_VERSION={props['APP_VERSION_NAME']}\n")
+          with open(os.environ['GITHUB_OUTPUT'], 'a') as output:
+              output.write(f"version={props['APP_VERSION_NAME']}\n")
+          PY
+      - uses: actions/setup-java@v4
         with:
-          distribution: 'temurin'
+          distribution: temurin
           java-version: '21'
-          cache: 'gradle'
-
-      - name: Set up Android SDK
-        id: setup_sdk
-        uses: android-actions/setup-android@v3
-
-      - name: Read Versions
-        run: |
-          echo "XRAY_VERSION=$(grep 'XRAY_CORE_VERSION' version.properties | cut -d '=' -f 2)" >> $GITHUB_ENV
-          echo "GEOIP_VERSION=$(grep 'GEOIP_VERSION' version.properties | cut -d '=' -f 2)" >> $GITHUB_ENV
-          echo "GEOSITE_VERSION=$(grep 'GEOSITE_VERSION' version.properties | cut -d '=' -f 2)" >> $GITHUB_ENV
-          echo "GO_VERSION=$(grep 'GO_VERSION' version.properties | cut -d '=' -f 2)" >> $GITHUB_ENV
-
-      - name: Set up Go
-        uses: actions/setup-go@v5
+          cache: gradle
+      - uses: android-actions/setup-android@v3
+        with:
+          packages: platform-tools
+      - uses: actions/setup-go@v5
         with:
           go-version: ${{ env.GO_VERSION }}
           cache: false
-
-      - name: Setup Keystore and Properties
-        if: github.event_name != 'pull_request'
+      - name: Install pinned NDK
+        run: sdkmanager "ndk;$NDK_VERSION"
+      - name: Build pinned Xray and apply reviewed patches
+        run: bash scripts/build-xray.sh --host
+      - name: Verify structure and run host tests
+        env:
+          SIMPLEXRAY_TEST_CORE: ${{ github.workspace }}/.gradle/xray-host/xray
         run: |
-          echo "${{ secrets.SIGNING_KEYSTORE }}" | base64 -d > ./store.jks
-          echo "storeFile=store.jks" > ./store.properties
-          echo "storePassword=${{ secrets.SIGNING_STORE_PASSWORD }}" >> ./store.properties
-          echo "keyAlias=${{ secrets.SIGNING_KEY_ALIAS }}" >> ./store.properties
-          echo "keyPassword=${{ secrets.SIGNING_KEY_PASSWORD }}" >> ./store.properties
-
-      - name: Download Rules Files
+          python3 scripts/check-source-layout.py
+          bash gradlew :app:testDebugUnitTest :app:compileDebugAndroidTestKotlin --max-workers=2 --console=plain
+      - name: Build pull request preview
+        if: github.event_name == 'pull_request'
+        run: bash gradlew :app:assembleDebug --max-workers=2 --console=plain
+      - name: Configure release signing
+        if: github.event_name == 'workflow_dispatch'
+        env:
+          SIGNING_KEYSTORE: ${{ secrets.SIGNING_KEYSTORE }}
+          SIGNING_STORE_PASSWORD: ${{ secrets.SIGNING_STORE_PASSWORD }}
+          SIGNING_KEY_ALIAS: ${{ secrets.SIGNING_KEY_ALIAS }}
+          SIGNING_KEY_PASSWORD: ${{ secrets.SIGNING_KEY_PASSWORD }}
         run: |
-          wget https://github.com/lhear/v2ray-rules-dat/releases/download/${{ env.GEOIP_VERSION }}/geoip.dat -O ./app/src/main/assets/geoip.dat
-          wget https://github.com/lhear/v2ray-rules-dat/releases/download/${{ env.GEOSITE_VERSION }}/geosite.dat -O ./app/src/main/assets/geosite.dat
-
-      - name: Build Xray-core from Source
+          python3 - <<'PY'
+          import base64, os
+          from pathlib import Path
+          names = ['SIGNING_KEYSTORE', 'SIGNING_STORE_PASSWORD', 'SIGNING_KEY_ALIAS', 'SIGNING_KEY_PASSWORD']
+          if any(not os.environ.get(name) for name in names):
+              raise SystemExit('Configure all four release signing secrets before running this workflow')
+          values = {name: os.environ[name] for name in names}
+          if any('\n' in values[name] or '\r' in values[name] for name in names[1:]):
+              raise SystemExit('Signing properties must be single-line values')
+          def escaped(value):
+              raw = value.encode('utf-16-be')
+              return ''.join('\\u' + raw[index:index + 2].hex() for index in range(0, len(raw), 2))
+          values = {name: value if name == 'SIGNING_KEYSTORE' else escaped(value) for name, value in values.items()}
+          os.umask(0o077)
+          Path('store.jks').write_bytes(base64.b64decode(values['SIGNING_KEYSTORE'], validate=True))
+          Path('store.properties').write_text('storeFile=store.jks\n' +
+              f"storePassword={values['SIGNING_STORE_PASSWORD']}\nkeyAlias={values['SIGNING_KEY_ALIAS']}\nkeyPassword={values['SIGNING_KEY_PASSWORD']}\n")
+          PY
+      - name: Build and verify signed release bundle
+        if: github.event_name == 'workflow_dispatch'
         run: |
-          # Set up NDK
-          wget -qO android-ndk.zip https://dl.google.com/android/repository/android-ndk-r28c-linux.zip
-          unzip -q android-ndk.zip
-          rm android-ndk.zip
-          NDK_HOME=$(realpath android-ndk-*)
-
-          # Clone Xray-core source and checkout tag
-          git clone https://github.com/XTLS/Xray-core.git
-          cd Xray-core
-          git checkout ${{ env.XRAY_VERSION }}
-          COMMID=$(git rev-parse HEAD | cut -c 1-7)
-
-          # Set common environment variables
-          export GOOS=android
-          export CGO_ENABLED=1
-
-          # Build for arm64-v8a
-          echo "Building for arm64-v8a..."
-          export GOARCH=arm64
-          export CC=$NDK_HOME/toolchains/llvm/prebuilt/linux-x86_64/bin/aarch64-linux-android24-clang
-          go build -o xray -trimpath -buildvcs=false -ldflags="-X github.com/xtls/xray-core/core.build=${COMMID} -s -w -buildid=" -v ./main
-          mkdir -p ../app/src/main/jniLibs/arm64-v8a
-          mv xray ../app/src/main/jniLibs/arm64-v8a/libxray.so
-
-          # Build for x86_64
-          echo "Building for x86_64..."
-          export GOARCH=amd64
-          export CC=$NDK_HOME/toolchains/llvm/prebuilt/linux-x86_64/bin/x86_64-linux-android24-clang
-          go build -o xray -trimpath -buildvcs=false -ldflags="-X github.com/xtls/xray-core/core.build=${COMMID} -s -w -buildid=" -v ./main
-          mkdir -p ../app/src/main/jniLibs/x86_64
-          mv xray ../app/src/main/jniLibs/x86_64/libxray.so
-
-      - name: Make gradlew executable
-        run: chmod +x ./gradlew
-
-      - name: Build Release APK
-        run: ./gradlew assembleRelease
-
-      - name: Find and Copy APKs
-        run: |
-          mkdir -p apks
-          find app/build/outputs/apk/release -name "*.apk" -exec cp {} apks/ \;
-
-      - name: Upload Artifacts
+          bash gradlew :app:assembleRelease --max-workers=2 --console=plain
+          python3 scripts/package-release.py
+      - name: Upload release bundle
+        if: github.event_name == 'workflow_dispatch'
         uses: actions/upload-artifact@v4
         with:
-          name: simplexray-apks
-          path: apks/
+          name: simplexray-release
+          path: app/release/v${{ env.APP_VERSION }}/
           if-no-files-found: error
-          retention-days: 1
+          retention-days: 14
+      - name: Upload pull request preview
+        if: github.event_name == 'pull_request'
+        uses: actions/upload-artifact@v4
+        with:
+          name: simplexray-debug-preview
+          path: app/build/outputs/apk/debug/*.apk
+          if-no-files-found: error
+          retention-days: 7
+      - name: Upload test reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-reports
+          path: app/build/reports/tests/testDebugUnitTest/
+          if-no-files-found: ignore
+          retention-days: 7
+      - name: Remove signing files
+        if: always() && github.event_name == 'workflow_dispatch'
+        run: rm -f store.jks store.properties
 
-  release:
-    name: Release
-    runs-on: ubuntu-latest
+  draft-release:
+    name: Prepare draft release
+    if: github.event_name == 'workflow_dispatch' && inputs.create_draft
     needs: build
-    if: github.event_name == 'release'
-
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
         with:
-          fetch-depth: 0
-
-      - name: Download artifacts
-        uses: actions/download-artifact@v4
+          persist-credentials: false
+      - uses: actions/download-artifact@v4
         with:
+          name: simplexray-release
           path: release
-          pattern: "simplexray-*"
-          merge-multiple: true
-
-      - name: Upload artifacts to Release
+      - name: Verify bundle and create draft
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          RELEASE_VERSION: ${{ needs.build.outputs.version }}
         run: |
-          for i in release/simplexray-*; do
-            gh release upload ${{ github.event.release.tag_name }} $i
-          done
+          cd release
+          sha256sum -c SHA256SUMS
+          cd ..
+          python3 - <<'PY'
+          import json, os
+          from pathlib import Path
+          data = json.loads(Path('release/release-metadata.json').read_text())
+          if data['sourceCommit'] != os.environ['GITHUB_SHA'] or data['versionName'] != os.environ['RELEASE_VERSION']:
+              raise SystemExit('Release bundle does not match this workflow run')
+          PY
+          release_tag="v$RELEASE_VERSION"
+          notes="$RUNNER_TEMP/release-notes.md"
+          python3 - "$notes" <<'PYNOTES'
+          import json, sys
+          from pathlib import Path
+          code = json.loads(Path('release/release-metadata.json').read_text())['versionCode']
+          if not isinstance(code, int) or code <= 0:
+              raise SystemExit('Invalid release version code')
+          text = Path(f'metadata/ru-RU/changelogs/{code}.txt').read_text().strip()
+          if not text:
+              raise SystemExit('Missing release changelog in metadata')
+          Path(sys.argv[1]).write_text(text + '\n')
+          PYNOTES
+          assets=(release/simplexray-arm64-v8a.apk release/simplexray-x86_64.apk release/simplexray-universal.apk release/SHA256SUMS release/release-metadata.json)
+          if gh release view "$release_tag" --json isDraft > release-state.json 2>/dev/null; then
+            python3 - <<'PY'
+          import json
+          if not json.load(open('release-state.json'))['isDraft']:
+              raise SystemExit('Refusing to replace a published release')
+          PY
+            gh release upload "$release_tag" "${assets[@]}" --clobber
+            gh release edit "$release_tag" --notes-file "$notes" --target "$GITHUB_SHA"
+          else
+            flags=(--draft --latest=false)
+            if [[ "$RELEASE_VERSION" == *-* ]]; then flags+=(--prerelease); fi
+            gh release create "$release_tag" "${assets[@]}" --target "$GITHUB_SHA" --title "SimpleXray $RELEASE_VERSION" --notes-file "$notes" "${flags[@]}"
+          fi

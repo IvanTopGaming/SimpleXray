@@ -48,6 +48,7 @@ android {
         }
         targetSdk 35
         minSdk 29
+        testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
     }
 
     signingConfigs {
@@ -92,7 +93,7 @@ android {
         }
        debug {
             minifyEnabled false
-            signingConfig isSigningEnabled ? signingConfigs.release : null
+            signingConfig signingConfigs.debug
             debuggable true
         }
     }
@@ -108,6 +109,10 @@ android {
         // Or, if you prefer, you can continue to check for errors in release builds,
         // but continue the build even when errors are found:
         abortOnError false
+    }
+
+    androidResources {
+        ignoreAssetsPattern = '!.svn:!.git:!.ds_store:!*.scc:.*:!CVS:!thumbs.db:!picasa.ini:!*~:geoip.dat:geosite.dat'
     }
 
     packagingOptions {
@@ -152,6 +157,15 @@ android {
         buildConfig true
     }
 
+    testOptions {
+        unitTests.includeAndroidResources = true
+        unitTests.all {
+            maxHeapSize = '1g'
+            maxParallelForks = 1
+            systemProperty 'robolectric.dependency.repo.url', 'https://repo.maven.apache.org/maven2'
+        }
+    }
+
     sourceSets {
         main {
             java {
@@ -164,7 +178,32 @@ android {
     }
 }
 
+def verifyXrayCores = tasks.register('verifyXrayCores') {
+    doLast {
+        def missingCores = android.defaultConfig.ndk.abiFilters.collect { abi ->
+            file("src/main/jniLibs/${abi}/libxray.so")
+        }.findAll { core -> !core.isFile() || core.length() == 0 }
+        if (!missingCores.isEmpty()) {
+            throw new GradleException("Missing Xray-core binaries: ${missingCores.join(', ')}. " +
+                "Build Xray-core ${versionProps.XRAY_CORE_VERSION} for every configured ABI before assembling the app.")
+        }
+    }
+}
+
+tasks.named('preBuild').configure {
+    dependsOn verifyXrayCores
+}
+
 dependencies {
+    testImplementation 'junit:junit:4.13.2'
+    testImplementation 'org.robolectric:robolectric:4.16.1'
+    testImplementation platform('androidx.compose:compose-bom:2025.08.00')
+    testImplementation 'androidx.compose.ui:ui-test-junit4'
+    androidTestImplementation platform('androidx.compose:compose-bom:2025.08.00')
+    androidTestImplementation 'androidx.compose.ui:ui-test-junit4'
+    androidTestImplementation 'androidx.test:runner:1.6.2'
+    androidTestImplementation 'androidx.test.ext:junit:1.2.1'
+    debugImplementation 'androidx.compose.ui:ui-test-manifest'
     implementation "io.grpc:grpc-okhttp:1.74.0"
     implementation "io.grpc:grpc-protobuf:1.74.0"
     implementation "io.grpc:grpc-stub:1.74.0"
@@ -185,6 +224,5 @@ dependencies {
     implementation 'androidx.navigation:navigation-compose-android:2.9.3'
 
     implementation 'com.github.nanihadesuka:LazyColumnScrollbar:2.2.0'
-    implementation 'sh.calvin.reorderable:reorderable:2.5.1'
     implementation "com.squareup.okhttp3:okhttp:4.12.0"
 }

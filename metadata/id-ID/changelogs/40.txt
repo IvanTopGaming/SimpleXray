@@ -1,0 +1,6 @@
+Prarilis 1.11.0-rc.1.
+• Xray diperbarui ke 26.9.30.
+• Konfigurasi server manual.
+• Blok perutean dengan server tersendiri dan SplitDNS.
+• Perbaikan statistik lalu lintas UDP.
+• Pembaruan preset perutean.

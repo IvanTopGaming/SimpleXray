@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8" ?>
 <resources>
     <string name="socks_address">目标Socks地址</string>
     <string name="socks_port">目标Socks端口</string>
@@ -20,7 +20,9 @@
     <string name="bypass_lan_title">绕过局域网</string>
     <string name="bypass_lan_summary">启用时，局域网流量不通过代理</string>
     <string name="use_template_title">使用模版创建新配置</string>
-    <string name="use_template_summary">启用时，创建新配置会预填充模版内容</string>
+    <string
+        name="use_template_summary"
+    >启用时，创建新配置会预填充模版内容</string>
     <string name="vpn_interface">VPN接口</string>
     <string name="confirm">确定</string>
     <string name="cancel">取消</string>
@@ -36,7 +38,9 @@
     <string name="share">分享</string>
     <string name="export">导出</string>
     <string name="http_proxy_title">通过HTTP代理</string>
-    <string name="http_proxy_summary">启用时,直接通过HTTP代理,无需经过TUN.某些应用可能会忽略此设置</string>
+    <string
+        name="http_proxy_summary"
+    >启用时,直接通过HTTP代理,无需经过TUN.某些应用可能会忽略此设置</string>
     <string name="invalid_ipv6">请输入有效的IPv6地址</string>
     <string name="invalid_ipv4">请输入有效的IPv4地址</string>
     <string name="invalid_ipv4_or_ipv6">请输入有效的IPv4/IPv6地址</string>
@@ -48,12 +52,6 @@
     <string name="version">版本</string>
     <string name="kernel">内核</string>
     <string name="open_source">打开源代码库</string>
-    <string name="backup">备份</string>
-    <string name="restore">恢复</string>
-    <string name="backup_success">备份成功</string>
-    <string name="backup_failed">备份失败</string>
-    <string name="restore_failed">恢复失败</string>
-    <string name="restore_success">恢复成功</string>
     <string name="no_config_files">无配置文件</string>
     <string name="no_log_entries">无日志</string>
     <string name="rule_file_default">默认规则文件</string>
@@ -89,8 +87,12 @@
     <string name="import_invalid_format">导入格式无效</string>
     <string name="import_file">导入</string>
     <string name="reset_file">重置</string>
-    <string name="rule_file_restore_geoip_success">geoip.dat 已恢复为默认</string>
-    <string name="rule_file_restore_geosite_success">geosite.dat 已恢复为默认</string>
+    <string
+        name="rule_file_restore_geoip_success"
+    >geoip.dat 已恢复为默认</string>
+    <string
+        name="rule_file_restore_geosite_success"
+    >geosite.dat 已恢复为默认</string>
     <string name="invalid_timeout">请输入有效的超时时间（正整数）</string>
     <string name="rule_file_update_url">从URL更新</string>
     <string name="update">更新</string>
@@ -102,7 +104,9 @@
     <string name="download_cancelled">下载已取消</string>
     <string name="general">通用</string>
     <string name="delete_rule_file_title">删除规则文件</string>
-    <string name="delete_rule_file_message">这将恢复为默认规则文件，确定吗？</string>
+    <string
+        name="delete_rule_file_message"
+    >这将恢复为默认规则文件，确定吗？</string>
     <string name="restore_default_url">恢复默认地址</string>
     <string name="core_stats_title">仪表</string>
     <string name="stats_uplink">上行流量</string>
@@ -115,7 +119,9 @@
     <string name="no_new_version_available">没有新版本可用</string>
     <string name="failed_to_check_for_updates">检查更新失败</string>
     <string name="new_version_available_title">新版本可用</string>
-    <string name="new_version_available_message">新版本 (%1$s) 可用。是否下载？</string>
+    <string
+        name="new_version_available_message"
+    >新版本 (%1$s) 可用。是否下载？</string>
     <string name="download">下载</string>
     <string name="theme_title">主题</string>
     <string name="theme_summary">调整主题为深色或浅色</string>

@@ -1,42 +1,54 @@
-<?xml version="1.0" encoding="utf-8"?>
-<manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:tools="http://schemas.android.com/tools">
+<?xml version="1.0" encoding="utf-8" ?>
+<manifest
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+>
 
     <uses-feature
         android:name="android.software.leanback"
-        android:required="false" />
+        android:required="false"
+    />
     <uses-feature
         android:name="android.hardware.touchscreen"
-        android:required="false" />
+        android:required="false"
+    />
 
     <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
     <uses-permission
         android:name="android.permission.QUERY_ALL_PACKAGES"
-        tools:ignore="QueryAllPackagesPermission" />
+        tools:ignore="QueryAllPackagesPermission"
+    />
     <uses-permission
         android:name="android.permission.FOREGROUND_SERVICE_SPECIAL_USE"
-        android:minSdkVersion="34" />
+        android:minSdkVersion="34"
+    />
 
     <application
         android:banner="@mipmap/ic_banner"
         android:icon="@mipmap/ic_launcher"
         android:label="@string/app_name"
-        android:theme="@style/Theme.Material3.DynamicColors.DayNight.NoActionBar">
+        android:theme="@style/Theme.SimpleXray"
+    >
         <provider
             android:name="com.simplexray.an.prefs.PrefsProvider"
             android:authorities="com.simplexray.an.prefsprovider"
             android:exported="false"
-            android:grantUriPermissions="true" />
+            android:grantUriPermissions="true"
+        />
         <provider
             android:name="androidx.core.content.FileProvider"
             android:authorities="com.simplexray.an.fileprovider"
             android:exported="false"
-            android:grantUriPermissions="true">
+            android:grantUriPermissions="true"
+        >
             <meta-data
                 android:name="android.support.FILE_PROVIDER_PATHS"
-                android:resource="@xml/filepaths" />
+                android:resource="@xml/filepaths"
+            />
         </provider>
 
         <service
@@ -44,23 +56,43 @@
             android:exported="true"
             android:foregroundServiceType="specialUse"
             android:permission="android.permission.BIND_VPN_SERVICE"
-            android:process=":native">
+            android:process=":native"
+        >
             <intent-filter>
                 <action android:name="android.net.VpnService" />
             </intent-filter>
             <property
                 android:name="android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE"
-                android:value="VPN service" />
+                android:value="VPN service"
+            />
         </service>
+
+        <receiver
+            android:name="com.simplexray.an.service.BootReceiver"
+            android:exported="false"
+        >
+            <intent-filter>
+                <action android:name="android.intent.action.BOOT_COMPLETED" />
+            </intent-filter>
+        </receiver>
+
+        <service
+            android:name="com.simplexray.an.service.SubscriptionRefreshJobService"
+            android:exported="true"
+            android:permission="android.permission.BIND_JOB_SERVICE"
+        />
 
         <service
             android:name="com.simplexray.an.service.QuickTileService"
             android:exported="true"
             android:icon="@drawable/ic_stat_name"
             android:label="@string/app_name"
-            android:permission="android.permission.BIND_QUICK_SETTINGS_TILE">
+            android:permission="android.permission.BIND_QUICK_SETTINGS_TILE"
+        >
             <intent-filter>
-                <action android:name="android.service.quicksettings.action.QS_TILE" />
+                <action
+                    android:name="android.service.quicksettings.action.QS_TILE"
+                />
             </intent-filter>
         </service>
 
@@ -68,16 +100,19 @@
             android:name="com.simplexray.an.activity.MainActivity"
             android:configChanges="orientation|screenSize|screenLayout"
             android:enableOnBackInvokedCallback="true"
-            android:excludeFromRecents="true"
+            android:excludeFromRecents="false"
             android:exported="true"
             android:launchMode="singleTask"
             android:windowSoftInputMode="adjustPan"
-            tools:targetApi="tiramisu">
+            tools:targetApi="tiramisu"
+        >
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
                 <category android:name="android.intent.category.LAUNCHER" />
-                <category android:name="android.intent.category.LEANBACK_LAUNCHER" />
+                <category
+                    android:name="android.intent.category.LEANBACK_LAUNCHER"
+                />
             </intent-filter>
             <intent-filter>
                 <action android:name="android.intent.action.SEND" />
@@ -93,7 +128,9 @@
                 <data android:scheme="simplexray" />
             </intent-filter>
             <intent-filter>
-                <action android:name="android.service.quicksettings.action.QS_TILE_PREFERENCES" />
+                <action
+                    android:name="android.service.quicksettings.action.QS_TILE_PREFERENCES"
+                />
             </intent-filter>
         </activity>
     </application>

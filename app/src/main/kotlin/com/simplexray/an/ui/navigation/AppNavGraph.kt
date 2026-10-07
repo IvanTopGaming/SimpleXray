@@ -1,107 +1,95 @@
 package com.simplexray.an.ui.navigation
 
-import androidx.compose.animation.AnimatedContentTransitionScope
 import androidx.compose.animation.EnterTransition
 import androidx.compose.animation.ExitTransition
-import androidx.compose.animation.core.FastOutSlowInEasing
-import androidx.compose.animation.core.tween
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
-import androidx.compose.animation.scaleIn
-import androidx.compose.animation.scaleOut
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
-import androidx.navigation.NavBackStackEntry
+import androidx.compose.ui.window.DialogProperties
+import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.lifecycle.viewmodel.initializer
+import androidx.lifecycle.viewmodel.viewModelFactory
+import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
+import androidx.navigation.compose.dialog
 import androidx.navigation.compose.rememberNavController
-import com.simplexray.an.common.ROUTE_APP_LIST
-import com.simplexray.an.common.ROUTE_CONFIG_EDIT
-import com.simplexray.an.common.ROUTE_MAIN
-import com.simplexray.an.ui.screens.AppListScreen
-import com.simplexray.an.ui.screens.ConfigEditScreen
-import com.simplexray.an.ui.screens.MainScreen
-import com.simplexray.an.viewmodel.MainViewModel
+import androidx.navigation.navArgument
+import com.simplexray.an.ui.navigation.ROUTE_APP_LIST
+import com.simplexray.an.ui.navigation.ROUTE_CONFIG_EDIT
+import com.simplexray.an.ui.navigation.ROUTE_MAIN
+import com.simplexray.an.feature.apps.ui.AppListScreen
+import com.simplexray.an.feature.servers.ui.ConfigEditScreen
+import com.simplexray.an.app.ui.MainScreen
+import com.simplexray.an.ui.theme.DisableDialogWindowAnimations
+import com.simplexray.an.feature.apps.state.AppListViewModel
+import com.simplexray.an.feature.servers.state.ConfigEditViewModel
+import com.simplexray.an.app.state.MainViewModel
 
 @Composable
-fun AppNavHost(
-    mainViewModel: MainViewModel
-) {
+fun AppNavHost(mainViewModel: MainViewModel) {
     val navController = rememberNavController()
+    val application = mainViewModel.getApplication<android.app.Application>()
 
     NavHost(
         navController = navController,
-        startDestination = ROUTE_MAIN
+        startDestination = ROUTE_MAIN,
+        enterTransition = { EnterTransition.None },
+        exitTransition = { ExitTransition.None },
+        popEnterTransition = { EnterTransition.None },
+        popExitTransition = { ExitTransition.None },
     ) {
-        composable(
-            route = ROUTE_MAIN,
-            enterTransition = { EnterTransition.None },
-            exitTransition = { exitTransition() },
-            popEnterTransition = { popEnterTransition() },
-            popExitTransition = { ExitTransition.None }
-        ) {
+        composable(route = ROUTE_MAIN) {
             MainScreen(
                 mainViewModel = mainViewModel,
                 appNavController = navController,
-                snackbarHostState = remember { SnackbarHostState() }
+                snackbarHostState = remember { SnackbarHostState() },
             )
         }
 
-        composable(
-            route = ROUTE_APP_LIST,
-            enterTransition = { enterTransition() },
-            exitTransition = { exitTransition() },
-            popEnterTransition = { EnterTransition.None },
-            popExitTransition = { popExitTransition() }
-        ) {
+        composable(route = ROUTE_APP_LIST) {
             AppListScreen(
-                viewModel = mainViewModel.appListViewModel,
-                onBackClick = { navController.popBackStack() }
+                viewModel =
+                    viewModel(
+                        factory = viewModelFactory { initializer { AppListViewModel(application) } }
+                    ),
+                onBackClick = { navController.popBackStack() },
             )
         }
 
-        composable(
-            route = ROUTE_CONFIG_EDIT,
-            enterTransition = { enterTransition() },
-            exitTransition = { exitTransition() },
-            popEnterTransition = { EnterTransition.None },
-            popExitTransition = { popExitTransition() }
-        ) {
+        dialog(
+            route = "$ROUTE_CONFIG_EDIT?file={file}",
+            arguments =
+                listOf(
+                    navArgument("file") {
+                        type = NavType.StringType
+                        nullable = true
+                        defaultValue = null
+                    }
+                ),
+            dialogProperties =
+                DialogProperties(usePlatformDefaultWidth = false, decorFitsSystemWindows = false),
+        ) { entry ->
+            DisableDialogWindowAnimations()
+            val filePath = entry.arguments?.getString("file")
+            if (filePath == null) {
+                LaunchedEffect(Unit) { navController.popBackStack(ROUTE_MAIN, false) }
+                return@dialog
+            }
             ConfigEditScreen(
                 onBackClick = { navController.popBackStack() },
                 snackbarHostState = remember { SnackbarHostState() },
-                viewModel = mainViewModel.configEditViewModel
+                viewModel =
+                    viewModel(
+                        factory =
+                            viewModelFactory {
+                                initializer {
+                                    ConfigEditViewModel(application, filePath, mainViewModel.prefs)
+                                }
+                            }
+                    ),
             )
         }
     }
 }
-
-private fun AnimatedContentTransitionScope<NavBackStackEntry>.enterTransition() =
-    scaleIn(
-        initialScale = 0.8f,
-        animationSpec = tween(300, easing = FastOutSlowInEasing)
-    ) + slideIntoContainer(
-        towards = AnimatedContentTransitionScope.SlideDirection.Start,
-        animationSpec = tween(400, easing = FastOutSlowInEasing)
-    ) + fadeIn(animationSpec = tween(400))
-
-private fun exitTransition() =
-    fadeOut(animationSpec = tween(300)) + scaleOut(
-        targetScale = 0.9f,
-        animationSpec = tween(400, easing = FastOutSlowInEasing)
-    )
-
-private fun popEnterTransition() = fadeIn(animationSpec = tween(400)) + scaleIn(
-    initialScale = 0.9f,
-    animationSpec = tween(400, easing = FastOutSlowInEasing)
-)
-
-private fun AnimatedContentTransitionScope<NavBackStackEntry>.popExitTransition() =
-    scaleOut(
-        targetScale = 0.8f,
-        animationSpec = tween(300, easing = FastOutSlowInEasing)
-    ) + slideOutOfContainer(
-        towards = AnimatedContentTransitionScope.SlideDirection.End,
-        animationSpec = tween(300, easing = FastOutSlowInEasing)
-    ) + fadeOut(animationSpec = tween(400))

@@ -1,0 +1,6 @@
+Prerelease 1.11.0-rc.1.
+• Updated Xray to 26.9.30.
+• Added manual server configuration.
+• Added routing blocks with separate servers and SplitDNS.
+• Fixed UDP traffic accounting.
+• Updated routing presets.

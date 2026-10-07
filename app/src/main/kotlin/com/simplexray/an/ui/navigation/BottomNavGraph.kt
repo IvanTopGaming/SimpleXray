@@ -1,169 +1,140 @@
 package com.simplexray.an.ui.navigation
 
-import android.util.Log
-import androidx.activity.result.ActivityResultLauncher
-import androidx.compose.animation.AnimatedContentTransitionScope
-import androidx.compose.animation.EnterTransition
-import androidx.compose.animation.ExitTransition
-import androidx.compose.animation.core.FastOutSlowInEasing
-import androidx.compose.animation.core.tween
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
-import androidx.compose.foundation.ScrollState
+import android.net.Uri
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.lazy.LazyListState
+import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.runtime.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Modifier
+import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.lifecycle.viewmodel.initializer
+import androidx.lifecycle.viewmodel.viewModelFactory
 import androidx.navigation.NavBackStackEntry
 import androidx.navigation.NavHostController
-import androidx.navigation.compose.NavHost
-import androidx.navigation.compose.composable
-import com.simplexray.an.common.ROUTE_CONFIG
-import com.simplexray.an.common.ROUTE_LOG
-import com.simplexray.an.common.ROUTE_SETTINGS
-import com.simplexray.an.common.ROUTE_STATS
+import com.simplexray.an.app.state.MainViewModel
+import com.simplexray.an.app.ui.MainScreenCallbacks
+import com.simplexray.an.app.ui.MainScreenLaunchers
+import com.simplexray.an.feature.apps.state.AppListViewModel
+import com.simplexray.an.feature.apps.ui.AppListScreen
+import com.simplexray.an.feature.dashboard.ui.DashboardScreen
+import com.simplexray.an.feature.logs.state.LogViewModel
+import com.simplexray.an.feature.logs.ui.LogScreen
+import com.simplexray.an.feature.servers.ui.ConfigScreen
+import com.simplexray.an.feature.settings.ui.SettingsHomeScreen
+import com.simplexray.an.feature.settings.ui.SettingsScreen
+import com.simplexray.an.feature.subscriptions.ui.SubscriptionsScreen
 import com.simplexray.an.service.TProxyService
-import com.simplexray.an.ui.screens.ConfigScreen
-import com.simplexray.an.ui.screens.DashboardScreen
-import com.simplexray.an.ui.screens.LogScreen
-import com.simplexray.an.ui.screens.SettingsScreen
-import com.simplexray.an.viewmodel.LogViewModel
-import com.simplexray.an.viewmodel.MainViewModel
-import java.io.File
-
-private const val TAG = "AppNavGraph"
-
-private val BOTTOM_NAV_ROUTE_INDEX = mapOf(
-    ROUTE_STATS to 0,
-    ROUTE_CONFIG to 1,
-    ROUTE_LOG to 2,
-    ROUTE_SETTINGS to 3
-)
-
-private fun NavBackStackEntry.routeIndex(): Int =
-    destination.route?.let { BOTTOM_NAV_ROUTE_INDEX[it] } ?: 0
-
-private fun AnimatedContentTransitionScope<NavBackStackEntry>.horizontalSlideEnter(): EnterTransition {
-    val targetIndex = targetState.routeIndex()
-    val initialIndex = initialState.routeIndex()
-    val direction = if (targetIndex > initialIndex) {
-        AnimatedContentTransitionScope.SlideDirection.Start
-    } else {
-        AnimatedContentTransitionScope.SlideDirection.End
-    }
-    return slideIntoContainer(
-        towards = direction,
-        animationSpec = tween(200, easing = FastOutSlowInEasing)
-    ) + fadeIn(animationSpec = tween(200))
-}
-
-private fun AnimatedContentTransitionScope<NavBackStackEntry>.horizontalSlideExit(): ExitTransition {
-    val targetIndex = targetState.routeIndex()
-    val initialIndex = initialState.routeIndex()
-    val direction = if (targetIndex > initialIndex) {
-        AnimatedContentTransitionScope.SlideDirection.Start
-    } else {
-        AnimatedContentTransitionScope.SlideDirection.End
-    }
-    return slideOutOfContainer(
-        towards = direction,
-        animationSpec = tween(200, easing = FastOutSlowInEasing)
-    ) + fadeOut(animationSpec = tween(150))
-}
-
-private fun AnimatedContentTransitionScope<NavBackStackEntry>.enterTransition() =
-    horizontalSlideEnter()
-
-private fun AnimatedContentTransitionScope<NavBackStackEntry>.exitTransition() =
-    horizontalSlideExit()
-
-private fun AnimatedContentTransitionScope<NavBackStackEntry>.popEnterTransition() =
-    horizontalSlideEnter()
-
-private fun AnimatedContentTransitionScope<NavBackStackEntry>.popExitTransition() =
-    horizontalSlideExit()
-
-private fun createReloadConfigCallback(mainViewModel: MainViewModel): () -> Unit = {
-    Log.d(TAG, "Reload config requested from UI.")
-    mainViewModel.startTProxyService(TProxyService.ACTION_RELOAD_CONFIG)
-}
-
-private fun createEditConfigCallback(mainViewModel: MainViewModel): (File) -> Unit = { file ->
-    Log.d(TAG, "ConfigFragment request: Edit file: ${file.name}")
-    mainViewModel.editConfig(file.absolutePath)
-}
+import com.simplexray.an.ui.scaffold.navigateToRoute
 
 @Composable
 fun BottomNavHost(
     navController: NavHostController,
-    paddingValues: PaddingValues,
     mainViewModel: MainViewModel,
-    onDeleteConfigClick: (File, () -> Unit) -> Unit,
     logViewModel: LogViewModel,
-    geoipFilePickerLauncher: ActivityResultLauncher<Array<String>>,
-    geositeFilePickerLauncher: ActivityResultLauncher<Array<String>>,
-    logListState: LazyListState,
-    configListState: LazyListState,
-    settingsScrollState: ScrollState
+    callbacks: MainScreenCallbacks,
+    launchers: MainScreenLaunchers,
+    onAddSubscription: () -> Unit,
+    onPaste: () -> Unit,
+    onAddServer: () -> Unit = {},
+    scaffold: @Composable (NavBackStackEntry, @Composable (PaddingValues) -> Unit) -> Unit,
 ) {
-    NavHost(
-        navController = navController,
+    var subscriptionFilter by rememberSaveable { mutableStateOf<String?>(null) }
+    var filterRequest by rememberSaveable { mutableIntStateOf(0) }
+    ImmediateNavHost(
+        navController,
         startDestination = ROUTE_STATS,
-        modifier = Modifier.padding(paddingValues)
-    ) {
-        composable(
-            route = ROUTE_STATS,
-            enterTransition = { enterTransition() },
-            exitTransition = { exitTransition() },
-            popEnterTransition = { popEnterTransition() },
-            popExitTransition = { popExitTransition() }
-        ) {
-            DashboardScreen(mainViewModel = mainViewModel)
-        }
-
-        composable(
-            route = ROUTE_CONFIG,
-            enterTransition = { enterTransition() },
-            exitTransition = { exitTransition() },
-            popEnterTransition = { popEnterTransition() },
-            popExitTransition = { popExitTransition() }
-        ) {
-            ConfigScreen(
-                onReloadConfig = createReloadConfigCallback(mainViewModel),
-                onEditConfigClick = createEditConfigCallback(mainViewModel),
-                onDeleteConfigClick = onDeleteConfigClick,
-                mainViewModel = mainViewModel,
-                listState = configListState
-            )
-        }
-
-        composable(
-            route = ROUTE_LOG,
-            enterTransition = { enterTransition() },
-            exitTransition = { exitTransition() },
-            popEnterTransition = { popEnterTransition() },
-            popExitTransition = { popExitTransition() }
-        ) {
-            LogScreen(
-                logViewModel = logViewModel,
-                listState = logListState
-            )
-        }
-
-        composable(
-            route = ROUTE_SETTINGS,
-            enterTransition = { enterTransition() },
-            exitTransition = { exitTransition() },
-            popEnterTransition = { popEnterTransition() },
-            popExitTransition = { popExitTransition() }
-        ) {
-            SettingsScreen(
-                mainViewModel = mainViewModel,
-                geoipFilePickerLauncher = geoipFilePickerLauncher,
-                geositeFilePickerLauncher = geositeFilePickerLauncher,
-                scrollState = settingsScrollState
-            )
+        routes =
+            listOf(
+                ROUTE_STATS,
+                ROUTE_CONFIG,
+                ROUTE_SUBSCRIPTIONS,
+                ROUTE_SETTINGS,
+                "settings-detail/{section}",
+                ROUTE_LOG,
+                ROUTE_APP_LIST,
+            ),
+        chrome = { entry, content ->
+            scaffold(entry) { paddingValues ->
+                Box(Modifier.padding(paddingValues)) { content() }
+            }
+        },
+    ) { entry ->
+        when (entry.destination.route) {
+            ROUTE_STATS -> {
+                DashboardScreen(
+                    mainViewModel,
+                    onSwitchVpn = callbacks.onSwitchVpnService,
+                    onServers = { navigateToRoute(navController, ROUTE_CONFIG) },
+                    onAddSubscription = onAddSubscription,
+                    onPaste = onPaste,
+                    onAddServer = onAddServer,
+                )
+            }
+            ROUTE_CONFIG -> {
+                ConfigScreen(
+                    onReloadConfig = {
+                        mainViewModel.startTProxyService(TProxyService.ACTION_RELOAD_CONFIG)
+                    },
+                    onEditConfigClick = { mainViewModel.editConfig(it.absolutePath) },
+                    onDeleteConfigClick = callbacks.onDeleteConfigClick,
+                    mainViewModel = mainViewModel,
+                    listState = rememberLazyListState(),
+                    subscriptionFilter = subscriptionFilter,
+                    filterRequest = filterRequest,
+                    onClearFilter = { subscriptionFilter = null },
+                )
+            }
+            ROUTE_SUBSCRIPTIONS -> {
+                SubscriptionsScreen(
+                    mainViewModel,
+                    onAddSubscription,
+                    onServers = {
+                        subscriptionFilter = it
+                        filterRequest++
+                        navigateToRoute(navController, ROUTE_CONFIG)
+                    },
+                )
+            }
+            ROUTE_SETTINGS -> {
+                SettingsHomeScreen(
+                    mainViewModel,
+                    onSection = {
+                        navController.navigate("settings-detail/" + Uri.encode(it))
+                    },
+                    onLogs = { navController.navigate(ROUTE_LOG) },
+                )
+            }
+            "settings-detail/{section}" -> {
+                SettingsScreen(
+                    mainViewModel = mainViewModel,
+                    geoipFilePickerLauncher = launchers.geoipFilePickerLauncher,
+                    geositeFilePickerLauncher = launchers.geositeFilePickerLauncher,
+                    scrollState = rememberScrollState(),
+                    section = entry.arguments?.getString("section"),
+                )
+            }
+            ROUTE_LOG -> {
+                LogScreen(logViewModel, rememberLazyListState())
+            }
+            ROUTE_APP_LIST -> {
+                AppListScreen(
+                    viewModel =
+                        viewModel(
+                            factory =
+                                viewModelFactory {
+                                    initializer {
+                                        AppListViewModel(mainViewModel.getApplication())
+                                    }
+                                }
+                        ),
+                    onBackClick = { navController.popBackStack() },
+                    embedded = true,
+                )
+            }
         }
     }
 }

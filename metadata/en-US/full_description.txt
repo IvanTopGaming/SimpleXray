@@ -1,9 +1,13 @@
-SimpleXray is a high-performance proxy client for Android, built upon the robust Xray-core.
+SimpleXray is an Xray-core client for Android 10 and later.
 
-It features an innovative approach: directly executing the official Xray-core binary. This method isolates core logic from the app layer, boosting stability and maximizing Xray-core's native performance. SimpleXray aims to provide a stable and efficient network experience.
+• Import servers and subscriptions or enter connection settings manually.
+• VLESS, VMess, Trojan, Shadowsocks/SS2022, SOCKS, HTTP, WireGuard and Hysteria 2.
+• Domain, IP, GeoSite and GeoIP rules with a separate server for each routing block.
+• DNS, FakeIP and SplitDNS.
+• Import and export routing presets through the clipboard.
+• Per-app VPN selection and local SOCKS/HTTP proxies.
+• Profile JSON, configuration overrides and core logs.
+• Connection speed, traffic totals and disconnect action in the notification.
+• Optional automatic connection after reboot.
 
-Key Features
-
-- Enhanced Stability: By running Xray-core as an independent process, SimpleXray avoids common stability issues, significantly improving reliability.
-- High Performance: Leverages Xray-core's native speed and efficient tunneling for low latency and high throughput.
-- User-Friendly: Offers a clean, intuitive UI and simplified setup, making it easy for users to configure and manage connections.
+Source and releases: https://github.com/IvanTopGaming/SimpleXray

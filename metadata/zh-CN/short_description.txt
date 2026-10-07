@@ -1,1 +1,1 @@
-简洁、快速的 Xray 客户端
+支持路由规则和 SplitDNS 的 Xray 客户端
