@@ -2,7 +2,6 @@ package com.simplexray.an.activity
 
 import android.content.Intent
 import android.content.res.Configuration
-import android.os.Build
 import android.os.Bundle
 import android.util.Log
 import androidx.activity.ComponentActivity
@@ -12,18 +11,18 @@ import androidx.activity.viewModels
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
-import androidx.compose.material3.darkColorScheme
-import androidx.compose.material3.dynamicDarkColorScheme
-import androidx.compose.material3.dynamicLightColorScheme
-import androidx.compose.material3.lightColorScheme
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.MotionDurationScale
+import androidx.compose.ui.platform.compositionContext
+import androidx.compose.ui.platform.createLifecycleAwareWindowRecomposer
 import androidx.core.view.WindowCompat
 import androidx.lifecycle.lifecycleScope
-import com.simplexray.an.common.ThemeMode
+import com.simplexray.an.ui.theme.ThemeMode
+import com.simplexray.an.feature.subscriptions.data.SubscriptionRefreshScheduler
 import com.simplexray.an.ui.navigation.AppNavHost
-import com.simplexray.an.viewmodel.MainViewModel
-import com.simplexray.an.viewmodel.MainViewModelFactory
+import com.simplexray.an.ui.theme.SimpleXrayTheme
+import com.simplexray.an.app.state.MainViewModel
+import com.simplexray.an.app.state.MainViewModelFactory
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 
@@ -34,6 +33,15 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
 
         enableEdgeToEdge()
+        window.decorView.compositionContext =
+            window.decorView.createLifecycleAwareWindowRecomposer(
+                coroutineContext =
+                    object : MotionDurationScale {
+                        override val scaleFactor = 0f
+                    },
+                lifecycle = lifecycle,
+            )
+        SubscriptionRefreshScheduler.reconcile(this)
         window.isNavigationBarContrastEnforced = false
 
         mainViewModel.reloadView = { initView() }
@@ -45,30 +53,21 @@ class MainActivity : ComponentActivity() {
 
     private fun initView() {
         val insetsController = WindowCompat.getInsetsController(window, window.decorView)
-        val currentNightMode =
-            resources.configuration.uiMode and Configuration.UI_MODE_NIGHT_MASK
-        val isDark = when (mainViewModel.prefs.theme) {
-            ThemeMode.Light -> false
-            ThemeMode.Dark -> true
-            ThemeMode.Auto -> currentNightMode == Configuration.UI_MODE_NIGHT_YES
-        }
+        val currentNightMode = resources.configuration.uiMode and Configuration.UI_MODE_NIGHT_MASK
+        val isDark =
+            when (mainViewModel.prefs.theme) {
+                ThemeMode.Light -> false
+                ThemeMode.Dark -> true
+                ThemeMode.Auto -> currentNightMode == Configuration.UI_MODE_NIGHT_YES
+            }
         insetsController.isAppearanceLightStatusBars = !isDark
+        insetsController.isAppearanceLightNavigationBars = !isDark
 
         setContent {
-            val context = LocalContext.current
-            val dynamicColor = Build.VERSION.SDK_INT >= Build.VERSION_CODES.S
-
-            val colorScheme = when {
-                dynamicColor && isDark -> dynamicDarkColorScheme(context)
-                dynamicColor && !isDark -> dynamicLightColorScheme(context)
-                isDark -> darkColorScheme()
-                else -> lightColorScheme()
-            }
-
-            MaterialTheme(colorScheme = colorScheme) {
+            SimpleXrayTheme(dark = isDark) {
                 Surface(
                     modifier = Modifier.fillMaxSize(),
-                    color = MaterialTheme.colorScheme.background
+                    color = MaterialTheme.colorScheme.background,
                 ) {
                     AppNavHost(mainViewModel)
                 }
@@ -92,11 +91,12 @@ class MainActivity : ComponentActivity() {
     override fun onConfigurationChanged(newConfig: Configuration) {
         super.onConfigurationChanged(newConfig)
         val currentNightMode = newConfig.uiMode and Configuration.UI_MODE_NIGHT_MASK
-        val isDark = when (mainViewModel.prefs.theme) {
-            ThemeMode.Light -> false
-            ThemeMode.Dark -> true
-            ThemeMode.Auto -> currentNightMode == Configuration.UI_MODE_NIGHT_YES
-        }
+        val isDark =
+            when (mainViewModel.prefs.theme) {
+                ThemeMode.Light -> false
+                ThemeMode.Dark -> true
+                ThemeMode.Auto -> currentNightMode == Configuration.UI_MODE_NIGHT_YES
+            }
         val insetsController = WindowCompat.getInsetsController(window, window.decorView)
         insetsController.isAppearanceLightStatusBars = !isDark
         Log.d(TAG, "MainActivity onConfigurationChanged called.")

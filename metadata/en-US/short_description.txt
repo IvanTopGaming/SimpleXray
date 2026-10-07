@@ -1,1 +1,1 @@
-A simple, fast Xray client
+Xray client with routing rules and SplitDNS

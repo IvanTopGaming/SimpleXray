@@ -1,6 +1,5 @@
 package com.simplexray.an.ui.theme
 
-import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
@@ -27,9 +26,8 @@ object ScrollbarDefaults {
             selectionMode = ScrollbarSelectionMode.Thumb,
             selectionActionable = ScrollbarSelectionActionable.Always,
             hideDelayMillis = 400,
-            hideDisplacement = 14.dp,
-            hideEasingAnimation = FastOutSlowInEasing,
-            durationAnimationMillis = 500,
+            hideDisplacement = 0.dp,
+            durationAnimationMillis = 0,
         )
     }
 }

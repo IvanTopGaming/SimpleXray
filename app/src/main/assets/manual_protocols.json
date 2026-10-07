@@ -1,0 +1,625 @@
+{
+  "version": "26.9.30",
+  "protocols": {
+    "vless": {
+      "label": "VLESS",
+      "schema": "protocol.vless",
+      "transport": true,
+      "defaultTransport": "raw",
+      "defaultSecurity": "none"
+    },
+    "vmess": {
+      "label": "VMess",
+      "schema": "protocol.vmess",
+      "transport": true,
+      "defaultTransport": "raw",
+      "defaultSecurity": "none"
+    },
+    "trojan": {
+      "label": "Trojan",
+      "schema": "protocol.trojan",
+      "transport": true,
+      "defaultTransport": "raw",
+      "defaultSecurity": "tls"
+    },
+    "shadowsocks": {
+      "label": "Shadowsocks",
+      "schema": "protocol.shadowsocks",
+      "transport": true,
+      "defaultTransport": "raw",
+      "defaultSecurity": "none"
+    },
+    "socks": {
+      "label": "SOCKS",
+      "schema": "protocol.socks",
+      "transport": true,
+      "defaultTransport": "raw",
+      "defaultSecurity": "none"
+    },
+    "http": {
+      "label": "HTTP",
+      "schema": "protocol.http",
+      "transport": true,
+      "defaultTransport": "raw",
+      "defaultSecurity": "none"
+    },
+    "wireguard": {
+      "label": "WireGuard",
+      "schema": "protocol.wireguard",
+      "transport": false,
+      "defaultTransport": "raw",
+      "defaultSecurity": "none"
+    },
+    "hysteria": {
+      "label": "Hysteria 2",
+      "schema": "protocol.hysteria",
+      "transport": true,
+      "defaultTransport": "hysteria",
+      "defaultSecurity": "tls"
+    }
+  },
+  "schemas": {
+    "protocol.http": {
+      "label": "HTTP",
+      "fields": {
+        "address": {
+          "label": "Адрес сервера",
+          "help": "Домен или IP сервера.",
+          "type": "string",
+          "required": true,
+          "default": ""
+        },
+        "port": {
+          "label": "Порт сервера",
+          "help": "Порт подключения к серверу.",
+          "type": "integer",
+          "required": true,
+          "default": 8080,
+          "minimum": 1,
+          "maximum": 65535
+        },
+        "level": {
+          "label": "Уровень пользователя",
+          "help": "Уровень политики Xray для этого подключения.",
+          "type": "integer",
+          "required": false,
+          "minimum": 0,
+          "maximum": 4294967295,
+          "advanced": true
+        },
+        "email": {
+          "label": "Email пользователя",
+          "help": "Имя пользователя для статистики Xray.",
+          "type": "string",
+          "required": false,
+          "advanced": true
+        },
+        "user": {
+          "label": "Логин",
+          "help": "Непустой логин включает авторизацию на сервере.",
+          "type": "string",
+          "required": false,
+          "basic": true
+        },
+        "pass": {
+          "label": "Пароль",
+          "help": "Пароль сервера; применяется вместе с логином.",
+          "type": "string",
+          "required": false,
+          "secret": true,
+          "basic": true
+        },
+        "headers": {
+          "label": "Заголовки HTTP",
+          "help": "Дополнительные заголовки запроса к прокси.",
+          "type": "map",
+          "required": false,
+          "values": {
+            "label": "Значение",
+            "help": "Значение заголовка.",
+            "type": "string",
+            "required": false
+          },
+          "advanced": true
+        }
+      }
+    },
+    "protocol.socks": {
+      "label": "SOCKS",
+      "fields": {
+        "address": {
+          "label": "Адрес сервера",
+          "help": "Домен или IP сервера.",
+          "type": "string",
+          "required": true,
+          "default": ""
+        },
+        "port": {
+          "label": "Порт сервера",
+          "help": "Порт подключения к серверу.",
+          "type": "integer",
+          "required": true,
+          "default": 1080,
+          "minimum": 1,
+          "maximum": 65535
+        },
+        "level": {
+          "label": "Уровень пользователя",
+          "help": "Уровень политики Xray для этого подключения.",
+          "type": "integer",
+          "required": false,
+          "minimum": 0,
+          "maximum": 4294967295,
+          "advanced": true
+        },
+        "email": {
+          "label": "Email пользователя",
+          "help": "Имя пользователя для статистики Xray.",
+          "type": "string",
+          "required": false,
+          "advanced": true
+        },
+        "user": {
+          "label": "Логин",
+          "help": "Непустой логин включает авторизацию на сервере.",
+          "type": "string",
+          "required": false,
+          "basic": true
+        },
+        "pass": {
+          "label": "Пароль",
+          "help": "Пароль сервера; применяется вместе с логином.",
+          "type": "string",
+          "required": false,
+          "secret": true,
+          "basic": true
+        }
+      }
+    },
+    "protocol.shadowsocks": {
+      "label": "Shadowsocks",
+      "fields": {
+        "address": {
+          "label": "Адрес сервера",
+          "help": "Домен или IP сервера.",
+          "type": "string",
+          "required": true,
+          "default": ""
+        },
+        "port": {
+          "label": "Порт сервера",
+          "help": "Порт подключения к серверу.",
+          "type": "integer",
+          "required": true,
+          "default": 443,
+          "minimum": 1,
+          "maximum": 65535
+        },
+        "level": {
+          "label": "Уровень пользователя",
+          "help": "Уровень политики Xray для этого подключения.",
+          "type": "integer",
+          "required": false,
+          "minimum": 0,
+          "maximum": 255,
+          "advanced": true,
+          "when": {
+            "key": "method",
+            "notPrefix": "2022-"
+          }
+        },
+        "email": {
+          "label": "Email пользователя",
+          "help": "Имя пользователя для статистики Xray.",
+          "type": "string",
+          "required": false,
+          "advanced": true,
+          "when": {
+            "key": "method",
+            "notPrefix": "2022-"
+          }
+        },
+        "method": {
+          "label": "Шифрование",
+          "help": "Метод должен совпадать с настройками сервера.",
+          "type": "string",
+          "required": true,
+          "default": "aes-128-gcm",
+          "enum": [
+            "aes-128-gcm",
+            "aes-256-gcm",
+            "chacha20-poly1305",
+            "xchacha20-poly1305",
+            "none",
+            "2022-blake3-aes-128-gcm",
+            "2022-blake3-aes-256-gcm",
+            "2022-blake3-chacha20-poly1305"
+          ]
+        },
+        "password": {
+          "label": "Пароль или ключ",
+          "help": "Для SS2022: ключи Base64 через двоеточие.",
+          "type": "string",
+          "required": true,
+          "default": "",
+          "secret": true
+        }
+      }
+    },
+    "protocol.trojan": {
+      "label": "Trojan",
+      "fields": {
+        "address": {
+          "label": "Адрес сервера",
+          "help": "Домен или IP сервера.",
+          "type": "string",
+          "required": true,
+          "default": ""
+        },
+        "port": {
+          "label": "Порт сервера",
+          "help": "Порт подключения к серверу.",
+          "type": "integer",
+          "required": true,
+          "default": 443,
+          "minimum": 1,
+          "maximum": 65535
+        },
+        "level": {
+          "label": "Уровень пользователя",
+          "help": "Уровень политики Xray для этого подключения.",
+          "type": "integer",
+          "required": false,
+          "minimum": 0,
+          "maximum": 255,
+          "advanced": true
+        },
+        "email": {
+          "label": "Email пользователя",
+          "help": "Имя пользователя для статистики Xray.",
+          "type": "string",
+          "required": false,
+          "advanced": true
+        },
+        "password": {
+          "label": "Пароль",
+          "help": "Пароль пользователя Trojan.",
+          "type": "string",
+          "required": true,
+          "default": "",
+          "secret": true
+        }
+      }
+    },
+    "protocol.vmess": {
+      "label": "VMess",
+      "fields": {
+        "address": {
+          "label": "Адрес сервера",
+          "help": "Домен или IP сервера.",
+          "type": "string",
+          "required": true,
+          "default": ""
+        },
+        "port": {
+          "label": "Порт сервера",
+          "help": "Порт подключения к серверу.",
+          "type": "integer",
+          "required": true,
+          "default": 443,
+          "minimum": 1,
+          "maximum": 65535
+        },
+        "level": {
+          "label": "Уровень пользователя",
+          "help": "Уровень политики Xray для этого подключения.",
+          "type": "integer",
+          "required": false,
+          "minimum": 0,
+          "maximum": 4294967295,
+          "advanced": true
+        },
+        "email": {
+          "label": "Email пользователя",
+          "help": "Имя пользователя для статистики Xray.",
+          "type": "string",
+          "required": false,
+          "advanced": true
+        },
+        "id": {
+          "label": "ID пользователя",
+          "help": "UUID или пользовательская строка до 30 байт UTF-8.",
+          "type": "string",
+          "required": true,
+          "default": "",
+          "secret": true
+        },
+        "security": {
+          "label": "Шифрование VMess",
+          "help": "Шифрование данных внутри протокола.",
+          "type": "string",
+          "required": false,
+          "enum": [
+            "auto",
+            "aes-128-gcm",
+            "chacha20-poly1305",
+            "none",
+            "zero"
+          ],
+          "basic": true
+        },
+        "experiments": {
+          "label": "Эксперименты VMess",
+          "help": "Имена AuthenticatedLength и NoTerminationSignal через запятую.",
+          "type": "string",
+          "required": false,
+          "advanced": true
+        }
+      }
+    },
+    "protocol.vless": {
+      "label": "VLESS",
+      "fields": {
+        "address": {
+          "label": "Адрес сервера",
+          "help": "Домен или IP сервера.",
+          "type": "string",
+          "required": true,
+          "default": ""
+        },
+        "port": {
+          "label": "Порт сервера",
+          "help": "Порт подключения к серверу.",
+          "type": "integer",
+          "required": true,
+          "default": 443,
+          "minimum": 1,
+          "maximum": 65535
+        },
+        "level": {
+          "label": "Уровень пользователя",
+          "help": "Уровень политики Xray для этого подключения.",
+          "type": "integer",
+          "required": false,
+          "minimum": 0,
+          "maximum": 4294967295,
+          "advanced": true
+        },
+        "email": {
+          "label": "Email пользователя",
+          "help": "Имя пользователя для статистики Xray.",
+          "type": "string",
+          "required": false,
+          "advanced": true
+        },
+        "id": {
+          "label": "ID пользователя",
+          "help": "UUID или пользовательская строка до 30 байт UTF-8.",
+          "type": "string",
+          "required": true,
+          "default": "",
+          "secret": true
+        },
+        "flow": {
+          "label": "Flow",
+          "help": "Режим XTLS Vision; должен совпадать с сервером.",
+          "type": "string",
+          "required": false,
+          "enum": [
+            "",
+            "xtls-rprx-vision",
+            "xtls-rprx-vision-udp443"
+          ]
+        },
+        "encryption": {
+          "label": "Шифрование VLESS",
+          "help": "none или mlkem768x25519plus с режимом, RTT и ключами сервера.",
+          "type": "string",
+          "required": true,
+          "default": "none"
+        },
+        "testpre": {
+          "label": "Предварительные подключения",
+          "help": "Число экспериментальных соединений, открываемых заранее.",
+          "type": "integer",
+          "required": false,
+          "minimum": 0,
+          "maximum": 4294967295,
+          "advanced": true
+        },
+        "testseed": {
+          "label": "Параметры дополнения Vision",
+          "help": "Четыре числа; второе и четвёртое должны быть больше нуля.",
+          "type": "array",
+          "required": false,
+          "items": {
+            "label": "Число",
+            "help": "Значение параметра дополнения Vision.",
+            "type": "integer",
+            "required": false,
+            "minimum": 0,
+            "maximum": 4294967295
+          },
+          "positionalMinimum": {
+            "1": 1,
+            "3": 1
+          },
+          "advanced": true
+        }
+      }
+    },
+    "protocol.wireguard.peer": {
+      "label": "Пир WireGuard",
+      "fields": {
+        "publicKey": {
+          "label": "Публичный ключ",
+          "help": "Ключ пира: 32 байта в Base64 или 64 символа HEX.",
+          "type": "string",
+          "required": true,
+          "default": ""
+        },
+        "preSharedKey": {
+          "label": "Общий секрет",
+          "help": "Дополнительный ключ: 32 байта в Base64 или HEX.",
+          "type": "string",
+          "required": false,
+          "secret": true,
+          "advanced": true
+        },
+        "endpoint": {
+          "label": "Адрес пира",
+          "help": "Домен:порт, IP:порт или [IPv6]:порт.",
+          "type": "string",
+          "required": true,
+          "default": ""
+        },
+        "keepAlive": {
+          "label": "Keepalive",
+          "help": "Интервал пакетов поддержания соединения в секундах.",
+          "type": "integer",
+          "required": false,
+          "minimum": 0,
+          "maximum": 65535,
+          "advanced": true
+        },
+        "allowedIPs": {
+          "label": "Разрешённые сети",
+          "help": "CIDR-сети пира; без поля разрешены IPv4 и IPv6.",
+          "type": "array",
+          "required": false,
+          "items": {
+            "label": "Сеть",
+            "help": "IPv4 или IPv6 с длиной префикса CIDR.",
+            "type": "string",
+            "required": false
+          },
+          "advanced": true
+        }
+      }
+    },
+    "protocol.wireguard": {
+      "label": "WireGuard",
+      "fields": {
+        "secretKey": {
+          "label": "Приватный ключ",
+          "help": "Ключ клиента: 32 байта в Base64 или 64 символа HEX.",
+          "type": "string",
+          "required": true,
+          "default": "",
+          "secret": true
+        },
+        "address": {
+          "label": "Адреса интерфейса",
+          "help": "IP клиента или адрес с корректной маской CIDR.",
+          "type": "array",
+          "required": true,
+          "default": [
+            "10.0.0.1",
+            "fd59:7153:2388:b5fd:0000:0000:0000:0001"
+          ],
+          "items": {
+            "label": "Адрес",
+            "help": "IPv4, IPv6 или адрес с маской CIDR.",
+            "type": "string",
+            "required": false
+          },
+          "minItems": 1
+        },
+        "peers": {
+          "label": "Пиры",
+          "help": "Серверы WireGuard и их параметры.",
+          "type": "array",
+          "required": true,
+          "items": {
+            "label": "Пир",
+            "help": "Настройки сервера WireGuard.",
+            "type": "object",
+            "required": true,
+            "ref": "protocol.wireguard.peer"
+          },
+          "minItems": 1
+        },
+        "mtu": {
+          "label": "MTU",
+          "help": "Максимальный размер пакета; 0 — стандартные 1420 байт.",
+          "type": "integer",
+          "required": false,
+          "minimum": 0,
+          "maximum": 2147483647,
+          "advanced": true
+        },
+        "reserved": {
+          "label": "Резервные байты",
+          "help": "Три байта заголовка WireGuard; без поля используются нули.",
+          "type": "array",
+          "required": false,
+          "items": {
+            "label": "Байт",
+            "help": "Значение байта от 0 до 255.",
+            "type": "integer",
+            "required": false,
+            "minimum": 0,
+            "maximum": 255
+          },
+          "allowedLengths": [
+            0,
+            3
+          ],
+          "advanced": true
+        },
+        "noKernelTun": {
+          "label": "Программный TUN",
+          "help": "Всегда использовать сетевой стек gVisor.",
+          "type": "boolean",
+          "required": false,
+          "advanced": true
+        },
+        "remoteDNS": {
+          "label": "DNS внутри WireGuard",
+          "help": "IP DNS-серверов для запросов через туннель; без списка ядро использует Cloudflare.",
+          "type": "array",
+          "required": false,
+          "items": {
+            "label": "IP DNS-сервера",
+            "help": "IPv4 или IPv6 без порта.",
+            "type": "string",
+            "required": false
+          }
+        }
+      }
+    },
+    "protocol.hysteria": {
+      "label": "Hysteria 2",
+      "fields": {
+        "version": {
+          "label": "Версия Hysteria",
+          "help": "В этом ядре поддерживается только Hysteria 2.",
+          "type": "integer",
+          "required": true,
+          "default": 2,
+          "minimum": 2,
+          "maximum": 2,
+          "enum": [
+            2
+          ]
+        },
+        "address": {
+          "label": "Адрес сервера",
+          "help": "Домен или IP сервера.",
+          "type": "string",
+          "required": true,
+          "default": ""
+        },
+        "port": {
+          "label": "Порт сервера",
+          "help": "UDP-порт подключения к серверу.",
+          "type": "integer",
+          "required": true,
+          "default": 443,
+          "minimum": 1,
+          "maximum": 65535
+        }
+      }
+    }
+  }
+}

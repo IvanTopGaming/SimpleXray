@@ -18,18 +18,14 @@ message Stat {
   int64 value = 2;
 }
 
-message GetStatsResponse {
-  Stat stat = 1;
-}
+message GetStatsResponse { Stat stat = 1; }
 
 message QueryStatsRequest {
   string pattern = 1;
   bool reset = 2;
 }
 
-message QueryStatsResponse {
-  repeated Stat stat = 1;
-}
+message QueryStatsResponse { repeated Stat stat = 1; }
 
 message SysStatsRequest {}
 
@@ -56,7 +52,8 @@ service StatsService {
   rpc GetStatsOnline(GetStatsRequest) returns (GetStatsResponse) {}
   rpc QueryStats(QueryStatsRequest) returns (QueryStatsResponse) {}
   rpc GetSysStats(SysStatsRequest) returns (SysStatsResponse) {}
-  rpc GetStatsOnlineIpList(GetStatsRequest) returns (GetStatsOnlineIpListResponse) {}
+  rpc GetStatsOnlineIpList(GetStatsRequest)
+      returns (GetStatsOnlineIpListResponse) {}
 }
 
 message Config {}

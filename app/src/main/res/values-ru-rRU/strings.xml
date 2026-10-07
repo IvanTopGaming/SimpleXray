@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8" ?>
 <resources>
     <string name="socks_address">Целевой адрес SOCKS</string>
     <string name="socks_port">Целевой порт SOCKS</string>
@@ -7,7 +7,9 @@
     <string name="dns_ipv6">DNS IPv6</string>
     <string name="ipv6">IPv6</string>
     <string name="apps_title">Прокси для отдельных приложений</string>
-    <string name="apps_summary">Выберите приложения для проксирования, иначе будет использоваться глобальный режим.</string>
+    <string
+        name="apps_summary"
+    >Выберите приложения для проксирования, иначе будет использоваться глобальный режим.</string>
     <string name="save">Сохранить</string>
     <string name="search">Поиск</string>
     <string name="log">Журналы</string>
@@ -18,15 +20,23 @@
     <string name="new_profile">Новый профиль</string>
     <string name="configuration">Конфигурация</string>
     <string name="bypass_lan_title">Обход локальной сети</string>
-    <string name="bypass_lan_summary">Если включено, трафик локальной сети не будет проходить через прокси.</string>
-    <string name="use_template_title">Создавать новую конфигурацию из шаблона</string>
-    <string name="use_template_summary">Если включено, новые конфигурации будут предварительно заполнены содержимым шаблона.</string>
+    <string
+        name="bypass_lan_summary"
+    >Если включено, трафик локальной сети не будет проходить через прокси.</string>
+    <string
+        name="use_template_title"
+    >Создавать новую конфигурацию из шаблона</string>
+    <string
+        name="use_template_summary"
+    >Если включено, новые конфигурации будут предварительно заполнены содержимым шаблона.</string>
     <string name="vpn_interface">VPN-интерфейс</string>
     <string name="confirm">Подтвердить</string>
     <string name="cancel">Отмена</string>
     <string name="delete_config">Удалить конфигурацию</string>
     <string name="filename_empty">Имя файла не может быть пустым</string>
-    <string name="filename_invalid">Имя файла содержит недопустимые символы</string>
+    <string
+        name="filename_invalid"
+    >Имя файла содержит недопустимые символы</string>
     <string name="filename_already_exists">Имя файла уже существует</string>
     <string name="invalid_config_format">Неверный формат конфигурации</string>
     <string name="config_save_success">Успешно сохранено</string>
@@ -36,24 +46,32 @@
     <string name="share">Поделиться</string>
     <string name="export">Экспорт</string>
     <string name="http_proxy_title">Прокси через HTTP</string>
-    <string name="http_proxy_summary">Если включено, прокси будет идти напрямую через HTTP без использования TUN(туннель). Некоторые приложения могут игнорировать эту настройку.</string>
-    <string name="invalid_ipv6">Пожалуйста, введите корректный IPv6 адрес</string>
-    <string name="invalid_ipv4">Пожалуйста, введите корректный IPv4 адрес</string>
-    <string name="invalid_ipv4_or_ipv6">Пожалуйста, введите корректный IPv4/IPv6 адрес</string>
-    <string name="invalid_port">Пожалуйста, введите корректный номер порта</string>
-    <string name="invalid_port_range">Номер порта должен быть от 1024 до 65535</string>
+    <string
+        name="http_proxy_summary"
+    >Если включено, прокси будет идти напрямую через HTTP без использования TUN(туннель). Некоторые приложения могут игнорировать эту настройку.</string>
+    <string
+        name="invalid_ipv6"
+    >Пожалуйста, введите корректный IPv6 адрес</string>
+    <string
+        name="invalid_ipv4"
+    >Пожалуйста, введите корректный IPv4 адрес</string>
+    <string
+        name="invalid_ipv4_or_ipv6"
+    >Пожалуйста, введите корректный IPv4/IPv6 адрес</string>
+    <string
+        name="invalid_port"
+    >Пожалуйста, введите корректный номер порта</string>
+    <string
+        name="invalid_port_range"
+    >Номер порта должен быть от 1024 до 65535</string>
     <string name="import_from_clipboard">Импорт из буфера обмена</string>
-    <string name="import_failed">Не удалось импортировать: в буфере обмена не найдена конфигурация</string>
+    <string
+        name="import_failed"
+    >Не удалось импортировать: в буфере обмена не найдена конфигурация</string>
     <string name="source">Исходный код</string>
     <string name="version">Версия</string>
     <string name="kernel">Ядро</string>
     <string name="open_source">Репозиторий с исходным кодом</string>
-    <string name="backup">Резервная копия</string>
-    <string name="restore">Восстановить</string>
-    <string name="backup_success">Резервное копирование успешно</string>
-    <string name="backup_failed">Ошибка резервного копирования</string>
-    <string name="restore_failed">Ошибка восстановления</string>
-    <string name="restore_success">Восстановление прошло успешно</string>
     <string name="no_config_files">Файлы конфигурации отсутствуют</string>
     <string name="no_log_entries">Нет записей в журнале</string>
     <string name="rule_file_default">Файл правил по умолчанию</string>
@@ -73,13 +91,19 @@
     <string name="config_not_found">Файл конфигурации не найден</string>
     <string name="save_fail">Ошибка сохранения</string>
     <string name="disable_vpn_title">Отключить VPN-интерфейс</string>
-    <string name="disable_vpn_summary">Если включено, запускается только ядро без VPN-интерфейса</string>
+    <string
+        name="disable_vpn_summary"
+    >Если включено, запускается только ядро без VPN-интерфейса</string>
     <string name="connectivity_test">Тест подключения</string>
     <string name="connectivity_test_target">Целевой адрес</string>
     <string name="connectivity_test_timeout">Тайм-аут теста (мс)</string>
     <string name="connectivity_test_latency">Задержка сети: %1$d мс</string>
-    <string name="connectivity_test_failed">Не удалось подключиться к серверу</string>
-    <string name="connectivity_test_invalid_url">Неверный формат целевого адреса</string>
+    <string
+        name="connectivity_test_failed"
+    >Не удалось подключиться к серверу</string>
+    <string
+        name="connectivity_test_invalid_url"
+    >Неверный формат целевого адреса</string>
     <string name="select_all">Выбрать все</string>
     <string name="inverse_selection">Инвертировать выбор</string>
     <string name="show_system_apps">Показать системные приложения</string>
@@ -89,9 +113,15 @@
     <string name="import_invalid_format">Неверный формат импорта</string>
     <string name="import_file">Импорт</string>
     <string name="reset_file">Сбросить</string>
-    <string name="rule_file_restore_geoip_success">geoip.dat восстановлен по умолчанию</string>
-    <string name="rule_file_restore_geosite_success">geosite.dat восстановлен по умолчанию</string>
-    <string name="invalid_timeout">Пожалуйста, введите корректный тайм-аут (положительное число)</string>
+    <string
+        name="rule_file_restore_geoip_success"
+    >geoip.dat восстановлен по умолчанию</string>
+    <string
+        name="rule_file_restore_geosite_success"
+    >geosite.dat восстановлен по умолчанию</string>
+    <string
+        name="invalid_timeout"
+    >Пожалуйста, введите корректный тайм-аут (положительное число)</string>
     <string name="rule_file_update_url">Обновить с URL</string>
     <string name="update">Обновить</string>
     <string name="download_success">Загрузка прошла успешно</string>
@@ -102,7 +132,9 @@
     <string name="download_cancelled">Загрузка отменена</string>
     <string name="general">Общие</string>
     <string name="delete_rule_file_title">Удалить файл правил</string>
-    <string name="delete_rule_file_message">Это восстановит файл правил по умолчанию. Вы уверены?</string>
+    <string
+        name="delete_rule_file_message"
+    >Это восстановит файл правил по умолчанию. Вы уверены?</string>
     <string name="restore_default_url">Восстановить URL по умолчанию</string>
     <string name="core_stats_title">Панель управления</string>
     <string name="stats_uplink">Исходящий трафик</string>
@@ -113,9 +145,13 @@
     <string name="stats_uptime">Время работы</string>
     <string name="check_for_updates">Проверить обновления</string>
     <string name="no_new_version_available">Новых версий нет</string>
-    <string name="failed_to_check_for_updates">Ошибка проверки обновлений</string>
+    <string
+        name="failed_to_check_for_updates"
+    >Ошибка проверки обновлений</string>
     <string name="new_version_available_title">Доступна новая версия</string>
-    <string name="new_version_available_message">Доступна новая версия (%1$s). Хотите скачать?</string>
+    <string
+        name="new_version_available_message"
+    >Доступна новая версия (%1$s). Хотите скачать?</string>
     <string name="download">Скачать</string>
     <string name="theme_title">Тема</string>
     <string name="theme_summary">Выберите светлую или тёмную тему</string>

@@ -1,0 +1,2378 @@
+{
+  "version": "26.9.30",
+  "schemas": {
+    "KCPConfig": {
+      "label": "mKCP",
+      "fields": {
+        "mtu": {
+          "label": "MTU",
+          "help": "Размер UDP-пакета в байтах; минимум 21.",
+          "type": "integer",
+          "required": false,
+          "minimum": 21,
+          "maximum": 4294967295
+        },
+        "tti": {
+          "label": "Интервал передачи",
+          "help": "Интервал передачи от 10 до 1000 миллисекунд.",
+          "type": "integer",
+          "required": false,
+          "minimum": 10,
+          "maximum": 1000
+        },
+        "uplinkCapacity": {
+          "label": "Скорость вверх",
+          "help": "Максимальная скорость вверх в МиБ/с.",
+          "type": "integer",
+          "required": false,
+          "minimum": 0,
+          "maximum": 4294967295
+        },
+        "downlinkCapacity": {
+          "label": "Скорость вниз",
+          "help": "Максимальная скорость вниз в МиБ/с.",
+          "type": "integer",
+          "required": false,
+          "minimum": 0,
+          "maximum": 4294967295
+        },
+        "cwndMultiplier": {
+          "label": "Множитель окна перегрузки",
+          "help": "Множитель окна отправки; минимум 1.",
+          "type": "integer",
+          "required": false,
+          "minimum": 1,
+          "maximum": 4294967295
+        },
+        "maxSendingWindow": {
+          "label": "Максимальное окно отправки",
+          "help": "Размер в байтах; не меньше MTU. По умолчанию 2 МиБ.",
+          "type": "integer",
+          "required": false,
+          "minimum": 21,
+          "maximum": 4294967295
+        }
+      }
+    },
+    "TCPConfig": {
+      "label": "RAW / TCP",
+      "fields": {
+        "header": {
+          "label": "Заголовок RAW",
+          "help": "Без заголовка либо маскировка HTTP-запросом.",
+          "type": "object",
+          "required": false,
+          "discriminator": "type",
+          "variants": {
+            "none": "NoOpConnectionAuthenticator",
+            "http": "Authenticator"
+          },
+          "basic": true
+        }
+      }
+    },
+    "WebSocketConfig": {
+      "label": "WebSocket",
+      "fields": {
+        "host": {
+          "label": "HTTP-хост",
+          "help": "При отсутствии используется SNI или адрес сервера.",
+          "type": "string",
+          "required": false,
+          "basic": true
+        },
+        "path": {
+          "label": "Путь",
+          "help": "Путь HTTP-запроса до сервера.",
+          "type": "string",
+          "required": false,
+          "basic": true
+        },
+        "headers": {
+          "label": "Заголовки",
+          "help": "Произвольные имена заголовков и их значения.",
+          "type": "map",
+          "required": false,
+          "values": {
+            "label": "Значение",
+            "help": "Целое число для int или строка для str.",
+            "type": "string",
+            "required": false
+          }
+        },
+        "heartbeatPeriod": {
+          "label": "Период пинга",
+          "help": "Период WebSocket-пинга в секундах.",
+          "type": "integer",
+          "required": false,
+          "minimum": 0,
+          "maximum": 4294967295
+        },
+        "earlyData": {
+          "label": "Ранние данные",
+          "help": "Число байтов ранних данных в запросе подключения.",
+          "type": "integer",
+          "required": false,
+          "minimum": 0,
+          "maximum": 4294967295,
+          "queryTarget": "path",
+          "queryName": "ed",
+          "basic": true
+        }
+      }
+    },
+    "HttpUpgradeConfig": {
+      "label": "HTTPUpgrade",
+      "fields": {
+        "host": {
+          "label": "HTTP-хост",
+          "help": "При отсутствии используется SNI или адрес сервера.",
+          "type": "string",
+          "required": false,
+          "basic": true
+        },
+        "path": {
+          "label": "Путь",
+          "help": "Путь HTTP-запроса до сервера.",
+          "type": "string",
+          "required": false,
+          "basic": true
+        },
+        "headers": {
+          "label": "Заголовки",
+          "help": "Произвольные имена заголовков и их значения.",
+          "type": "map",
+          "required": false,
+          "values": {
+            "label": "Значение",
+            "help": "Целое число для int или строка для str.",
+            "type": "string",
+            "required": false
+          }
+        },
+        "earlyData": {
+          "label": "Ранние данные",
+          "help": "Число байтов ранних данных в запросе подключения.",
+          "type": "integer",
+          "required": false,
+          "minimum": 0,
+          "maximum": 4294967295,
+          "queryTarget": "path",
+          "queryName": "ed",
+          "basic": true
+        }
+      }
+    },
+    "SplitHTTPConfig": {
+      "label": "XHTTP",
+      "fields": {
+        "host": {
+          "label": "HTTP-хост",
+          "help": "При отсутствии используется SNI или адрес сервера.",
+          "type": "string",
+          "required": false,
+          "basic": true
+        },
+        "path": {
+          "label": "Путь",
+          "help": "Путь HTTP-запроса до сервера.",
+          "type": "string",
+          "required": false,
+          "basic": true
+        },
+        "mode": {
+          "label": "Режим",
+          "help": "auto, отдельные пакеты вверх или непрерывный поток.",
+          "type": "string",
+          "required": false,
+          "enum": [
+            "auto",
+            "packet-up",
+            "stream-up",
+            "stream-one"
+          ],
+          "basic": true
+        },
+        "headers": {
+          "label": "Заголовки",
+          "help": "Произвольные имена заголовков и их значения.",
+          "type": "map",
+          "required": false,
+          "values": {
+            "label": "Значение",
+            "help": "Целое число для int или строка для str.",
+            "type": "string",
+            "required": false
+          }
+        },
+        "xPaddingBytes": {
+          "label": "Размер заполнения",
+          "help": "Диапазон длины заполнения в байтах; минимум больше нуля.",
+          "type": "integerRange",
+          "required": false
+        },
+        "xPaddingObfsMode": {
+          "label": "Обфускация заполнения",
+          "help": "Применять заданные способ и расположение заполнения.",
+          "type": "boolean",
+          "required": false
+        },
+        "xPaddingKey": {
+          "label": "Ключ заполнения",
+          "help": "Имя ключа заполнения в запросе или cookie.",
+          "type": "string",
+          "required": false
+        },
+        "xPaddingHeader": {
+          "label": "Заголовок заполнения",
+          "help": "Имя HTTP-заголовка с заполнением.",
+          "type": "string",
+          "required": false
+        },
+        "xPaddingPlacement": {
+          "label": "Расположение заполнения",
+          "help": "Где передавать заполнение: cookie, заголовок или запрос.",
+          "type": "string",
+          "required": false,
+          "enum": [
+            "cookie",
+            "header",
+            "query",
+            "queryInHeader"
+          ]
+        },
+        "xPaddingMethod": {
+          "label": "Способ заполнения",
+          "help": "Повторять x или использовать случайный токен.",
+          "type": "string",
+          "required": false,
+          "enum": [
+            "repeat-x",
+            "tokenish"
+          ]
+        },
+        "uplinkHTTPMethod": {
+          "label": "Метод отправки",
+          "help": "HTTP-метод; GET доступен только в packet-up.",
+          "type": "string",
+          "required": false
+        },
+        "sessionIDPlacement": {
+          "label": "Расположение сессии",
+          "help": "Где передавать идентификатор сессии.",
+          "type": "string",
+          "required": false,
+          "enum": [
+            "path",
+            "cookie",
+            "header",
+            "query"
+          ]
+        },
+        "sessionIDKey": {
+          "label": "Ключ сессии",
+          "help": "Имя ключа идентификатора сессии.",
+          "type": "string",
+          "required": false
+        },
+        "seqPlacement": {
+          "label": "Расположение номера",
+          "help": "Где передавать порядковый номер пакета.",
+          "type": "string",
+          "required": false,
+          "enum": [
+            "path",
+            "cookie",
+            "header",
+            "query"
+          ]
+        },
+        "seqKey": {
+          "label": "Ключ номера",
+          "help": "Имя ключа порядкового номера.",
+          "type": "string",
+          "required": false
+        },
+        "uplinkDataPlacement": {
+          "label": "Расположение данных",
+          "help": "cookie и header доступны только в packet-up.",
+          "type": "string",
+          "required": false,
+          "enum": [
+            "auto",
+            "body",
+            "cookie",
+            "header"
+          ]
+        },
+        "uplinkDataKey": {
+          "label": "Ключ данных",
+          "help": "Имя заголовка или cookie с данными.",
+          "type": "string",
+          "required": false
+        },
+        "uplinkChunkSize": {
+          "label": "Размер блока данных",
+          "help": "Диапазон размера блока в байтах; минимум ограничен 64.",
+          "type": "integerRange",
+          "required": false
+        },
+        "noGRPCHeader": {
+          "label": "Без заголовка gRPC",
+          "help": "Не добавлять тип содержимого gRPC к исходящему потоку.",
+          "type": "boolean",
+          "required": false
+        },
+        "scMaxEachPostBytes": {
+          "label": "Размер POST",
+          "help": "Диапазон максимального размера POST в байтах.",
+          "type": "integerRange",
+          "required": false
+        },
+        "scMinPostsIntervalMs": {
+          "label": "Интервал POST",
+          "help": "Диапазон минимального интервала POST в миллисекундах.",
+          "type": "integerRange",
+          "required": false
+        },
+        "xmux": {
+          "label": "Мультиплексирование XHTTP",
+          "help": "Повторное использование HTTP-соединений XHTTP.",
+          "type": "object",
+          "required": false,
+          "ref": "XmuxConfig"
+        },
+        "downloadSettings": {
+          "label": "Транспорт скачивания",
+          "help": "Отдельные XHTTP-параметры скачивания; несовместимы со stream-one.",
+          "type": "object",
+          "required": false,
+          "ref": "StreamConfig",
+          "when": {
+            "key": "mode",
+            "notPrefix": "stream-one"
+          }
+        },
+        "extra": {
+          "label": "Дополнительные настройки",
+          "help": "Заменяет дополнительные поля XHTTP; host, path и mode остаются внешними.",
+          "type": "object",
+          "required": false,
+          "ref": "XHTTPExtra"
+        }
+      },
+      "constraints": [
+        {
+          "rule": "xhttpModes",
+          "message": "GET и cookie/header требуют packet-up; stream-one несовместим с downloadSettings."
+        }
+      ]
+    },
+    "XmuxConfig": {
+      "label": "Мультиплексирование XHTTP",
+      "fields": {
+        "maxConcurrency": {
+          "label": "Параллельные запросы",
+          "help": "Диапазон числа запросов; конфликтует с maxConnections.",
+          "type": "integerRange",
+          "required": false
+        },
+        "maxConnections": {
+          "label": "Число соединений",
+          "help": "Диапазон числа соединений; конфликтует с maxConcurrency.",
+          "type": "integerRange",
+          "required": false
+        },
+        "cMaxReuseTimes": {
+          "label": "Повторные использования",
+          "help": "Диапазон повторных использований соединения.",
+          "type": "integerRange",
+          "required": false
+        },
+        "hMaxRequestTimes": {
+          "label": "Запросов на соединение",
+          "help": "Диапазон числа запросов до смены соединения.",
+          "type": "integerRange",
+          "required": false
+        },
+        "hMaxReusableSecs": {
+          "label": "Время жизни соединения",
+          "help": "Диапазон времени использования соединения в секундах.",
+          "type": "integerRange",
+          "required": false
+        },
+        "hKeepAlivePeriod": {
+          "label": "Период keep-alive",
+          "help": "Период HTTP keep-alive в секундах; отрицательное значение отключает его.",
+          "type": "integer",
+          "required": false,
+          "minimum": -9223372036854775808,
+          "maximum": 9223372036854775807
+        }
+      },
+      "constraints": [
+        {
+          "rule": "mutuallyExclusivePositive",
+          "fields": [
+            "maxConcurrency",
+            "maxConnections"
+          ],
+          "message": "Выбери maxConcurrency или maxConnections."
+        }
+      ]
+    },
+    "UdpHop": {
+      "label": "Смена портов UDP",
+      "fields": {
+        "mode": {
+          "label": "Режим смены адреса",
+          "help": "Один режим или несколько через запятую: intervalLocal, intervalRemote, perConnRemote.",
+          "type": "string",
+          "required": true,
+          "default": "intervalRemote"
+        },
+        "remotePorts": {
+          "label": "Удалённые порты",
+          "help": "Одиночные порты и диапазоны от 1 до 65535.",
+          "type": "portRanges",
+          "required": false
+        },
+        "interval": {
+          "label": "Интервал смены портов",
+          "help": "Интервал в секундах; 0 — 30 секунд, иначе минимум 5.",
+          "type": "integerRange",
+          "required": false
+        }
+      }
+    },
+    "HysteriaConfig": {
+      "label": "Hysteria 2",
+      "fields": {
+        "version": {
+          "label": "Версия",
+          "help": "Для Hysteria поддерживается только версия 2.",
+          "type": "integer",
+          "required": true,
+          "enum": [
+            2
+          ],
+          "minimum": -2147483648,
+          "maximum": 2147483647,
+          "default": 2
+        },
+        "auth": {
+          "label": "Пароль авторизации",
+          "help": "Строка авторизации на сервере Hysteria 2.",
+          "type": "string",
+          "required": false,
+          "basic": true
+        }
+      }
+    },
+    "TLSCertConfig": {
+      "label": "Сертификат доверия",
+      "fields": {
+        "certificateFile": {
+          "label": "Файл сертификата",
+          "help": "Путь к PEM-файлу; имеет приоритет над введённым сертификатом.",
+          "type": "string",
+          "required": false
+        },
+        "certificate": {
+          "label": "Сертификат PEM",
+          "help": "PEM-сертификат доверия вместе со строками BEGIN и END.",
+          "type": "string",
+          "required": false,
+          "serialize": "pemLines",
+          "multiline": true
+        }
+      },
+      "constraints": [
+        {
+          "rule": "anyNonEmpty",
+          "fields": [
+            "certificateFile",
+            "certificate"
+          ],
+          "message": "Добавь файл сертификата или строки PEM."
+        }
+      ]
+    },
+    "QuicParamsConfig": {
+      "label": "Параметры QUIC",
+      "fields": {
+        "congestion": {
+          "label": "Контроль перегрузки",
+          "help": "Настройка «Контроль перегрузки» для этого соединения.",
+          "type": "string",
+          "required": false,
+          "enum": [
+            "",
+            "brutal",
+            "reno",
+            "bbr",
+            "force-brutal"
+          ]
+        },
+        "debug": {
+          "label": "Диагностика QUIC",
+          "help": "Настройка «Диагностика QUIC» для этого соединения.",
+          "type": "boolean",
+          "required": false
+        },
+        "brutalUp": {
+          "label": "Скорость Brutal вверх",
+          "help": "Скорость вверх, например 10 mbps; ненулевая не меньше 512 kbps.",
+          "type": "string",
+          "required": false
+        },
+        "brutalDown": {
+          "label": "Скорость Brutal вниз",
+          "help": "Скорость вниз, например 10 mbps; ненулевая не меньше 512 kbps.",
+          "type": "string",
+          "required": false
+        },
+        "initStreamReceiveWindow": {
+          "label": "Начальное окно потока",
+          "help": "Начальное окно потока в байтах: ноль либо минимум 16384.",
+          "type": "integer",
+          "required": false,
+          "minimum": 0,
+          "maximum": 9223372036854775807
+        },
+        "maxStreamReceiveWindow": {
+          "label": "Максимальное окно потока",
+          "help": "Максимальное окно потока в байтах: ноль либо минимум 16384.",
+          "type": "integer",
+          "required": false,
+          "minimum": 0,
+          "maximum": 9223372036854775807
+        },
+        "initConnectionReceiveWindow": {
+          "label": "Начальное окно соединения",
+          "help": "Начальное окно соединения в байтах: ноль либо минимум 16384.",
+          "type": "integer",
+          "required": false,
+          "minimum": 0,
+          "maximum": 9223372036854775807
+        },
+        "maxConnectionReceiveWindow": {
+          "label": "Максимальное окно соединения",
+          "help": "Максимальное окно соединения в байтах: ноль либо минимум 16384.",
+          "type": "integer",
+          "required": false,
+          "minimum": 0,
+          "maximum": 9223372036854775807
+        },
+        "maxIdleTimeout": {
+          "label": "Тайм-аут простоя QUIC",
+          "help": "Простой QUIC в секундах: ноль либо от 4 до 120.",
+          "type": "integer",
+          "required": false,
+          "minimum": -9223372036854775808,
+          "maximum": 9223372036854775807
+        },
+        "keepAlivePeriod": {
+          "label": "Период пинга QUIC",
+          "help": "Пинг QUIC в секундах: ноль либо от 2 до 60.",
+          "type": "integer",
+          "required": false,
+          "minimum": -9223372036854775808,
+          "maximum": 9223372036854775807
+        },
+        "disablePathMTUDiscovery": {
+          "label": "Отключить поиск MTU",
+          "help": "Настройка «Отключить поиск MTU» для этого соединения.",
+          "type": "boolean",
+          "required": false
+        },
+        "maxIncomingStreams": {
+          "label": "Входящие потоки QUIC",
+          "help": "Входящие потоки: ноль либо минимум 8; применяется XHTTP.",
+          "type": "integer",
+          "required": false,
+          "minimum": -9223372036854775808,
+          "maximum": 9223372036854775807
+        }
+      }
+    },
+    "TLSConfig": {
+      "label": "TLS",
+      "fields": {
+        "certificates": {
+          "label": "Сертификаты доверия",
+          "help": "Дополнительные сертификаты для проверки сервера.",
+          "type": "array",
+          "required": false,
+          "items": {
+            "label": "Значение",
+            "help": "Целое число для int или строка для str.",
+            "type": "object",
+            "required": false,
+            "ref": "TLSCertConfig"
+          }
+        },
+        "serverName": {
+          "label": "Имя сервера (SNI)",
+          "help": "Имя для SNI и проверки сертификата.",
+          "type": "string",
+          "required": false,
+          "basic": true
+        },
+        "alpn": {
+          "label": "Протоколы ALPN",
+          "help": "Приоритет протоколов; fromMitm допускается единственным элементом.",
+          "type": "array",
+          "required": false,
+          "items": {
+            "label": "Значение",
+            "help": "Целое число для int или строка для str.",
+            "type": "string",
+            "required": false
+          },
+          "basic": true
+        },
+        "enableSessionResumption": {
+          "label": "Возобновление TLS-сессии",
+          "help": "Настройка «Возобновление TLS-сессии» для этого соединения.",
+          "type": "boolean",
+          "required": false
+        },
+        "disableSystemRoot": {
+          "label": "Отключить системные CA",
+          "help": "Доверять только добавленным сертификатам.",
+          "type": "boolean",
+          "required": false
+        },
+        "minVersion": {
+          "label": "Минимальная версия TLS",
+          "help": "Настройка «Минимальная версия TLS» для этого соединения.",
+          "type": "string",
+          "required": false,
+          "enum": [
+            "",
+            "1.0",
+            "1.1",
+            "1.2",
+            "1.3"
+          ]
+        },
+        "maxVersion": {
+          "label": "Максимальная версия TLS",
+          "help": "Настройка «Максимальная версия TLS» для этого соединения.",
+          "type": "string",
+          "required": false,
+          "enum": [
+            "",
+            "1.0",
+            "1.1",
+            "1.2",
+            "1.3"
+          ]
+        },
+        "cipherSuites": {
+          "label": "Наборы шифров",
+          "help": "Приоритет наборов шифров TLS.",
+          "type": "array",
+          "required": false,
+          "serialize": "colonSeparated",
+          "items": {
+            "label": "Значение",
+            "help": "Приоритет наборов шифров TLS.",
+            "type": "string",
+            "required": true
+          }
+        },
+        "fingerprint": {
+          "label": "TLS-отпечаток",
+          "help": "Отпечаток ClientHello; по умолчанию chrome.",
+          "type": "string",
+          "required": false,
+          "enum": [
+            "360",
+            "android",
+            "chrome",
+            "edge",
+            "firefox",
+            "hello360_11_0",
+            "hello360_7_5",
+            "hello360_auto",
+            "helloandroid_11_okhttp",
+            "hellochrome_100",
+            "hellochrome_100_psk",
+            "hellochrome_102",
+            "hellochrome_106_shuffle",
+            "hellochrome_112_psk_shuf",
+            "hellochrome_114_padding_psk_shuf",
+            "hellochrome_115_pq",
+            "hellochrome_115_pq_psk",
+            "hellochrome_120",
+            "hellochrome_120_pq",
+            "hellochrome_131",
+            "hellochrome_133",
+            "hellochrome_58",
+            "hellochrome_62",
+            "hellochrome_70",
+            "hellochrome_72",
+            "hellochrome_83",
+            "hellochrome_87",
+            "hellochrome_96",
+            "hellochrome_auto",
+            "helloedge_106",
+            "helloedge_85",
+            "helloedge_auto",
+            "hellofirefox_102",
+            "hellofirefox_105",
+            "hellofirefox_120",
+            "hellofirefox_148",
+            "hellofirefox_55",
+            "hellofirefox_56",
+            "hellofirefox_63",
+            "hellofirefox_65",
+            "hellofirefox_99",
+            "hellofirefox_auto",
+            "hellogolang",
+            "helloios_11_1",
+            "helloios_12_1",
+            "helloios_13",
+            "helloios_14",
+            "helloios_auto",
+            "helloqq_11_1",
+            "helloqq_auto",
+            "hellorandomized",
+            "hellorandomizedalpn",
+            "hellorandomizednoalpn",
+            "hellosafari_16_0",
+            "hellosafari_26_3",
+            "hellosafari_auto",
+            "ios",
+            "qq",
+            "random",
+            "randomized",
+            "randomizednoalpn",
+            "safari",
+            "unsafe"
+          ],
+          "basic": true,
+          "default": "chrome"
+        },
+        "curvePreferences": {
+          "label": "Криптографические кривые",
+          "help": "Приоритет криптографических кривых TLS.",
+          "type": "array",
+          "required": false,
+          "items": {
+            "label": "Значение",
+            "help": "Целое число для int или строка для str.",
+            "type": "string",
+            "required": false
+          }
+        },
+        "masterKeyLog": {
+          "label": "Файл ключей сессии",
+          "help": "Локальный файл ключей сессий для диагностики.",
+          "type": "string",
+          "required": false
+        },
+        "pinnedPeerCertSha256": {
+          "label": "SHA-256 сертификатов",
+          "help": "Каждый SHA-256 содержит 32 байта в HEX.",
+          "type": "array",
+          "required": false,
+          "serialize": "commaSeparated",
+          "items": {
+            "label": "Значение",
+            "help": "Каждый SHA-256 содержит 32 байта в HEX.",
+            "type": "string",
+            "required": true
+          }
+        },
+        "verifyPeerCertByName": {
+          "label": "Имена сертификата",
+          "help": "Допустимые DNS-имена сертификата сервера.",
+          "type": "array",
+          "required": false,
+          "serialize": "commaSeparated",
+          "items": {
+            "label": "Значение",
+            "help": "Допустимые DNS-имена сертификата сервера.",
+            "type": "string",
+            "required": true
+          }
+        },
+        "echConfigList": {
+          "label": "Конфигурация ECH",
+          "help": "Base64-конфигурация ECH либо DNS URL; можно домен+URL.",
+          "type": "string",
+          "required": false
+        },
+        "echSockopt": {
+          "label": "Сокет ECH",
+          "help": "Параметры сокета для DNS-запросов ECH.",
+          "type": "object",
+          "required": false,
+          "ref": "SocketConfig"
+        }
+      }
+    },
+    "REALITYConfig": {
+      "label": "REALITY",
+      "fields": {
+        "masterKeyLog": {
+          "label": "Файл ключей сессии",
+          "help": "Локальный файл ключей сессий для диагностики.",
+          "type": "string",
+          "required": false
+        },
+        "show": {
+          "label": "Диагностика REALITY",
+          "help": "Настройка «Диагностика REALITY» для этого соединения.",
+          "type": "boolean",
+          "required": false
+        },
+        "fingerprint": {
+          "label": "TLS-отпечаток",
+          "help": "Отпечаток ClientHello; по умолчанию chrome.",
+          "type": "string",
+          "required": false,
+          "enum": [
+            "360",
+            "android",
+            "chrome",
+            "edge",
+            "firefox",
+            "hello360_11_0",
+            "hello360_7_5",
+            "hello360_auto",
+            "helloandroid_11_okhttp",
+            "hellochrome_100",
+            "hellochrome_100_psk",
+            "hellochrome_102",
+            "hellochrome_106_shuffle",
+            "hellochrome_112_psk_shuf",
+            "hellochrome_114_padding_psk_shuf",
+            "hellochrome_115_pq",
+            "hellochrome_115_pq_psk",
+            "hellochrome_120",
+            "hellochrome_120_pq",
+            "hellochrome_131",
+            "hellochrome_133",
+            "hellochrome_58",
+            "hellochrome_62",
+            "hellochrome_70",
+            "hellochrome_72",
+            "hellochrome_83",
+            "hellochrome_87",
+            "hellochrome_96",
+            "hellochrome_auto",
+            "helloedge_106",
+            "helloedge_85",
+            "helloedge_auto",
+            "hellofirefox_102",
+            "hellofirefox_105",
+            "hellofirefox_120",
+            "hellofirefox_148",
+            "hellofirefox_55",
+            "hellofirefox_56",
+            "hellofirefox_63",
+            "hellofirefox_65",
+            "hellofirefox_99",
+            "hellofirefox_auto",
+            "helloios_11_1",
+            "helloios_12_1",
+            "helloios_13",
+            "helloios_14",
+            "helloios_auto",
+            "helloqq_11_1",
+            "helloqq_auto",
+            "hellorandomized",
+            "hellorandomizedalpn",
+            "hellorandomizednoalpn",
+            "hellosafari_16_0",
+            "hellosafari_26_3",
+            "hellosafari_auto",
+            "ios",
+            "qq",
+            "random",
+            "randomized",
+            "randomizednoalpn",
+            "safari"
+          ],
+          "basic": true,
+          "default": "chrome"
+        },
+        "serverName": {
+          "label": "Имя сервера (SNI)",
+          "help": "Имя для SNI и проверки сертификата.",
+          "type": "string",
+          "required": false,
+          "basic": true
+        },
+        "password": {
+          "label": "Пароль",
+          "help": "Ключ REALITY: Base64url без padding, ровно 32 байта.",
+          "type": "string",
+          "required": true,
+          "basic": true
+        },
+        "shortId": {
+          "label": "Короткий ID",
+          "help": "Чётное число HEX-символов, не более 16; пустой ID допустим.",
+          "type": "string",
+          "required": false,
+          "basic": true
+        },
+        "mldsa65Verify": {
+          "label": "Ключ ML-DSA-65",
+          "help": "Ключ ML-DSA-65: Base64url, ровно 1952 байта.",
+          "type": "string",
+          "required": false
+        },
+        "spiderX": {
+          "label": "Путь обходчика",
+          "help": "Путь обходчика, начинающийся с /.",
+          "type": "string",
+          "required": false,
+          "basic": true
+        },
+        "spiderPadding": {
+          "label": "Заполнение обходчика",
+          "help": "Диапазон параметра обходчика REALITY.",
+          "type": "integerRange",
+          "required": false,
+          "minimum": 0,
+          "queryTarget": "spiderX",
+          "queryName": "p"
+        },
+        "spiderConcurrency": {
+          "label": "Параллельность обходчика",
+          "help": "Диапазон параметра обходчика REALITY.",
+          "type": "integerRange",
+          "required": false,
+          "minimum": 0,
+          "queryTarget": "spiderX",
+          "queryName": "c"
+        },
+        "spiderTimes": {
+          "label": "Повторы обходчика",
+          "help": "Диапазон параметра обходчика REALITY.",
+          "type": "integerRange",
+          "required": false,
+          "minimum": 0,
+          "queryTarget": "spiderX",
+          "queryName": "t"
+        },
+        "spiderInterval": {
+          "label": "Интервал обходчика",
+          "help": "Диапазон параметра обходчика REALITY.",
+          "type": "integerRange",
+          "required": false,
+          "minimum": 0,
+          "queryTarget": "spiderX",
+          "queryName": "i"
+        },
+        "spiderReturn": {
+          "label": "Возврат обходчика",
+          "help": "Диапазон параметра обходчика REALITY.",
+          "type": "integerRange",
+          "required": false,
+          "minimum": 0,
+          "queryTarget": "spiderX",
+          "queryName": "r"
+        }
+      }
+    },
+    "CustomSockoptConfig": {
+      "label": "Системный параметр сокета",
+      "fields": {
+        "system": {
+          "label": "Операционная система",
+          "help": "Пусто — любая система; иначе точное имя, например android.",
+          "type": "string",
+          "required": false
+        },
+        "network": {
+          "label": "Транспорт",
+          "help": "Способ передачи данных до сервера.",
+          "type": "string",
+          "required": false
+        },
+        "level": {
+          "label": "Уровень параметра",
+          "help": "Числовой уровень параметра; по умолчанию TCP, 6.",
+          "type": "integer",
+          "required": false,
+          "serialize": "decimalString",
+          "minimum": 0,
+          "maximum": 2147483647
+        },
+        "opt": {
+          "label": "Номер параметра",
+          "help": "Числовой идентификатор системного параметра.",
+          "type": "integer",
+          "required": true,
+          "serialize": "decimalString",
+          "minimum": 0,
+          "maximum": 2147483647
+        },
+        "value": {
+          "label": "Значение",
+          "help": "Целое число для int или строка для str.",
+          "type": "union",
+          "required": true,
+          "selector": "type",
+          "variants": [
+            {
+              "label": "Число",
+              "help": "Целое значение системного параметра.",
+              "type": "integer",
+              "required": true,
+              "minimum": -2147483648,
+              "maximum": 2147483647,
+              "serialize": "decimalString",
+              "when": {
+                "key": "type",
+                "values": [
+                  "int"
+                ]
+              }
+            },
+            {
+              "label": "Строка",
+              "help": "Строковое значение системного параметра.",
+              "type": "string",
+              "required": true,
+              "when": {
+                "key": "type",
+                "values": [
+                  "str"
+                ]
+              }
+            }
+          ]
+        },
+        "type": {
+          "label": "Тип",
+          "help": "Настройка «Тип» для этого соединения.",
+          "type": "string",
+          "required": true,
+          "enum": [
+            "int",
+            "str"
+          ]
+        }
+      }
+    },
+    "HappyEyeballsConfig": {
+      "label": "Параллельные подключения",
+      "fields": {
+        "prioritizeIPv6": {
+          "label": "Сначала IPv6",
+          "help": "Настройка «Сначала IPv6» для этого соединения.",
+          "type": "boolean",
+          "required": false
+        },
+        "tryDelayMs": {
+          "label": "Задержка попыток",
+          "help": "Задержка между попытками в миллисекундах.",
+          "type": "integer",
+          "required": false,
+          "minimum": 0,
+          "maximum": 9223372036854775807
+        },
+        "interleave": {
+          "label": "Чередование адресов",
+          "help": "Число адресов перед сменой семьи IPv4/IPv6.",
+          "type": "integer",
+          "required": false,
+          "minimum": 0,
+          "maximum": 4294967295
+        },
+        "maxConcurrentTry": {
+          "label": "Число попыток",
+          "help": "Максимум одновременных попыток подключения.",
+          "type": "integer",
+          "required": false,
+          "minimum": 0,
+          "maximum": 4294967295
+        }
+      }
+    },
+    "SocketConfig": {
+      "label": "Параметры сокета",
+      "fields": {
+        "mark": {
+          "label": "Метка сокета",
+          "help": "Настройка «Метка сокета» для этого соединения.",
+          "type": "integer",
+          "required": false,
+          "minimum": -2147483648,
+          "maximum": 2147483647
+        },
+        "tcpFastOpen": {
+          "label": "TCP Fast Open",
+          "help": "Переключатель или числовая настройка TCP Fast Open.",
+          "type": "union",
+          "required": false,
+          "variants": [
+            {
+              "label": "Значение",
+              "help": "Целое число для int или строка для str.",
+              "type": "boolean",
+              "required": false
+            },
+            {
+              "label": "Значение",
+              "help": "Целое число для int или строка для str.",
+              "type": "integer",
+              "required": false
+            }
+          ]
+        },
+        "tcpKeepAliveInterval": {
+          "label": "Интервал TCP keep-alive",
+          "help": "Интервал TCP keep-alive в секундах.",
+          "type": "integer",
+          "required": false,
+          "minimum": -2147483648,
+          "maximum": 2147483647
+        },
+        "tcpKeepAliveIdle": {
+          "label": "Ожидание TCP keep-alive",
+          "help": "Простой перед первым TCP keep-alive в секундах.",
+          "type": "integer",
+          "required": false,
+          "minimum": -2147483648,
+          "maximum": 2147483647
+        },
+        "tcpCongestion": {
+          "label": "Алгоритм TCP",
+          "help": "Алгоритм системы, например cubic или bbr.",
+          "type": "string",
+          "required": false
+        },
+        "tcpWindowClamp": {
+          "label": "Ограничение окна TCP",
+          "help": "Верхняя граница окна TCP в байтах.",
+          "type": "integer",
+          "required": false,
+          "minimum": -2147483648,
+          "maximum": 2147483647
+        },
+        "tcpMaxSeg": {
+          "label": "Максимальный сегмент TCP",
+          "help": "Максимальный сегмент TCP в байтах.",
+          "type": "integer",
+          "required": false,
+          "minimum": -2147483648,
+          "maximum": 2147483647
+        },
+        "penetrate": {
+          "label": "Передать сокет скачиванию",
+          "help": "Передать параметры основного сокета скачиванию XHTTP.",
+          "type": "boolean",
+          "required": false
+        },
+        "tcpUserTimeout": {
+          "label": "Тайм-аут TCP",
+          "help": "Тайм-аут неподтверждённых данных в миллисекундах.",
+          "type": "integer",
+          "required": false,
+          "minimum": -2147483648,
+          "maximum": 2147483647
+        },
+        "interface": {
+          "label": "Исходящий интерфейс",
+          "help": "Имя сетевого интерфейса для исходящего подключения.",
+          "type": "string",
+          "required": false
+        },
+        "tcpMptcp": {
+          "label": "Многопутевой TCP",
+          "help": "Настройка «Многопутевой TCP» для этого соединения.",
+          "type": "boolean",
+          "required": false
+        },
+        "customSockopt": {
+          "label": "Системные параметры сокета",
+          "help": "Произвольные типизированные параметры системного сокета.",
+          "type": "array",
+          "required": false,
+          "items": {
+            "label": "Значение",
+            "help": "Целое число для int или строка для str.",
+            "type": "object",
+            "required": false,
+            "ref": "CustomSockoptConfig"
+          }
+        },
+        "addressPortStrategy": {
+          "label": "Поиск адреса и порта",
+          "help": "Поиск адреса и порта через записи DNS SRV или TXT.",
+          "type": "string",
+          "required": false,
+          "enum": [
+            "None",
+            "SrvPortOnly",
+            "SrvAddressOnly",
+            "SrvPortAndAddress",
+            "TxtPortOnly",
+            "TxtAddressOnly",
+            "TxtPortAndAddress"
+          ]
+        },
+        "happyEyeballs": {
+          "label": "Параллельные подключения",
+          "help": "Настройка «Параллельные подключения» для этого соединения.",
+          "type": "object",
+          "required": false,
+          "ref": "HappyEyeballsConfig"
+        }
+      }
+    },
+    "TCPItem": {
+      "label": "Элемент TCP-заголовка",
+      "fields": {
+        "delay": {
+          "label": "Задержка",
+          "help": "Диапазон задержки в миллисекундах.",
+          "type": "integerRange",
+          "required": false
+        },
+        "rand": {
+          "label": "Случайные байты",
+          "help": "Число случайных байтов; не задавай вместе с содержимым пакета.",
+          "type": "integer",
+          "required": false,
+          "minimum": -2147483648,
+          "maximum": 2147483647
+        },
+        "randRange": {
+          "label": "Диапазон байтов",
+          "help": "Допустимые значения байта от 0 до 255.",
+          "type": "integerRange",
+          "required": false
+        },
+        "type": {
+          "label": "Тип",
+          "help": "Настройка «Тип» для этого соединения.",
+          "type": "string",
+          "required": false,
+          "enum": [
+            "array",
+            "str",
+            "hex",
+            "base64"
+          ]
+        },
+        "packet": {
+          "label": "Содержимое пакета",
+          "help": "Байты, текст, HEX или Base64 согласно выбранному типу.",
+          "type": "union",
+          "required": false,
+          "selector": "type",
+          "variants": [
+            {
+              "label": "Байты",
+              "help": "Каждый байт от 0 до 255.",
+              "type": "array",
+              "required": false,
+              "when": {
+                "key": "type",
+                "values": [
+                  "array"
+                ]
+              },
+              "items": {
+                "label": "Байт",
+                "help": "Целое число от 0 до 255.",
+                "type": "integer",
+                "required": true,
+                "minimum": 0,
+                "maximum": 255
+              }
+            },
+            {
+              "label": "Строка",
+              "help": "Текст, HEX или Base64 согласно выбранному типу.",
+              "type": "string",
+              "required": false,
+              "when": {
+                "key": "type",
+                "values": [
+                  "str",
+                  "hex",
+                  "base64"
+                ]
+              }
+            }
+          ]
+        }
+      }
+    },
+    "HeaderCustomTCP": {
+      "label": "Заголовок TCP",
+      "fields": {
+        "clients": {
+          "label": "Последовательности клиента",
+          "help": "Последовательности пакетов, отправляемых клиентом.",
+          "type": "array",
+          "required": false,
+          "items": {
+            "label": "Значение",
+            "help": "Целое число для int или строка для str.",
+            "type": "array",
+            "required": false,
+            "items": {
+              "label": "Значение",
+              "help": "Целое число для int или строка для str.",
+              "type": "object",
+              "required": false,
+              "ref": "TCPItem"
+            }
+          }
+        },
+        "servers": {
+          "label": "Последовательности сервера",
+          "help": "Ожидаемые последовательности пакетов от сервера.",
+          "type": "array",
+          "required": false,
+          "items": {
+            "label": "Значение",
+            "help": "Целое число для int или строка для str.",
+            "type": "array",
+            "required": false,
+            "items": {
+              "label": "Значение",
+              "help": "Целое число для int или строка для str.",
+              "type": "object",
+              "required": false,
+              "ref": "TCPItem"
+            }
+          }
+        }
+      }
+    },
+    "FragmentMask": {
+      "label": "Фрагментация",
+      "fields": {
+        "packets": {
+          "label": "Фрагментируемые пакеты",
+          "help": "tlshello, пусто для всех пакетов либо числовой диапазон.",
+          "type": "string",
+          "required": false
+        },
+        "length": {
+          "label": "Размер фрагмента",
+          "help": "Диапазон размера фрагментов в байтах; минимум больше нуля.",
+          "type": "integerRange",
+          "required": true,
+          "minimum": 1
+        },
+        "delay": {
+          "label": "Задержка",
+          "help": "Диапазон задержки в миллисекундах.",
+          "type": "integerRange",
+          "required": false
+        },
+        "maxSplit": {
+          "label": "Число частей",
+          "help": "Диапазон максимального числа частей.",
+          "type": "integerRange",
+          "required": false
+        }
+      }
+    },
+    "NoiseItem": {
+      "label": "Шумовой пакет",
+      "fields": {
+        "rand": {
+          "label": "Случайные байты",
+          "help": "Число случайных байтов; не задавай вместе с содержимым пакета.",
+          "type": "integerRange",
+          "required": false
+        },
+        "randRange": {
+          "label": "Диапазон байтов",
+          "help": "Допустимые значения байта от 0 до 255.",
+          "type": "integerRange",
+          "required": false
+        },
+        "type": {
+          "label": "Тип",
+          "help": "Настройка «Тип» для этого соединения.",
+          "type": "string",
+          "required": false,
+          "enum": [
+            "array",
+            "str",
+            "hex",
+            "base64"
+          ]
+        },
+        "packet": {
+          "label": "Содержимое пакета",
+          "help": "Байты, текст, HEX или Base64 согласно выбранному типу.",
+          "type": "union",
+          "required": false,
+          "selector": "type",
+          "variants": [
+            {
+              "label": "Байты",
+              "help": "Каждый байт от 0 до 255.",
+              "type": "array",
+              "required": false,
+              "when": {
+                "key": "type",
+                "values": [
+                  "array"
+                ]
+              },
+              "items": {
+                "label": "Байт",
+                "help": "Целое число от 0 до 255.",
+                "type": "integer",
+                "required": true,
+                "minimum": 0,
+                "maximum": 255
+              }
+            },
+            {
+              "label": "Строка",
+              "help": "Текст, HEX или Base64 согласно выбранному типу.",
+              "type": "string",
+              "required": false,
+              "when": {
+                "key": "type",
+                "values": [
+                  "str",
+                  "hex",
+                  "base64"
+                ]
+              }
+            }
+          ]
+        },
+        "delay": {
+          "label": "Задержка",
+          "help": "Диапазон задержки в миллисекундах.",
+          "type": "integerRange",
+          "required": false
+        }
+      }
+    },
+    "NoiseMask": {
+      "label": "Шум UDP",
+      "fields": {
+        "reset": {
+          "label": "Период сброса",
+          "help": "Диапазон периода сброса шумовой последовательности.",
+          "type": "integerRange",
+          "required": false
+        },
+        "noise": {
+          "label": "Шумовые пакеты",
+          "help": "Последовательность шумовых UDP-пакетов.",
+          "type": "array",
+          "required": false,
+          "items": {
+            "label": "Значение",
+            "help": "Целое число для int или строка для str.",
+            "type": "object",
+            "required": false,
+            "ref": "NoiseItem"
+          }
+        }
+      }
+    },
+    "UDPItem": {
+      "label": "Элемент UDP-заголовка",
+      "fields": {
+        "rand": {
+          "label": "Случайные байты",
+          "help": "Число случайных байтов; не задавай вместе с содержимым пакета.",
+          "type": "integer",
+          "required": false,
+          "minimum": -2147483648,
+          "maximum": 2147483647
+        },
+        "randRange": {
+          "label": "Диапазон байтов",
+          "help": "Допустимые значения байта от 0 до 255.",
+          "type": "integerRange",
+          "required": false
+        },
+        "type": {
+          "label": "Тип",
+          "help": "Настройка «Тип» для этого соединения.",
+          "type": "string",
+          "required": false,
+          "enum": [
+            "array",
+            "str",
+            "hex",
+            "base64"
+          ]
+        },
+        "packet": {
+          "label": "Содержимое пакета",
+          "help": "Байты, текст, HEX или Base64 согласно выбранному типу.",
+          "type": "union",
+          "required": false,
+          "selector": "type",
+          "variants": [
+            {
+              "label": "Байты",
+              "help": "Каждый байт от 0 до 255.",
+              "type": "array",
+              "required": false,
+              "when": {
+                "key": "type",
+                "values": [
+                  "array"
+                ]
+              },
+              "items": {
+                "label": "Байт",
+                "help": "Целое число от 0 до 255.",
+                "type": "integer",
+                "required": true,
+                "minimum": 0,
+                "maximum": 255
+              }
+            },
+            {
+              "label": "Строка",
+              "help": "Текст, HEX или Base64 согласно выбранному типу.",
+              "type": "string",
+              "required": false,
+              "when": {
+                "key": "type",
+                "values": [
+                  "str",
+                  "hex",
+                  "base64"
+                ]
+              }
+            }
+          ]
+        }
+      }
+    },
+    "HeaderCustomUDP": {
+      "label": "Заголовок UDP",
+      "fields": {
+        "client": {
+          "label": "Пакеты клиента",
+          "help": "Пакеты заголовка, отправляемые клиентом.",
+          "type": "array",
+          "required": false,
+          "items": {
+            "label": "Значение",
+            "help": "Целое число для int или строка для str.",
+            "type": "object",
+            "required": false,
+            "ref": "UDPItem"
+          }
+        },
+        "server": {
+          "label": "Пакеты сервера",
+          "help": "Ожидаемые пакеты заголовка сервера.",
+          "type": "array",
+          "required": false,
+          "items": {
+            "label": "Значение",
+            "help": "Целое число для int или строка для str.",
+            "type": "object",
+            "required": false,
+            "ref": "UDPItem"
+          }
+        }
+      }
+    },
+    "Dns": {
+      "label": "Заголовок DNS",
+      "fields": {
+        "domain": {
+          "label": "Домен",
+          "help": "Настройка «Домен» для этого соединения.",
+          "type": "string",
+          "required": false
+        }
+      }
+    },
+    "Aes128Gcm": {
+      "label": "mKCP AES-128-GCM",
+      "fields": {
+        "password": {
+          "label": "Пароль",
+          "help": "Общий пароль маскировки клиента и сервера.",
+          "type": "string",
+          "required": false
+        }
+      }
+    },
+    "Salamander": {
+      "label": "Salamander",
+      "fields": {
+        "password": {
+          "label": "Пароль",
+          "help": "Общий пароль маскировки клиента и сервера.",
+          "type": "string",
+          "required": false
+        }
+      }
+    },
+    "Sudoku": {
+      "label": "Sudoku",
+      "fields": {
+        "password": {
+          "label": "Пароль",
+          "help": "Общий пароль маскировки клиента и сервера.",
+          "type": "string",
+          "required": false
+        },
+        "ascii": {
+          "label": "Режим символов",
+          "help": "Предпочесть печатные символы или равномерное кодирование.",
+          "type": "string",
+          "required": false,
+          "enum": [
+            "prefer_entropy",
+            "prefer_ascii"
+          ],
+          "default": "prefer_entropy"
+        },
+        "customTable": {
+          "label": "Таблица кодирования",
+          "help": "8 символов: ровно 2 x, 2 p и 4 v.",
+          "type": "string",
+          "required": false,
+          "when": {
+            "key": "ascii",
+            "values": [
+              "prefer_entropy"
+            ]
+          }
+        },
+        "customTables": {
+          "label": "Таблицы кодирования",
+          "help": "Несколько таблиц по 8 символов; список имеет приоритет над одной таблицей.",
+          "type": "array",
+          "required": false,
+          "items": {
+            "label": "Значение",
+            "help": "Целое число для int или строка для str.",
+            "type": "string",
+            "required": false
+          },
+          "when": {
+            "key": "ascii",
+            "values": [
+              "prefer_entropy"
+            ]
+          }
+        },
+        "paddingMin": {
+          "label": "Минимум заполнения",
+          "help": "Нижняя граница заполнения Sudoku от 0 до 100.",
+          "type": "integer",
+          "required": false,
+          "minimum": 0,
+          "maximum": 100
+        },
+        "paddingMax": {
+          "label": "Максимум заполнения",
+          "help": "Верхняя граница заполнения Sudoku от 0 до 100.",
+          "type": "integer",
+          "required": false,
+          "minimum": 0,
+          "maximum": 100
+        }
+      },
+      "constraints": [
+        {
+          "rule": "sudokuDimensions",
+          "message": "Таблица содержит 2 x, 2 p и 4 v; заполнение от 0 до 100."
+        }
+      ]
+    },
+    "Xdns": {
+      "label": "Туннель DNS",
+      "fields": {
+        "domain": {
+          "label": "Домен",
+          "help": "Настройка «Домен» для этого соединения.",
+          "type": "string",
+          "required": true
+        }
+      }
+    },
+    "Xicmp": {
+      "label": "Туннель ICMP",
+      "fields": {
+        "listenIp": {
+          "label": "Адрес ICMP",
+          "help": "Локальный адрес ICMP; по умолчанию 0.0.0.0.",
+          "type": "string",
+          "required": false
+        },
+        "id": {
+          "label": "ID ICMP",
+          "help": "Идентификатор ICMP от 0 до 65535.",
+          "type": "integer",
+          "required": false,
+          "minimum": 0,
+          "maximum": 65535
+        }
+      }
+    },
+    "FinalMask": {
+      "label": "Маскировка",
+      "fields": {
+        "tcp": {
+          "label": "Маски TCP",
+          "help": "Упорядоченные маски TCP-соединений.",
+          "type": "array",
+          "required": false,
+          "items": {
+            "label": "Маска TCP",
+            "help": "Параметры одного слоя маскировки.",
+            "type": "object",
+            "required": true,
+            "ref": "MaskTCP"
+          }
+        },
+        "udp": {
+          "label": "Маски UDP",
+          "help": "Упорядоченные маски UDP; Sudoku должен быть последним внутренним слоем.",
+          "type": "array",
+          "required": false,
+          "items": {
+            "label": "Маска UDP",
+            "help": "Параметры одного слоя маскировки.",
+            "type": "object",
+            "required": true,
+            "ref": "MaskUDP"
+          }
+        },
+        "quicParams": {
+          "label": "Параметры QUIC",
+          "help": "QUIC для Hysteria 2 и XHTTP/HTTP3.",
+          "type": "object",
+          "required": false,
+          "ref": "QuicParamsConfig"
+        }
+      }
+    },
+    "StreamConfig": {
+      "label": "Транспорт и защита",
+      "fields": {
+        "address": {
+          "label": "Адрес транспорта",
+          "help": "Необязательная замена адреса подключения.",
+          "type": "string",
+          "required": false
+        },
+        "port": {
+          "label": "Порт транспорта",
+          "help": "Необязательная замена порта подключения.",
+          "type": "integer",
+          "required": false,
+          "minimum": 1,
+          "maximum": 65535
+        },
+        "network": {
+          "label": "Транспорт",
+          "help": "Способ передачи данных до сервера.",
+          "type": "string",
+          "required": true,
+          "enum": [
+            "raw",
+            "xhttp",
+            "kcp",
+            "grpc",
+            "ws",
+            "httpupgrade",
+            "hysteria"
+          ],
+          "default": "raw"
+        },
+        "security": {
+          "label": "Защита",
+          "help": "TLS, REALITY или соединение без защиты.",
+          "type": "string",
+          "required": true,
+          "enum": [
+            "none",
+            "tls",
+            "reality"
+          ],
+          "default": "none"
+        },
+        "finalmask": {
+          "label": "Маскировка",
+          "help": "Настройка «Маскировка» для этого соединения.",
+          "type": "object",
+          "required": false,
+          "ref": "FinalMask"
+        },
+        "tlsSettings": {
+          "label": "TLS",
+          "help": "Настройка «TLS» для этого соединения.",
+          "type": "object",
+          "required": false,
+          "ref": "TLSConfig",
+          "when": {
+            "key": "security",
+            "values": [
+              "tls"
+            ]
+          },
+          "basic": true
+        },
+        "realitySettings": {
+          "label": "REALITY",
+          "help": "Настройка «REALITY» для этого соединения.",
+          "type": "object",
+          "required": true,
+          "ref": "REALITYConfig",
+          "when": {
+            "key": "security",
+            "values": [
+              "reality"
+            ]
+          },
+          "basic": true
+        },
+        "rawSettings": {
+          "label": "RAW / TCP",
+          "help": "Настройка «RAW / TCP» для этого соединения.",
+          "type": "object",
+          "required": false,
+          "ref": "TCPConfig",
+          "when": {
+            "key": "network",
+            "values": [
+              "raw"
+            ]
+          },
+          "basic": true
+        },
+        "xhttpSettings": {
+          "label": "XHTTP",
+          "help": "Настройка «XHTTP» для этого соединения.",
+          "type": "object",
+          "required": false,
+          "ref": "SplitHTTPConfig",
+          "when": {
+            "key": "network",
+            "values": [
+              "xhttp"
+            ]
+          },
+          "basic": true
+        },
+        "kcpSettings": {
+          "label": "mKCP",
+          "help": "Настройка «mKCP» для этого соединения.",
+          "type": "object",
+          "required": false,
+          "ref": "KCPConfig",
+          "when": {
+            "key": "network",
+            "values": [
+              "kcp"
+            ]
+          },
+          "basic": true
+        },
+        "grpcSettings": {
+          "label": "gRPC",
+          "help": "Настройка «gRPC» для этого соединения.",
+          "type": "object",
+          "required": false,
+          "ref": "GRPCConfig",
+          "when": {
+            "key": "network",
+            "values": [
+              "grpc"
+            ]
+          },
+          "basic": true
+        },
+        "wsSettings": {
+          "label": "WebSocket",
+          "help": "Настройка «WebSocket» для этого соединения.",
+          "type": "object",
+          "required": false,
+          "ref": "WebSocketConfig",
+          "when": {
+            "key": "network",
+            "values": [
+              "ws"
+            ]
+          },
+          "basic": true
+        },
+        "httpupgradeSettings": {
+          "label": "HTTPUpgrade",
+          "help": "Настройка «HTTPUpgrade» для этого соединения.",
+          "type": "object",
+          "required": false,
+          "ref": "HttpUpgradeConfig",
+          "when": {
+            "key": "network",
+            "values": [
+              "httpupgrade"
+            ]
+          },
+          "basic": true
+        },
+        "hysteriaSettings": {
+          "label": "Hysteria 2",
+          "help": "Настройка «Hysteria 2» для этого соединения.",
+          "type": "object",
+          "required": false,
+          "ref": "HysteriaConfig",
+          "when": {
+            "key": "network",
+            "values": [
+              "hysteria"
+            ]
+          },
+          "basic": true
+        },
+        "sockopt": {
+          "label": "Параметры сокета",
+          "help": "Настройка «Параметры сокета» для этого соединения.",
+          "type": "object",
+          "required": false,
+          "ref": "SocketConfig"
+        }
+      }
+    },
+    "GRPCConfig": {
+      "label": "gRPC",
+      "fields": {
+        "authority": {
+          "label": "Имя HTTP/2-сервера",
+          "help": "HTTP/2 authority для gRPC-запросов.",
+          "type": "string",
+          "required": false,
+          "basic": true
+        },
+        "serviceName": {
+          "label": "Название сервиса",
+          "help": "Название gRPC-сервиса на сервере.",
+          "type": "string",
+          "required": false,
+          "basic": true
+        },
+        "multiMode": {
+          "label": "Несколько потоков",
+          "help": "Использовать многопоточный режим gRPC.",
+          "type": "boolean",
+          "required": false,
+          "basic": true
+        },
+        "idle_timeout": {
+          "label": "Тайм-аут простоя",
+          "help": "Тайм-аут простоя gRPC в секундах.",
+          "type": "integer",
+          "required": false,
+          "minimum": -2147483648,
+          "maximum": 2147483647
+        },
+        "health_check_timeout": {
+          "label": "Тайм-аут проверки",
+          "help": "Ожидание ответа на проверку gRPC в секундах.",
+          "type": "integer",
+          "required": false,
+          "minimum": -2147483648,
+          "maximum": 2147483647
+        },
+        "permit_without_stream": {
+          "label": "Пинг без потоков",
+          "help": "Разрешить keep-alive без активных потоков.",
+          "type": "boolean",
+          "required": false
+        },
+        "initial_windows_size": {
+          "label": "Начальное окно HTTP/2",
+          "help": "Начальное окно HTTP/2 в байтах; ноль использует стандартное.",
+          "type": "integer",
+          "required": false,
+          "minimum": -2147483648,
+          "maximum": 2147483647
+        },
+        "user_agent": {
+          "label": "User-Agent",
+          "help": "Строка User-Agent для gRPC.",
+          "type": "string",
+          "required": false
+        }
+      }
+    },
+    "AuthenticatorRequest": {
+      "label": "HTTP-запрос RAW",
+      "fields": {
+        "version": {
+          "label": "Версия",
+          "help": "Версия HTTP, например 1.1.",
+          "type": "string",
+          "required": false
+        },
+        "method": {
+          "label": "HTTP-метод",
+          "help": "HTTP-метод маскировки, например GET.",
+          "type": "string",
+          "required": false
+        },
+        "path": {
+          "label": "Путь",
+          "help": "Путь HTTP-запроса до сервера.",
+          "type": "array",
+          "required": false,
+          "items": {
+            "label": "Значение",
+            "help": "Целое число для int или строка для str.",
+            "type": "string",
+            "required": false
+          }
+        },
+        "headers": {
+          "label": "Заголовки",
+          "help": "Произвольные имена заголовков и их значения.",
+          "type": "map",
+          "required": false,
+          "values": {
+            "label": "Значение",
+            "help": "Целое число для int или строка для str.",
+            "type": "array",
+            "required": false,
+            "items": {
+              "label": "Значение",
+              "help": "Целое число для int или строка для str.",
+              "type": "string",
+              "required": false
+            }
+          }
+        }
+      }
+    },
+    "Authenticator": {
+      "label": "HTTP-маскировка RAW",
+      "fields": {
+        "type": {
+          "label": "Тип заголовка",
+          "help": "Формат маскировки RAW.",
+          "type": "string",
+          "required": true,
+          "enum": [
+            "http"
+          ]
+        },
+        "request": {
+          "label": "HTTP-запрос",
+          "help": "Параметры HTTP-запроса маскировки RAW.",
+          "type": "object",
+          "required": false,
+          "ref": "AuthenticatorRequest"
+        }
+      }
+    },
+    "Wechat": {
+      "label": "Заголовок WeChat",
+      "fields": {}
+    },
+    "Utp": {
+      "label": "Заголовок uTP",
+      "fields": {}
+    },
+    "Original": {
+      "label": "Исходная маска mKCP",
+      "fields": {}
+    },
+    "Srtp": {
+      "label": "Заголовок SRTP",
+      "fields": {}
+    },
+    "NoOpConnectionAuthenticator": {
+      "label": "Без HTTP-маскировки",
+      "fields": {
+        "type": {
+          "label": "Тип заголовка",
+          "help": "Формат маскировки RAW.",
+          "type": "string",
+          "required": true,
+          "enum": [
+            "none"
+          ]
+        }
+      }
+    },
+    "Dtls": {
+      "label": "Заголовок DTLS",
+      "fields": {}
+    },
+    "Wireguard": {
+      "label": "Заголовок WireGuard",
+      "fields": {}
+    },
+    "MaskTCP": {
+      "label": "Маска TCP",
+      "fields": {
+        "type": {
+          "label": "Тип маски",
+          "help": "Выбери формат маскировки.",
+          "type": "string",
+          "required": true,
+          "enum": [
+            "header-custom",
+            "fragment",
+            "sudoku"
+          ]
+        },
+        "settings": {
+          "label": "Настройки маски",
+          "help": "Типизированные параметры выбранной маски.",
+          "type": "object",
+          "required": false,
+          "selector": "type",
+          "variants": {
+            "header-custom": "HeaderCustomTCP",
+            "fragment": "FragmentMask",
+            "sudoku": "Sudoku"
+          }
+        }
+      }
+    },
+    "MaskUDP": {
+      "label": "Маска UDP",
+      "fields": {
+        "type": {
+          "label": "Тип маски",
+          "help": "Выбери формат маскировки.",
+          "type": "string",
+          "required": true,
+          "enum": [
+            "header-custom",
+            "header-dns",
+            "header-dtls",
+            "header-srtp",
+            "header-utp",
+            "header-wechat",
+            "header-wireguard",
+            "mkcp-original",
+            "mkcp-aes128gcm",
+            "noise",
+            "salamander",
+            "sudoku",
+            "xdns",
+            "xicmp",
+            "udphop"
+          ]
+        },
+        "settings": {
+          "label": "Настройки маски",
+          "help": "Типизированные параметры выбранной маски.",
+          "type": "object",
+          "required": false,
+          "selector": "type",
+          "variants": {
+            "header-custom": "HeaderCustomUDP",
+            "header-dns": "Dns",
+            "header-dtls": "Dtls",
+            "header-srtp": "Srtp",
+            "header-utp": "Utp",
+            "header-wechat": "Wechat",
+            "header-wireguard": "Wireguard",
+            "mkcp-original": "Original",
+            "mkcp-aes128gcm": "Aes128Gcm",
+            "noise": "NoiseMask",
+            "salamander": "Salamander",
+            "sudoku": "Sudoku",
+            "xdns": "Xdns",
+            "xicmp": "Xicmp",
+            "udphop": "UdpHop"
+          }
+        }
+      }
+    },
+    "XHTTPExtra": {
+      "label": "Дополнительные настройки XHTTP",
+      "fields": {
+        "headers": {
+          "label": "Заголовки",
+          "help": "Произвольные имена заголовков и их значения.",
+          "type": "map",
+          "required": false,
+          "values": {
+            "label": "Значение",
+            "help": "Целое число для int или строка для str.",
+            "type": "string",
+            "required": false
+          }
+        },
+        "xPaddingBytes": {
+          "label": "Размер заполнения",
+          "help": "Диапазон длины заполнения в байтах; минимум больше нуля.",
+          "type": "integerRange",
+          "required": false
+        },
+        "xPaddingObfsMode": {
+          "label": "Обфускация заполнения",
+          "help": "Применять заданные способ и расположение заполнения.",
+          "type": "boolean",
+          "required": false
+        },
+        "xPaddingKey": {
+          "label": "Ключ заполнения",
+          "help": "Имя ключа заполнения в запросе или cookie.",
+          "type": "string",
+          "required": false
+        },
+        "xPaddingHeader": {
+          "label": "Заголовок заполнения",
+          "help": "Имя HTTP-заголовка с заполнением.",
+          "type": "string",
+          "required": false
+        },
+        "xPaddingPlacement": {
+          "label": "Расположение заполнения",
+          "help": "Где передавать заполнение: cookie, заголовок или запрос.",
+          "type": "string",
+          "required": false,
+          "enum": [
+            "cookie",
+            "header",
+            "query",
+            "queryInHeader"
+          ]
+        },
+        "xPaddingMethod": {
+          "label": "Способ заполнения",
+          "help": "Повторять x или использовать случайный токен.",
+          "type": "string",
+          "required": false,
+          "enum": [
+            "repeat-x",
+            "tokenish"
+          ]
+        },
+        "uplinkHTTPMethod": {
+          "label": "Метод отправки",
+          "help": "HTTP-метод; GET доступен только в packet-up.",
+          "type": "string",
+          "required": false
+        },
+        "sessionIDPlacement": {
+          "label": "Расположение сессии",
+          "help": "Где передавать идентификатор сессии.",
+          "type": "string",
+          "required": false,
+          "enum": [
+            "path",
+            "cookie",
+            "header",
+            "query"
+          ]
+        },
+        "sessionIDKey": {
+          "label": "Ключ сессии",
+          "help": "Имя ключа идентификатора сессии.",
+          "type": "string",
+          "required": false
+        },
+        "seqPlacement": {
+          "label": "Расположение номера",
+          "help": "Где передавать порядковый номер пакета.",
+          "type": "string",
+          "required": false,
+          "enum": [
+            "path",
+            "cookie",
+            "header",
+            "query"
+          ]
+        },
+        "seqKey": {
+          "label": "Ключ номера",
+          "help": "Имя ключа порядкового номера.",
+          "type": "string",
+          "required": false
+        },
+        "uplinkDataPlacement": {
+          "label": "Расположение данных",
+          "help": "cookie и header доступны только в packet-up.",
+          "type": "string",
+          "required": false,
+          "enum": [
+            "auto",
+            "body",
+            "cookie",
+            "header"
+          ]
+        },
+        "uplinkDataKey": {
+          "label": "Ключ данных",
+          "help": "Имя заголовка или cookie с данными.",
+          "type": "string",
+          "required": false
+        },
+        "uplinkChunkSize": {
+          "label": "Размер блока данных",
+          "help": "Диапазон размера блока в байтах; минимум ограничен 64.",
+          "type": "integerRange",
+          "required": false
+        },
+        "noGRPCHeader": {
+          "label": "Без заголовка gRPC",
+          "help": "Не добавлять тип содержимого gRPC к исходящему потоку.",
+          "type": "boolean",
+          "required": false
+        },
+        "scMaxEachPostBytes": {
+          "label": "Размер POST",
+          "help": "Диапазон максимального размера POST в байтах.",
+          "type": "integerRange",
+          "required": false
+        },
+        "scMinPostsIntervalMs": {
+          "label": "Интервал POST",
+          "help": "Диапазон минимального интервала POST в миллисекундах.",
+          "type": "integerRange",
+          "required": false
+        },
+        "xmux": {
+          "label": "Мультиплексирование XHTTP",
+          "help": "Повторное использование HTTP-соединений XHTTP.",
+          "type": "object",
+          "required": false,
+          "ref": "XmuxConfig"
+        },
+        "downloadSettings": {
+          "label": "Транспорт скачивания",
+          "help": "Отдельные XHTTP-параметры скачивания; несовместимы со stream-one.",
+          "type": "object",
+          "required": false,
+          "ref": "StreamConfig",
+          "when": {
+            "key": "mode",
+            "notPrefix": "stream-one"
+          }
+        }
+      },
+      "inheritedSelectors": [
+        "mode"
+      ],
+      "constraints": [
+        {
+          "rule": "xhttpModes",
+          "message": "GET и cookie/header требуют packet-up; stream-one несовместим с downloadSettings."
+        }
+      ]
+    }
+  }
+}
