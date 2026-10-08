@@ -31,7 +31,7 @@ jobs:
           - language: actions
             build-mode: none
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           submodules: recursive
           persist-credentials: false
@@ -45,18 +45,18 @@ jobs:
           with open(os.environ['GITHUB_ENV'], 'a') as output:
               output.write(f"GO_VERSION={props['GO_VERSION']}\nNDK_VERSION={props['NDK_VERSION']}\n")
           PY
-      - uses: actions/setup-java@v4
+      - uses: actions/setup-java@v6
         if: matrix.language == 'java-kotlin'
         with:
           distribution: temurin
           java-version: '21'
           cache: gradle
-      - uses: android-actions/setup-android@v3
+      - uses: android-actions/setup-android@v4
         if: matrix.language == 'java-kotlin'
         with:
           cmdline-tools-version: '16111833'
           packages: 'platform-tools platforms;android-37.0 build-tools;36.0.0'
-      - uses: actions/setup-go@v5
+      - uses: actions/setup-go@v7
         if: matrix.language == 'java-kotlin'
         with:
           go-version: ${{ env.GO_VERSION }}
