@@ -1,0 +1,84 @@
+name: CodeQL
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: codeql-${{ github.ref }}-${{ github.event_name }}
+  cancel-in-progress: true
+
+jobs:
+  analyze:
+    name: CodeQL (${{ matrix.language }})
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    permissions:
+      contents: read
+      security-events: write
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - language: java-kotlin
+            build-mode: manual
+          - language: actions
+            build-mode: none
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+          persist-credentials: false
+      - name: Read pinned build versions
+        if: matrix.language == 'java-kotlin'
+        run: |
+          python3 - <<'PY'
+          import os
+          from pathlib import Path
+          props = dict(line.split('=', 1) for line in Path('version.properties').read_text().splitlines() if '=' in line)
+          with open(os.environ['GITHUB_ENV'], 'a') as output:
+              output.write(f"GO_VERSION={props['GO_VERSION']}\nNDK_VERSION={props['NDK_VERSION']}\n")
+          PY
+      - uses: actions/setup-java@v4
+        if: matrix.language == 'java-kotlin'
+        with:
+          distribution: temurin
+          java-version: '21'
+          cache: gradle
+      - uses: android-actions/setup-android@v3
+        if: matrix.language == 'java-kotlin'
+        with:
+          cmdline-tools-version: '16111833'
+          packages: 'platform-tools platforms;android-37.0 build-tools;36.0.0'
+      - uses: actions/setup-go@v5
+        if: matrix.language == 'java-kotlin'
+        with:
+          go-version: ${{ env.GO_VERSION }}
+          cache: false
+      - name: Prepare native dependencies
+        if: matrix.language == 'java-kotlin'
+        run: |
+          sdkmanager "ndk;$NDK_VERSION"
+          bash scripts/build-xray.sh
+      - name: Initialize CodeQL
+        uses: github/codeql-action/init@v4
+        with:
+          languages: ${{ matrix.language }}
+          build-mode: ${{ matrix.build-mode }}
+      - name: Compile Android sources for analysis
+        if: matrix.language == 'java-kotlin'
+        run: |
+          bash gradlew :app:compileDebugKotlin :app:compileDebugJavaWithJavac \
+            --no-daemon --no-build-cache --no-configuration-cache --rerun-tasks \
+            -Pkotlin.compiler.execution.strategy=in-process -Pkotlin.incremental=false \
+            --max-workers=2 --console=plain
+      - name: Analyze
+        uses: github/codeql-action/analyze@v4
+        with:
+          category: /language:${{ matrix.language }}
