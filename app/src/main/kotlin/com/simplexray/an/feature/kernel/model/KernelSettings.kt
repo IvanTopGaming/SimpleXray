@@ -13,7 +13,7 @@ data class KernelSettings(
     val xudpConcurrency: Int = 0,
     val udp443: Udp443Mode = Udp443Mode.REJECT,
     val serverDomainStrategy: ServerDomainStrategy = ServerDomainStrategy.AS_IS,
-    val tcpFastOpen: Boolean = false,
+    val tcpFastOpen: Boolean = true,
     val tcpKeepAliveInterval: Int = 0,
     val tcpUserTimeout: Int = 0,
     val tcpCongestion: TcpCongestion = TcpCongestion.SYSTEM,

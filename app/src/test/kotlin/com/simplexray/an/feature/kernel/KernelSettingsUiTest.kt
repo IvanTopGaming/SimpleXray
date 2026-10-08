@@ -119,7 +119,7 @@ class KernelSettingsUiTest {
         assertEquals(-1, saved.muxConcurrency)
         assertEquals(Udp443Mode.ALLOW, saved.udp443)
         assertEquals(ServerDomainStrategy.USE_IPV6V4, saved.serverDomainStrategy)
-        assertTrue(saved.tcpFastOpen)
+        assertFalse(saved.tcpFastOpen)
         assertEquals(TcpCongestion.BBR, saved.tcpCongestion)
     }
 

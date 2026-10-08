@@ -122,7 +122,7 @@ VPN-интерфейса в SOCKS-вход Xray. Такой запуск отд�
 
 ## Сборка
 
-Нужны **Java 21**, **Android SDK** и версии **Go/NDK**, указанные в
+Нужны **Java 21 (Temurin/OpenJDK)**, **Android SDK Platform 37.0**, **Build Tools 36.0.0** и версии **Go/NDK**, указанные в
 [version.properties](version.properties). Команды ниже рассчитаны на Linux;
 путь к SDK задаётся через `ANDROID_HOME`.
 

@@ -53,14 +53,14 @@ class LoggingCompilerTest {
     }
 
     @Test
-    fun defaultsDisableAccessAndDnsButKeepWarnings() {
+    fun defaultsEnableAccessAndDnsWithInfoLevel() {
         val log =
             JsonParser.parseString(LoggingConfigCompiler.compile("{}", LogSettings()))
                 .asJsonObject
                 .getAsJsonObject("log")
-        assertEquals("none", log["access"].asString)
-        assertEquals("warning", log["loglevel"].asString)
-        assertFalse(log["dnsLog"].asBoolean)
+        assertEquals("", log["access"].asString)
+        assertEquals("info", log["loglevel"].asString)
+        assertTrue(log["dnsLog"].asBoolean)
         assertEquals("", log["maskAddress"].asString)
     }
 

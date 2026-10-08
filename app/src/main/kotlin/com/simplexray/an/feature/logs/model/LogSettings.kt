@@ -4,9 +4,9 @@ import com.google.gson.JsonObject
 import com.google.gson.JsonParser
 
 data class LogSettings(
-    val level: String = "warning",
-    val access: Boolean = false,
-    val dns: Boolean = false,
+    val level: String = "info",
+    val access: Boolean = true,
+    val dns: Boolean = true,
     val maskIp: Boolean = false,
     val trafficStats: Boolean = true,
 ) {
@@ -44,11 +44,11 @@ data class LogSettings(
                     json["level"]?.let {
                         require(it.isJsonPrimitive && it.asJsonPrimitive.isString)
                         it.asString
-                    } ?: "warning"
+                    } ?: "info"
                 return LogSettings(
                         level,
-                        bool("access", false),
-                        bool("dns", false),
+                        bool("access", true),
+                        bool("dns", true),
                         bool("maskIp", false),
                         bool("trafficStats", true),
                     )

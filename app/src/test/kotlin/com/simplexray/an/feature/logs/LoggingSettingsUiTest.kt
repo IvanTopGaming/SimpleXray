@@ -69,7 +69,7 @@ class LoggingSettingsUiTest {
         compose.mainClock.advanceTimeByFrame()
         click("debug")
         assertEquals(
-            LogSettings("debug", true, true, true, false),
+            LogSettings("debug", false, false, true, false),
             LogSettings.decode(prefs.logSettingsJson),
         )
         assertEquals(prefs.logSettingsJson, Preferences(compose.activity).logSettingsJson)
