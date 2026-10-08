@@ -224,5 +224,5 @@ dependencies {
     implementation 'androidx.navigation:navigation-compose-android:2.9.3'
 
     implementation 'com.github.nanihadesuka:LazyColumnScrollbar:2.2.0'
-    implementation "com.squareup.okhttp3:okhttp:4.12.0"
+    implementation "com.squareup.okhttp3:okhttp:5.5.0"
 }
