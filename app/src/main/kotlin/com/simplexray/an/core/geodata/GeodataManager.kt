@@ -30,13 +30,16 @@ class GeodataManager(
     private val urlFor: (String) -> String,
     private val client: OkHttpClient = defaultClient,
 ) {
-    suspend fun ensureAvailable(required: Set<String>, onProgress: (String) -> Unit = {}) {
+    suspend fun ensureAvailable(
+        required: Set<String>,
+        onProgress: (GeodataProgress) -> Unit = {},
+    ) {
         withAvailable(required, onProgress) {}
     }
 
     suspend fun <T> withAvailable(
         required: Set<String>,
-        onProgress: (String) -> Unit = {},
+        onProgress: (GeodataProgress) -> Unit = {},
         refresh: Set<String> = emptySet(),
         onPublished: (String) -> Unit = {},
         block: suspend () -> T,
@@ -57,7 +60,7 @@ class GeodataManager(
             }
         }
 
-    suspend fun update(filename: String, onProgress: (String) -> Unit = {}) {
+    suspend fun update(filename: String, onProgress: (GeodataProgress) -> Unit = {}) {
         requireFilename(filename)
         withContext(Dispatchers.IO) { withStorageLock { download(filename, onProgress) } }
     }
@@ -128,8 +131,8 @@ class GeodataManager(
         }
     }
 
-    private suspend fun download(filename: String, onProgress: (String) -> Unit) {
-        onProgress("Загрузка $filename: 0 байт")
+    private suspend fun download(filename: String, onProgress: (GeodataProgress) -> Unit) {
+        onProgress(GeodataProgress(filename, 0L, -1L))
         val call = client.newCall(Request.Builder().url(urlFor(filename)).build())
         call.timeout().timeout(3, TimeUnit.MINUTES)
         coroutineScope {

@@ -5,6 +5,8 @@ import android.content.Intent
 import android.os.Looper
 import androidx.lifecycle.ViewModelStore
 import com.simplexray.an.app.state.MainViewModel
+import com.simplexray.an.core.geodata.GeodataProgress
+import com.simplexray.an.feature.dashboard.model.ConnectionPreparation
 import com.simplexray.an.service.TProxyService
 import com.simplexray.an.support.HostCoreVersionRead
 import org.junit.Assert.*
@@ -24,19 +26,31 @@ class ConnectionPreparationTest {
         val store = ViewModelStore()
         val model = MainViewModel(app)
         store.put("main", model)
-        fun progress(error: Boolean = false) {
-            app.sendBroadcast(
+        fun progress(error: Boolean = false, download: Boolean = false) {
+            val intent =
                 Intent(TProxyService.ACTION_PREPARATION)
                     .setPackage(app.packageName)
-                    .putExtra(TProxyService.EXTRA_PREPARATION, "Загрузка geoip.dat")
+                    .putExtra(TProxyService.EXTRA_PREPARATION, "Загрузка баз")
                     .putExtra(TProxyService.EXTRA_PREPARATION_ERROR, error)
-            )
+            if (download) {
+                intent
+                    .putExtra(TProxyService.EXTRA_DOWNLOAD_FILE, "geoip.dat")
+                    .putExtra(TProxyService.EXTRA_DOWNLOAD_BYTES, 512L)
+                    .putExtra(TProxyService.EXTRA_DOWNLOAD_TOTAL, 2048L)
+            }
+            app.sendBroadcast(intent)
             shadowOf(Looper.getMainLooper()).idle()
         }
         try {
             progress()
-            assertEquals("Загрузка geoip.dat", model.connectionPreparation.value)
+            assertEquals(ConnectionPreparation("Загрузка баз"), model.connectionPreparation.value)
             assertFalse(model.controlMenuClickable.value)
+            progress(download = true)
+            assertEquals(
+                ConnectionPreparation("Загрузка баз", GeodataProgress("geoip.dat", 512L, 2048L)),
+                model.connectionPreparation.value,
+            )
+            assertEquals(.25f, model.connectionPreparation.value?.download?.fraction)
             progress(error = true)
             assertNull(model.connectionPreparation.value)
             assertTrue(model.controlMenuClickable.value)

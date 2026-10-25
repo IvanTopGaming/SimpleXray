@@ -36,9 +36,10 @@ apksigner = max(tools, key=lambda p: tuple(int(x) for x in re.findall(r'\d+', p.
 expected_certificate = (root / 'release-signing-certificate.sha256').read_text().strip().lower()
 if not re.fullmatch(r'[a-f0-9]{64}', expected_certificate):
     raise SystemExit('Invalid release certificate fingerprint')
-core_spec_path = root / 'patches' / 'xray' / props['XRAY_CORE_VERSION'] / 'build.json'
-core_spec = json.loads(core_spec_path.read_text())
-marker = core_spec['revision'][:7] + '-' + core_spec['buildSuffix']
+core_revision = props['XRAY_CORE_REVISION']
+if not re.fullmatch(r'[0-9a-f]{40}', core_revision):
+    raise SystemExit('Invalid Xray core revision')
+marker = core_revision[:7]
 build = root / 'app/build/outputs/apk/release'
 output_metadata = json.loads((build / 'output-metadata.json').read_text())
 if output_metadata['applicationId'] != 'com.simplexray.an':
@@ -89,8 +90,7 @@ metadata = {
     'applicationId': 'com.simplexray.an', 'versionName': version, 'versionCode': code, 'minSdk': 29,
     'tag': f'v{version}', 'prerelease': '-' in version,
     'sourceCommit': commit, 'signingCertificateSha256': expected_certificate,
-    'xray': {'version': props['XRAY_CORE_VERSION'], 'revision': core_spec['revision'], 'build': marker,
-             'patches': {name: hashlib.sha256((core_spec_path.parent / name).read_bytes()).hexdigest() for name in core_spec['patches']}},
+    'xray': {'version': props['XRAY_CORE_VERSION'], 'revision': core_revision, 'build': marker},
     'artifacts': entries,
 }
 metadata_path = release / 'release-metadata.json'

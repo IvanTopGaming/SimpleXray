@@ -75,7 +75,13 @@ class ProfileSettingsUiTest {
             .performScrollTo()
             .performTextReplacement("""{"log":{"loglevel":"error"}}""")
         compose.onNodeWithText("Сохранить переопределения").performScrollTo().performClick()
-        compose.waitUntil(5_000) { prefs.profileOverridesJson != saved }
+        compose.waitUntil(5_000) {
+            compose
+                .onAllNodesWithText("Сохранено", substring = true)
+                .fetchSemanticsNodes()
+                .isNotEmpty()
+        }
+        assertNotEquals(saved, prefs.profileOverridesJson)
         compose
             .onNodeWithTag("profile-overrides")
             .performScrollTo()
