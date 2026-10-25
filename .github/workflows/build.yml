@@ -56,7 +56,7 @@ jobs:
           cache: false
       - name: Install pinned NDK
         run: sdkmanager "ndk;$NDK_VERSION"
-      - name: Build pinned Xray and apply reviewed patches
+      - name: Build pinned Xray
         run: bash scripts/build-xray.sh --host
       - name: Verify structure and run host tests
         env:

@@ -13,6 +13,11 @@ class ReleaseVersionTest {
     }
 
     @Test
+    fun nextPatchReleaseUpdatesReleaseCandidateOfPreviousVersion() {
+        assertTrue(requireNotNull(compareReleaseVersions("v1.11.1", "1.11.0-rc.2")) > 0)
+    }
+
+    @Test
     fun releaseCandidateNumbersCompareNumerically() {
         assertTrue(requireNotNull(compareReleaseVersions("1.11.0-rc.10", "1.11.0-rc.2")) > 0)
     }

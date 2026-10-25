@@ -1,5 +1,6 @@
 package com.simplexray.an.core.geodata.io
 
+import com.simplexray.an.core.geodata.GeodataProgress
 import com.simplexray.an.core.geodata.MAX_BYTES
 import java.io.File
 import java.io.FileOutputStream
@@ -16,7 +17,7 @@ internal object GeodataFileCopy {
         filename: String,
         expected: Long,
         onBytes: (Int) -> Unit = {},
-        onProgress: (String) -> Unit,
+        onProgress: (GeodataProgress) -> Unit,
     ) {
         var total = 0L
         var lastProgress = 0L
@@ -38,7 +39,7 @@ internal object GeodataFileCopy {
                 onBytes(count)
                 val now = System.nanoTime()
                 if (now - lastProgress >= TimeUnit.MILLISECONDS.toNanos(200)) {
-                    onProgress(progress(filename, total, expected))
+                    onProgress(GeodataProgress(filename, total, expected))
                     lastProgress = now
                 }
             }
@@ -47,10 +48,6 @@ internal object GeodataFileCopy {
             currentCoroutineContext().ensureActive()
             output.fd.sync()
         }
-        onProgress(progress(filename, total, expected))
+        onProgress(GeodataProgress(filename, total, expected))
     }
-
-    private fun progress(filename: String, bytes: Long, expected: Long): String =
-        if (expected > 0L) "Загрузка $filename: $bytes / $expected байт"
-        else "Загрузка $filename: $bytes байт"
 }

@@ -7,6 +7,7 @@ import android.net.VpnService
 import android.os.IBinder
 import android.os.ParcelFileDescriptor
 import android.util.Log
+import com.simplexray.an.core.geodata.GeodataProgress
 import com.simplexray.an.core.network.socks.LocalProxyEndpoint
 import com.simplexray.an.core.network.socks.socksAuthenticationEnabled
 import com.simplexray.an.core.runtime.assets.CoreAssetSnapshot
@@ -61,13 +62,23 @@ class TProxyService : VpnService() {
 
     private var activeRuntime: VpnRuntimeSettings? = null
 
-    private fun reportPreparation(message: String, error: Boolean = false) {
-        sendBroadcast(
+    private fun reportPreparation(
+        message: String,
+        error: Boolean = false,
+        download: GeodataProgress? = null,
+    ) {
+        val intent =
             Intent(ACTION_PREPARATION)
                 .setPackage(packageName)
                 .putExtra(EXTRA_PREPARATION, message)
                 .putExtra(EXTRA_PREPARATION_ERROR, error)
-        )
+        if (download != null) {
+            intent
+                .putExtra(EXTRA_DOWNLOAD_FILE, download.filename)
+                .putExtra(EXTRA_DOWNLOAD_BYTES, download.bytes)
+                .putExtra(EXTRA_DOWNLOAD_TOTAL, download.total)
+        }
+        sendBroadcast(intent)
     }
 
     private fun geodataClient(): okhttp3.OkHttpClient {
@@ -175,7 +186,7 @@ class TProxyService : VpnService() {
                             .prepare(
                                 prefs,
                                 ::geodataClient,
-                                { reportPreparation(it) },
+                                { reportPreparation("Загрузка баз", download = it) },
                                 { snapshot = it },
                             )
                     val vpn = prepared.vpn
@@ -433,6 +444,9 @@ class TProxyService : VpnService() {
         const val ACTION_PREPARATION: String = "com.simplexray.an.PREPARATION"
         const val EXTRA_PREPARATION: String = "preparation"
         const val EXTRA_PREPARATION_ERROR: String = "preparation_error"
+        const val EXTRA_DOWNLOAD_FILE: String = "download_file"
+        const val EXTRA_DOWNLOAD_BYTES: String = "download_bytes"
+        const val EXTRA_DOWNLOAD_TOTAL: String = "download_total"
         const val ACTION_LOG_UPDATE: String = "com.simplexray.an.LOG_UPDATE"
         const val ACTION_RELOAD_CONFIG: String = "com.simplexray.an.RELOAD_CONFIG"
         const val EXTRA_LOG_DATA: String = "log_data"

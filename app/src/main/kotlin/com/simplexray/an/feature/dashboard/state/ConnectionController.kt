@@ -13,7 +13,9 @@ import androidx.activity.result.ActivityResultLauncher
 import androidx.lifecycle.application
 import com.simplexray.an.R
 import com.simplexray.an.app.state.MainViewUiEvent
+import com.simplexray.an.core.geodata.GeodataProgress
 import com.simplexray.an.core.runtime.stats.CoreStatsClient
+import com.simplexray.an.feature.dashboard.model.ConnectionPreparation
 import com.simplexray.an.feature.dashboard.model.CoreStatsState
 import com.simplexray.an.feature.dashboard.model.TrafficState
 import com.simplexray.an.prefs.Preferences
@@ -45,7 +47,7 @@ internal class ConnectionController(
 
     val controlMenuClickable: StateFlow<Boolean> = _controlMenuClickable.asStateFlow()
 
-    private val _connectionPreparation = MutableStateFlow<String?>(null)
+    private val _connectionPreparation = MutableStateFlow<ConnectionPreparation?>(null)
 
     val connectionPreparation = _connectionPreparation.asStateFlow()
 
@@ -71,7 +73,15 @@ internal class ConnectionController(
                     setControlMenuClickable(true)
                     sendEvent(MainViewUiEvent.ShowSnackbar(message))
                 } else {
-                    _connectionPreparation.value = message
+                    val download =
+                        intent.getStringExtra(TProxyService.EXTRA_DOWNLOAD_FILE)?.let {
+                            GeodataProgress(
+                                it,
+                                intent.getLongExtra(TProxyService.EXTRA_DOWNLOAD_BYTES, 0L),
+                                intent.getLongExtra(TProxyService.EXTRA_DOWNLOAD_TOTAL, -1L),
+                            )
+                        }
+                    _connectionPreparation.value = ConnectionPreparation(message, download)
                     setControlMenuClickable(false)
                 }
             }
@@ -115,7 +125,8 @@ internal class ConnectionController(
         val preparation = _connectionPreparation.value
         setServiceEnabled(connected)
         if (running && !connected)
-            _connectionPreparation.value = preparation ?: "Подготовка подключения…"
+            _connectionPreparation.value =
+                preparation ?: ConnectionPreparation("Подготовка подключения…")
         setControlMenuClickable(!running || connected)
     }
 
@@ -167,7 +178,7 @@ internal class ConnectionController(
                 setControlMenuClickable(true)
                 return@launch
             }
-            _connectionPreparation.value = "Подготовка подключения…"
+            _connectionPreparation.value = ConnectionPreparation("Подготовка подключения…")
             val intent = Intent(application, TProxyService::class.java).setAction(action)
             sendEvent(MainViewUiEvent.StartService(intent))
         }

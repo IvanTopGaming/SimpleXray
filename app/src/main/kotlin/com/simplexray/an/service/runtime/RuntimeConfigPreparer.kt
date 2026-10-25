@@ -9,6 +9,7 @@ import com.simplexray.an.core.config.logging.LoggingConfigCompiler
 import com.simplexray.an.core.config.profile.ProfileGeodata
 import com.simplexray.an.core.files.config.ServerConfigLock
 import com.simplexray.an.core.geodata.GeodataManager
+import com.simplexray.an.core.geodata.GeodataProgress
 import com.simplexray.an.core.runtime.assets.CoreAssetSnapshot
 import com.simplexray.an.feature.routing.server.RoutingServerSources
 import com.simplexray.an.feature.subscriptions.data.SubscriptionManager
@@ -30,7 +31,7 @@ internal class RuntimeConfigPreparer(private val context: Context) {
     suspend fun prepare(
         prefs: Preferences,
         geodataClient: () -> OkHttpClient,
-        reportPreparation: (String) -> Unit,
+        onGeodataProgress: (GeodataProgress) -> Unit,
         onSnapshotCreated: (CoreAssetSnapshot) -> Unit,
     ): PreparedRuntimeConfig {
         val builder = AppConfig(prefs)
@@ -62,7 +63,7 @@ internal class RuntimeConfigPreparer(private val context: Context) {
         val manager = GeodataManager(filesDir, { urls.getValue(it) }, geodataClient())
         return manager.withAvailable(
             required,
-            { reportPreparation(it) },
+            onGeodataProgress,
             refresh = refresh,
             onPublished = { name -> prefs.acknowledgeGeodata(name, urls.getValue(name)) },
         ) {

@@ -37,7 +37,7 @@ class GeodataManagerTest {
     fun onlyRequiredMissingFilesAreDownloadedAndEmptyFilesAreReplaced() = runBlocking {
         val directory = temporary.newFolder()
         File(directory, "geoip.dat").writeBytes(byteArrayOf())
-        val progress = mutableListOf<String>()
+        val progress = mutableListOf<GeodataProgress>()
         GeodataServer(geoip()).use { server ->
             val manager = GeodataManager(directory, { server.url })
             manager.ensureAvailable(emptySet())
@@ -47,9 +47,10 @@ class GeodataManagerTest {
             assertEquals(1, server.requests.get())
             assertArrayEquals(geoip(), File(directory, "geoip.dat").readBytes())
             assertFalse(File(directory, "geosite.dat").exists())
-            assertTrue(
-                progress.any { it.contains("geoip.dat") && it.contains(geoip().size.toString()) }
-            )
+            val size = geoip().size.toLong()
+            assertEquals(GeodataProgress("geoip.dat", 0L, -1L), progress.first())
+            assertEquals(GeodataProgress("geoip.dat", size, size), progress.last())
+            assertEquals(1f, progress.last().fraction)
             assertEquals(listOf("geoip.dat"), dataFiles(directory))
         }
     }
