@@ -1,10 +1,22 @@
 package com.simplexray.an.core.config.ownership
 
 import com.google.gson.JsonArray
+import com.google.gson.JsonElement
 import com.google.gson.JsonObject
 import java.math.BigInteger
 
 internal object LegacyTransportMigration {
+    private val mkcpHeaders =
+        mapOf(
+            "srtp" to "srtp",
+            "utp" to "utp",
+            "wechat-video" to "wechat",
+            "wechat" to "wechat",
+            "dtls" to "dtls",
+            "wireguard" to "wireguard",
+            "dns" to "dns",
+        )
+
     fun apply(outbound: JsonObject) {
         val settings = outbound.obj("settings")
         when (outbound.text("protocol")) {
@@ -51,8 +63,10 @@ internal object LegacyTransportMigration {
         if (network in listOf("xhttp", "splithttp")) {
             (value.obj("xhttpSettings") ?: value.obj("splithttpSettings"))?.let { xhttp(it, depth) }
         }
+        value.obj("finalmask")?.array("udp")?.forEach { mask(it) }
         if (network in listOf("kcp", "mkcp"))
             value.obj("kcpSettings")?.let { kcp ->
+                kcpObfuscation(value, kcp)
                 kcp.remove("congestion")
                 val buffer = kcp.remove("writeBufferSize")?.takeUnless { it.isJsonNull }
                 if (buffer != null && kcp["maxSendingWindow"]?.isJsonNull != false) {
@@ -105,6 +119,103 @@ internal object LegacyTransportMigration {
         rename(effective, "sessionPlacement", "sessionIDPlacement")
         rename(effective, "sessionKey", "sessionIDKey")
         effective.obj("downloadSettings")?.let { stream(it, depth + 1) }
+    }
+
+    private fun kcpObfuscation(stream: JsonObject, kcp: JsonObject) {
+        val header =
+            kcp.remove("header")?.takeIf { it.isJsonObject }?.asJsonObject?.let { header ->
+                header.text("type")?.takeUnless { it.isEmpty() || it == "none" }?.let { type ->
+                    legacyMask(mkcpHeader(type), header.text("domain").takeIf { type == "dns" })
+                }
+            }
+        val seed =
+            kcp.remove("seed")?.takeUnless { it.isJsonNull }?.asString?.takeIf(String::isNotEmpty)
+        if (header == null && seed == null) return
+        val finalmask = stream.obj("finalmask") ?: JsonObject().also { stream.add("finalmask", it) }
+        val udp = finalmask.array("udp") ?: JsonArray()
+        if (udp.any { it.isJsonObject && it.asJsonObject.text("type") == "mkcp-legacy" }) return
+        finalmask.add(
+            "udp",
+            JsonArray().apply {
+                add(legacyMask(null, seed))
+                header?.let(::add)
+                addAll(udp)
+            },
+        )
+    }
+
+    private fun mask(element: JsonElement) {
+        val mask = element.takeIf { it.isJsonObject }?.asJsonObject ?: return
+        val settings = mask.obj("settings")
+        when (val type = mask.text("type")) {
+            "mkcp-original" -> replace(mask, legacyMask(null, null))
+            "mkcp-aes128gcm" -> {
+                val password = settings?.text("password")
+                require(!password.isNullOrEmpty()) { "mKCP AES-128-GCM: укажи пароль маскировки" }
+                replace(mask, legacyMask(null, password))
+            }
+            "xdns" -> settings?.let(::xdns)
+            else -> {
+                val header = type?.removePrefix("header-")
+                if (type != header && header in mkcpHeaders)
+                    replace(
+                        mask,
+                        legacyMask(header, settings?.text("domain").takeIf { header == "dns" }),
+                    )
+            }
+        }
+    }
+
+    private fun replace(mask: JsonObject, modern: JsonObject) {
+        mask.add("type", modern["type"])
+        mask.remove("settings")
+        modern["settings"]?.let { mask.add("settings", it) }
+    }
+
+    private fun mkcpHeader(type: String): String {
+        val header = mkcpHeaders[type]
+        require(header != null) { "Xray 26.10.21 не поддерживает заголовок mKCP $type" }
+        return header
+    }
+
+    private fun legacyMask(header: String?, value: String?) =
+        JsonObject().apply {
+            addProperty("type", "mkcp-legacy")
+            if (header != null || !value.isNullOrEmpty())
+                add(
+                    "settings",
+                    JsonObject().apply {
+                        header?.let { addProperty("header", it) }
+                        value?.takeIf(String::isNotEmpty)?.let { addProperty("value", it) }
+                    },
+                )
+        }
+
+    private fun xdns(settings: JsonObject) {
+        settings.remove("domain")?.takeUnless { it.isJsonNull }?.asString?.let { domain ->
+            if (!settings.has("domains"))
+                settings.add(
+                    "domains",
+                    JsonArray().apply {
+                        add(JsonObject().apply { add("names", JsonArray().apply { add(domain) }) })
+                    },
+                )
+        }
+        settings.array("domains")?.filter { it.isJsonObject }?.forEach {
+            val domain = it.asJsonObject
+            domain.remove("name")?.takeUnless { name -> name.isJsonNull }?.let { name ->
+                if (!domain.has("names")) domain.add("names", JsonArray().apply { add(name) })
+            }
+        }
+        settings.array("resolvers")?.filter { it.isJsonObject }?.forEach {
+            val resolver = it.asJsonObject
+            if (!resolver.has("type") && !resolver.has("settings")) return@forEach
+            val type = resolver.remove("type")?.takeUnless { value -> value.isJsonNull }?.asString
+            val address = resolver.remove("settings")?.takeIf { value -> value.isJsonObject }
+                ?.asJsonObject?.text("addr")
+            if (address != null && !resolver.has("addrs"))
+                resolver.add("addrs", JsonArray().apply { add("${type ?: "udp"}://$address") })
+        }
     }
 
     private fun JsonObject.obj(key: String): JsonObject? =

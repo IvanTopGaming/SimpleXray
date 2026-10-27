@@ -1,5 +1,5 @@
 {
-  "version": "26.9.30",
+  "version": "26.10.21",
   "schemas": {
     "KCPConfig": {
       "label": "mKCP",
@@ -639,8 +639,14 @@
           "required": false
         },
         "disableSystemRoot": {
-          "label": "Отключить системные CA",
+          "label": "Только добавленные сертификаты",
           "help": "Доверять только добавленным сертификатам.",
+          "type": "boolean",
+          "required": false
+        },
+        "useSystemCA": {
+          "label": "Системные сертификаты",
+          "help": "Проверять сервер по хранилищу CA Android вместо встроенного в ядро.",
           "type": "boolean",
           "required": false
         },
@@ -1590,28 +1596,6 @@
         }
       }
     },
-    "Dns": {
-      "label": "Заголовок DNS",
-      "fields": {
-        "domain": {
-          "label": "Домен",
-          "help": "Настройка «Домен» для этого соединения.",
-          "type": "string",
-          "required": false
-        }
-      }
-    },
-    "Aes128Gcm": {
-      "label": "mKCP AES-128-GCM",
-      "fields": {
-        "password": {
-          "label": "Пароль",
-          "help": "Общий пароль маскировки клиента и сервера.",
-          "type": "string",
-          "required": false
-        }
-      }
-    },
     "Salamander": {
       "label": "Salamander",
       "fields": {
@@ -1700,30 +1684,199 @@
     "Xdns": {
       "label": "Туннель DNS",
       "fields": {
-        "domain": {
-          "label": "Домен",
-          "help": "Настройка «Домен» для этого соединения.",
-          "type": "string",
-          "required": true
+        "domains": {
+          "label": "Домены",
+          "help": "Домены туннеля и ограничения DNS-запросов.",
+          "type": "array",
+          "required": true,
+          "minItems": 1,
+          "items": {
+            "label": "Группа доменов",
+            "help": "Имена доменов с общими ограничениями.",
+            "type": "object",
+            "required": true,
+            "ref": "XdnsDomain"
+          },
+          "basic": true
+        },
+        "resolvers": {
+          "label": "Резолверы",
+          "help": "DNS-серверы, через которые идут запросы туннеля.",
+          "type": "array",
+          "required": false,
+          "items": {
+            "label": "Резолвер",
+            "help": "Адреса резолвера и параметры подключения к нему.",
+            "type": "object",
+            "required": true,
+            "ref": "XdnsResolver"
+          },
+          "basic": true
+        },
+        "extraPoll": {
+          "label": "Дополнительный опрос",
+          "help": "Число дополнительных запросов опроса от 0 до 3.",
+          "type": "integer",
+          "required": false,
+          "minimum": 0,
+          "maximum": 3
+        }
+      }
+    },
+    "XdnsDomain": {
+      "label": "Домены туннеля DNS",
+      "fields": {
+        "names": {
+          "label": "Имена",
+          "help": "Домены, делегированные серверу туннеля.",
+          "type": "array",
+          "required": true,
+          "minItems": 1,
+          "items": {
+            "label": "Домен",
+            "help": "Имя домена туннеля.",
+            "type": "string",
+            "required": false
+          },
+          "basic": true
+        },
+        "lenLimit": {
+          "label": "Длина запроса",
+          "help": "Максимальная длина DNS-имени; 0 — 255.",
+          "type": "integer",
+          "required": false,
+          "minimum": 0,
+          "maximum": 255
+        },
+        "labelLimit": {
+          "label": "Длина метки",
+          "help": "Максимальная длина одной метки; 0 — 63.",
+          "type": "integer",
+          "required": false,
+          "minimum": 0,
+          "maximum": 63
+        },
+        "types": {
+          "label": "Типы записей",
+          "help": "Номера типов DNS-записей; без списка ядро выбирает сам.",
+          "type": "array",
+          "required": false,
+          "items": {
+            "label": "Тип",
+            "help": "Номер типа записи, например 16 для TXT.",
+            "type": "integer",
+            "required": false,
+            "minimum": 1,
+            "maximum": 65535
+          }
+        },
+        "edns0": {
+          "label": "Размер EDNS0",
+          "help": "Размер UDP-ответа EDNS0 в байтах; 0 — без EDNS0.",
+          "type": "integer",
+          "required": false,
+          "minimum": 0,
+          "maximum": 65535
+        }
+      }
+    },
+    "XdnsResolver": {
+      "label": "Резолвер туннеля DNS",
+      "fields": {
+        "addrs": {
+          "label": "Адреса",
+          "help": "IP:порт для UDP, tcp://IP:порт или https://адрес для DoH.",
+          "type": "array",
+          "required": true,
+          "minItems": 1,
+          "items": {
+            "label": "Адрес",
+            "help": "Без схемы используется UDP и порт 53.",
+            "type": "string",
+            "required": false
+          },
+          "basic": true
+        },
+        "worker": {
+          "label": "Параллельные запросы",
+          "help": "Число одновременных запросов; 0 — 32.",
+          "type": "integer",
+          "required": false,
+          "minimum": 0
+        },
+        "tlsConfig": {
+          "label": "TLS для DoH",
+          "help": "Параметры TLS для https-резолверов.",
+          "type": "object",
+          "required": false,
+          "ref": "TLSConfig"
+        },
+        "quicConfig": {
+          "label": "QUIC для DoH",
+          "help": "Параметры QUIC для https-резолверов.",
+          "type": "object",
+          "required": false,
+          "ref": "QuicParamsConfig"
         }
       }
     },
     "Xicmp": {
       "label": "Туннель ICMP",
       "fields": {
-        "listenIp": {
-          "label": "Адрес ICMP",
-          "help": "Локальный адрес ICMP; по умолчанию 0.0.0.0.",
-          "type": "string",
-          "required": false
-        },
-        "id": {
-          "label": "ID ICMP",
-          "help": "Идентификатор ICMP от 0 до 65535.",
-          "type": "integer",
+        "ips": {
+          "label": "Адреса ICMP",
+          "help": "IP получателей ICMP; ядро выбирает случайный из списка.",
+          "type": "array",
           "required": false,
-          "minimum": 0,
-          "maximum": 65535
+          "items": {
+            "label": "IP",
+            "help": "IPv4 или IPv6 без порта.",
+            "type": "string",
+            "required": false
+          },
+          "basic": true
+        },
+        "dgram": {
+          "label": "Непривилегированный ICMP",
+          "help": "ICMP через datagram-сокет; на Android без root нужен именно он.",
+          "type": "boolean",
+          "required": false,
+          "basic": true
+        }
+      }
+    },
+    "MkcpLegacy": {
+      "label": "Совместимость mKCP",
+      "fields": {
+        "header": {
+          "label": "Заголовок",
+          "help": "Маскировка пакетов под другой протокол; пусто — без заголовка.",
+          "type": "string",
+          "required": false,
+          "enum": [
+            "",
+            "srtp",
+            "utp",
+            "wechat",
+            "dtls",
+            "wireguard",
+            "dns"
+          ],
+          "basic": true
+        },
+        "value": {
+          "label": "Значение",
+          "help": "Без заголовка: seed для AES-128-GCM, пусто — исходная обфускация mKCP. С заголовком dns: домен.",
+          "type": "string",
+          "required": false,
+          "when": {
+            "key": "header",
+            "values": [
+              "",
+              "dns"
+            ]
+          },
+          "basic": true
         }
       }
     },
@@ -2082,22 +2235,6 @@
         }
       }
     },
-    "Wechat": {
-      "label": "Заголовок WeChat",
-      "fields": {}
-    },
-    "Utp": {
-      "label": "Заголовок uTP",
-      "fields": {}
-    },
-    "Original": {
-      "label": "Исходная маска mKCP",
-      "fields": {}
-    },
-    "Srtp": {
-      "label": "Заголовок SRTP",
-      "fields": {}
-    },
     "NoOpConnectionAuthenticator": {
       "label": "Без HTTP-маскировки",
       "fields": {
@@ -2111,14 +2248,6 @@
           ]
         }
       }
-    },
-    "Dtls": {
-      "label": "Заголовок DTLS",
-      "fields": {}
-    },
-    "Wireguard": {
-      "label": "Заголовок WireGuard",
-      "fields": {}
     },
     "MaskTCP": {
       "label": "Маска TCP",
@@ -2158,14 +2287,7 @@
           "required": true,
           "enum": [
             "header-custom",
-            "header-dns",
-            "header-dtls",
-            "header-srtp",
-            "header-utp",
-            "header-wechat",
-            "header-wireguard",
-            "mkcp-original",
-            "mkcp-aes128gcm",
+            "mkcp-legacy",
             "noise",
             "salamander",
             "sudoku",
@@ -2182,14 +2304,7 @@
           "selector": "type",
           "variants": {
             "header-custom": "HeaderCustomUDP",
-            "header-dns": "Dns",
-            "header-dtls": "Dtls",
-            "header-srtp": "Srtp",
-            "header-utp": "Utp",
-            "header-wechat": "Wechat",
-            "header-wireguard": "Wireguard",
-            "mkcp-original": "Original",
-            "mkcp-aes128gcm": "Aes128Gcm",
+            "mkcp-legacy": "MkcpLegacy",
             "noise": "NoiseMask",
             "salamander": "Salamander",
             "sudoku": "Sudoku",

@@ -11,10 +11,13 @@ interface ConfigFormatConverter {
         val knownImplementations =
             listOf(
                 SimpleXrayFormatConverter(),
-                VlessLinkConverter(),
-                VmessLinkConverter(),
-                ShadowsocksLinkConverter(),
-                TrojanLinkConverter(),
+                ShareLinkConverter(VlessConfigParser::parse, "vless"),
+                ShareLinkConverter(VmessConfigParser::parse, "vmess"),
+                ShareLinkConverter(ShadowsocksConfigParser::parse, "ss"),
+                ShareLinkConverter(TrojanConfigParser::parse, "trojan"),
+                ShareLinkConverter(Hysteria2ConfigParser::parse, "hysteria2", "hy2"),
+                ShareLinkConverter(SocksConfigParser::parse, "socks", "socks5"),
+                ShareLinkConverter(WireguardConfigParser::parse, "wireguard", "wg"),
             )
 
         fun convertOrNull(context: Context, content: String): Result<DetectedConfig>? {
