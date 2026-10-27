@@ -138,8 +138,8 @@ private constructor(
             val protocolRoot = JsonParser.parseString(protocolJson).asJsonObject
             val streamRoot = JsonParser.parseString(streamJson).asJsonObject
             require(
-                protocolRoot["version"].asString == "26.9.30" &&
-                    streamRoot["version"].asString == "26.9.30"
+                protocolRoot["version"].asString == "26.10.21" &&
+                    streamRoot["version"].asString == "26.10.21"
             )
             val protocols =
                 protocolRoot.getAsJsonObject("protocols").entrySet().map { (id, raw) ->

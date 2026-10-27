@@ -20,16 +20,16 @@ import org.junit.Assume.assumeTrue
 import org.junit.Test
 
 class ManualServerCompilerTest {
-    private fun registry(): ManualSchemaRegistry {
-        val assets =
-            listOf(File("src/main/assets"), File("app/src/main/assets")).first {
-                File(it, "manual_protocols.json").isFile
-            }
-        return ManualSchemaRegistry.fromJson(
-            File(assets, "manual_protocols.json").readText(),
-            File(assets, "manual_streams.json").readText(),
+    private fun assets() =
+        listOf(File("src/main/assets"), File("app/src/main/assets")).first {
+            File(it, "manual_protocols.json").isFile
+        }
+
+    private fun registry(): ManualSchemaRegistry =
+        ManualSchemaRegistry.fromJson(
+            File(assets(), "manual_protocols.json").readText(),
+            File(assets(), "manual_streams.json").readText(),
         )
-    }
 
     private fun string(text: String) = ManualValue(text = text)
 
@@ -79,23 +79,22 @@ class ManualServerCompilerTest {
         return draft.copy(settings = settings)
     }
 
-    @Test
-    fun eightStandaloneProfilesAreAcceptedByPinnedCore() {
+    private fun assertAcceptedByPinnedCore(drafts: Map<String, ManualServerDraft>) {
         val executable = System.getenv("SIMPLEXRAY_TEST_CORE")?.let(::File)
         assumeTrue(executable?.canExecute() == true)
         val registry = registry()
         val directory = Files.createTempDirectory("manual-server-core").toFile()
         try {
-            for (protocol in registry.protocols) {
-                val created = ManualServerCompiler(registry).compile(sample(registry, protocol.id))
+            for ((name, draft) in drafts) {
+                val created = ManualServerCompiler(registry).compile(draft)
                 val normalized = OwnedConfig.build(created.json, "127.0.0.1", 10808)
                 val configured =
                     KernelConfigCompiler.compile(
                         DnsConfigCompiler.compile(normalized, DnsSettings(), false),
                         KernelSettings(),
                     )
-                val input = File(directory, "${protocol.id}.json").apply { writeText(configured) }
-                val log = File(directory, "${protocol.id}.log")
+                val input = File(directory, "$name.json").apply { writeText(configured) }
+                val log = File(directory, "$name.log")
                 val process =
                     ProcessBuilder(executable!!.path, "run", "-test", "-c", input.path)
                         .redirectErrorStream(true)
@@ -106,8 +105,8 @@ class ManualServerCompilerTest {
                         }
                         .start()
                 try {
-                    assertTrue(protocol.id, process.waitFor(10, TimeUnit.SECONDS))
-                    assertEquals("${protocol.id}: ${log.readText()}", 0, process.exitValue())
+                    assertTrue(name, process.waitFor(10, TimeUnit.SECONDS))
+                    assertEquals("$name: ${log.readText()}", 0, process.exitValue())
                 } finally {
                     process.destroyForcibly()
                 }
@@ -115,6 +114,86 @@ class ManualServerCompilerTest {
         } finally {
             directory.deleteRecursively()
         }
+    }
+
+    @Test
+    fun eightStandaloneProfilesAreAcceptedByPinnedCore() {
+        val registry = registry()
+        assertAcceptedByPinnedCore(registry.protocols.associate { it.id to sample(registry, it.id) })
+    }
+
+    @Test
+    fun finalmaskVariantsAreAcceptedByPinnedCore() {
+        val registry = registry()
+        val base = sample(registry, "vless")
+        fun masked(network: String, vararg masks: ManualValue) =
+            base.copy(
+                stream =
+                    base.stream!!
+                        .withField("network", string(network))
+                        .withField("security", string(if (network == "hysteria") "tls" else "none"))
+                        .withField(
+                            "finalmask",
+                            objectValue("udp" to ManualValue.arrayValue(masks.toList())),
+                        )
+            )
+        fun mask(type: String, vararg settings: Pair<String, ManualValue>) =
+            objectValue("type" to string(type), "settings" to objectValue(*settings))
+        fun strings(vararg values: String) = ManualValue.arrayValue(values.map(::string))
+        assertThrows(IllegalArgumentException::class.java) {
+            ManualServerCompiler(registry)
+                .compile(masked("kcp", mask("xicmp", "ips" to strings("icmp.example"))))
+        }
+        assertAcceptedByPinnedCore(
+            mapOf(
+                "kcp-seed-header" to
+                    masked(
+                        "kcp",
+                        mask("mkcp-legacy", "value" to string("seed")),
+                        mask("mkcp-legacy", "header" to string("wechat")),
+                    ),
+                "kcp-original-dns" to
+                    masked(
+                        "kcp",
+                        mask("mkcp-legacy"),
+                        mask(
+                            "mkcp-legacy",
+                            "header" to string("dns"),
+                            "value" to string("dns.example"),
+                        ),
+                    ),
+                "xdns" to
+                    masked(
+                        "kcp",
+                        mask(
+                            "xdns",
+                            "domains" to
+                                ManualValue.arrayValue(
+                                    listOf(objectValue("names" to strings("t.example")))
+                                ),
+                            "resolvers" to
+                                ManualValue.arrayValue(
+                                    listOf(
+                                        objectValue(
+                                            "addrs" to
+                                                strings("1.1.1.1", "tcp://8.8.8.8:53")
+                                        )
+                                    )
+                                ),
+                            "extraPoll" to integer("2"),
+                        ),
+                    ),
+                "xicmp" to
+                    masked(
+                        "kcp",
+                        mask(
+                            "xicmp",
+                            "ips" to strings("1.1.1.1", "2606:4700::1111"),
+                            "dgram" to ManualValue("boolean", "true"),
+                        ),
+                    ),
+            )
+        )
     }
 
     @Test
@@ -282,6 +361,157 @@ class ManualServerCompilerTest {
         assertTrue("remoteDNS" in keys("protocol.wireguard"))
         assertTrue(keys("KCPConfig").containsAll(listOf("cwndMultiplier", "maxSendingWindow")))
         assertFalse("writeBufferSize" in keys("KCPConfig"))
+    }
+
+    @Test
+    fun finalmaskCatalogMatchesPinnedCore() {
+        val registry = registry()
+        fun keys(schema: String) = registry.fields(schema).map { it.key }
+        val udp = registry.fields("MaskUDP")
+        val types = udp.single { it.key == "type" }.options
+        assertEquals(
+            listOf(
+                "header-custom",
+                "mkcp-legacy",
+                "noise",
+                "salamander",
+                "sudoku",
+                "xdns",
+                "xicmp",
+                "udphop",
+            ),
+            types,
+        )
+        assertEquals(
+            types.toSet(),
+            udp.single { it.key == "settings" }.metadata.getAsJsonObject("variants").keySet(),
+        )
+        assertEquals(listOf("header", "value"), keys("MkcpLegacy"))
+        assertEquals(listOf("domains", "resolvers", "extraPoll"), keys("Xdns"))
+        assertEquals(listOf("ips", "dgram"), keys("Xicmp"))
+        assertTrue("useSystemCA" in keys("TLSConfig"))
+        for (removed in
+            listOf("Dns", "Aes128Gcm", "Original", "Srtp", "Utp", "Wechat", "Dtls", "Wireguard")) {
+            assertTrue(removed, runCatching { registry.fields(removed) }.isFailure)
+        }
+    }
+
+    @Test
+    fun everySchemaReferenceResolves() {
+        val roots =
+            listOf("manual_protocols.json", "manual_streams.json").map {
+                JsonParser.parseString(File(assets(), it).readText()).asJsonObject
+            }
+        val schemas = roots.flatMap { it.getAsJsonObject("schemas").keySet() }.toSet()
+        val references = mutableListOf<String>()
+        fun collect(element: com.google.gson.JsonElement) {
+            when {
+                element.isJsonObject ->
+                    element.asJsonObject.entrySet().forEach { (key, value) ->
+                        if (key == "ref" && value.isJsonPrimitive) references += value.asString
+                        if (key == "variants" && value.isJsonObject)
+                            value.asJsonObject.entrySet().forEach { (_, target) ->
+                                if (target.isJsonPrimitive) references += target.asString
+                            }
+                        collect(value)
+                    }
+                element.isJsonArray -> element.asJsonArray.forEach(::collect)
+            }
+        }
+        roots.forEach { collect(it.getAsJsonObject("schemas")) }
+        assertEquals(emptyList<String>(), references.filterNot { it in schemas })
+    }
+
+    @Test
+    fun removedMkcpMasksAndKcpObfuscationMigrateToMkcpLegacy() {
+        fun migrate(stream: String) =
+            JsonParser.parseString(
+                    """{"protocol":"vless","settings":{},"streamSettings":$stream}"""
+                )
+                .asJsonObject
+                .also(LegacyTransportMigration::apply)
+                .getAsJsonObject("streamSettings")
+        fun udp(stream: com.google.gson.JsonObject) =
+            stream.getAsJsonObject("finalmask").getAsJsonArray("udp").map { it.toString() }
+        val legacy = """{"type":"mkcp-legacy"}"""
+        fun legacy(settings: String) = """{"type":"mkcp-legacy","settings":$settings}"""
+
+        val kcp =
+            migrate(
+                """{"network":"kcp","kcpSettings":{"mtu":1350,"header":{"type":"wechat-video"},"seed":"s"}}"""
+            )
+        assertEquals(
+            listOf(legacy("""{"value":"s"}"""), legacy("""{"header":"wechat"}""")),
+            udp(kcp),
+        )
+        assertEquals("""{"mtu":1350}""", kcp["kcpSettings"].toString())
+        assertEquals(
+            listOf(legacy, legacy("""{"header":"dns","value":"d.example"}""")),
+            udp(
+                migrate(
+                    """{"network":"mkcp","kcpSettings":{"header":{"type":"dns","domain":"d.example"}}}"""
+                )
+            ),
+        )
+        assertEquals(
+            listOf(legacy("""{"value":"s"}"""), """{"type":"noise"}"""),
+            udp(
+                migrate(
+                    """{"network":"kcp","kcpSettings":{"header":{"type":"none"},"seed":"s"},"finalmask":{"udp":[{"type":"noise"}]}}"""
+                )
+            ),
+        )
+        val modern =
+            migrate(
+                """{"network":"kcp","kcpSettings":{"seed":"old"},"finalmask":{"udp":[{"type":"mkcp-legacy","settings":{"value":"new"}}]}}"""
+            )
+        assertEquals(listOf(legacy("""{"value":"new"}""")), udp(modern))
+        assertFalse(modern.getAsJsonObject("kcpSettings").has("seed"))
+        val inactive = migrate("""{"network":"ws","kcpSettings":{"seed":"old"}}""")
+        assertEquals("old", inactive.getAsJsonObject("kcpSettings")["seed"].asString)
+
+        assertEquals(
+            listOf(
+                legacy("""{"value":"p"}"""),
+                legacy,
+                legacy("""{"header":"dns","value":"d.example"}"""),
+                legacy("""{"header":"wechat"}"""),
+                legacy("""{"header":"srtp"}"""),
+                """{"type":"noise","settings":{"reset":"1-2"}}""",
+            ),
+            udp(
+                migrate(
+                    """{"network":"kcp","finalmask":{"udp":[
+                        {"type":"mkcp-aes128gcm","settings":{"password":"p"}},
+                        {"type":"mkcp-original"},
+                        {"type":"header-dns","settings":{"domain":"d.example"}},
+                        {"type":"header-wechat"},
+                        {"type":"header-srtp","settings":{}},
+                        {"type":"noise","settings":{"reset":"1-2"}}]}}"""
+                )
+            ),
+        )
+
+        val xdns =
+            udp(
+                migrate(
+                    """{"network":"kcp","finalmask":{"udp":[
+                        {"type":"xdns","settings":{"domain":"t.example"}},
+                        {"type":"xdns","settings":{"domains":[{"name":"a.example","lenLimit":200},{"names":["b.example"]}],
+                            "resolvers":[{"type":"udp","settings":{"addr":"1.1.1.1:53"}},{"type":"tcp","settings":{"addr":"8.8.8.8:53"}},{"addrs":["9.9.9.9"]}]}}]}}"""
+                )
+            )
+        assertEquals(
+            listOf(
+                """{"type":"xdns","settings":{"domains":[{"names":["t.example"]}]}}""",
+                """{"type":"xdns","settings":{"domains":[{"lenLimit":200,"names":["a.example"]},{"names":["b.example"]}],"resolvers":[{"addrs":["udp://1.1.1.1:53"]},{"addrs":["tcp://8.8.8.8:53"]},{"addrs":["9.9.9.9"]}]}}""",
+            ),
+            xdns,
+        )
+
+        assertThrows(IllegalArgumentException::class.java) {
+            migrate("""{"network":"kcp","kcpSettings":{"header":{"type":"morse"}}}""")
+        }
     }
 
     @Test

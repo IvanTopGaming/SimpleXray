@@ -77,6 +77,14 @@ internal object ManualClientValidation {
                     val settings = entry.obj("settings") ?: JsonObject()
                     when (entry.text("type")) {
                         "sudoku" -> sudoku(settings)
+                        "xicmp" ->
+                            settings.list("ips").forEach {
+                                check(
+                                    ipBits(it.asString) != null,
+                                    "Адреса ICMP",
+                                    "нужен IPv4 или IPv6 без порта",
+                                )
+                            }
                         "udphop" -> {
                             check(
                                 settings.text("mode").split(',').all {
