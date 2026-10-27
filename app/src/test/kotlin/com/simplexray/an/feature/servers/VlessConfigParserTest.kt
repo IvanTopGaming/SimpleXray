@@ -27,10 +27,8 @@ class VlessConfigParserTest {
             stream.getAsJsonObject("tlsSettings").getAsJsonArray("alpn").map { it.asString },
         )
         assertEquals("/socket?ed=2048", stream.getAsJsonObject("wsSettings")["path"].asString)
-        assertEquals(
-            "ws.example",
-            stream.getAsJsonObject("wsSettings").getAsJsonObject("headers")["Host"].asString,
-        )
+        assertEquals("ws.example", stream.getAsJsonObject("wsSettings")["host"].asString)
+        assertFalse(stream.getAsJsonObject("wsSettings").has("headers"))
         assertFalse(user(outbound).has("flow"))
     }
 
@@ -102,6 +100,117 @@ class VlessConfigParserTest {
     }
 
     @Test
+    fun xhttpKeepsPathHostModeAndExtraAsJsonObject() {
+        val outbound =
+            outbound(
+                VlessConfigParser.parse(
+                        "$endpoint?encryption=none&security=tls&sni=cdn.example&fp=chrome&alpn=h2&type=xhttp&host=cdn.example&path=%2Fapi%2Fv2%2Fsync.json&mode=packet-up&extra=%7B%22noSSEHeader%22%3Atrue%2C%22xPaddingBytes%22%3A%22100-1000%22%2C%22sessionIDPlacement%22%3A%22query%22%2C%22sessionIDKey%22%3A%22sid%22%2C%22xmux%22%3A%7B%22maxConcurrency%22%3A%2216-32%22%7D%7D#CDN"
+                    )
+                    .second
+            )
+        val stream = outbound.getAsJsonObject("streamSettings")
+        assertEquals("xhttp", stream["network"].asString)
+        assertEquals("cdn.example", stream.getAsJsonObject("tlsSettings")["serverName"].asString)
+        val xhttp = stream.getAsJsonObject("xhttpSettings")
+        assertEquals("/api/v2/sync.json", xhttp["path"].asString)
+        assertEquals("cdn.example", xhttp["host"].asString)
+        assertEquals("packet-up", xhttp["mode"].asString)
+        val extra = xhttp.getAsJsonObject("extra")
+        assertTrue(extra["noSSEHeader"].asBoolean)
+        assertEquals("100-1000", extra["xPaddingBytes"].asString)
+        assertEquals("query", extra["sessionIDPlacement"].asString)
+        assertEquals("sid", extra["sessionIDKey"].asString)
+        assertEquals("16-32", extra.getAsJsonObject("xmux")["maxConcurrency"].asString)
+        assertFalse(stream.has("wsSettings"))
+    }
+
+    @Test
+    fun xhttpWithoutOptionalFieldsAndSplithttpAliasUseDefaults() {
+        for (type in listOf("xhttp", "splithttp")) {
+            val stream =
+                outbound(VlessConfigParser.parse("$endpoint?security=tls&type=$type").second)
+                    .getAsJsonObject("streamSettings")
+            assertEquals("xhttp", stream["network"].asString)
+            val xhttp = stream.getAsJsonObject("xhttpSettings")
+            assertEquals("/", xhttp["path"].asString)
+            assertFalse(xhttp.has("host"))
+            assertFalse(xhttp.has("mode"))
+            assertFalse(xhttp.has("extra"))
+        }
+    }
+
+    @Test
+    fun tlsDropsRemovedAllowInsecureAndKeepsModernVerification() {
+        val tls =
+            stream(
+                    "$endpoint?security=tls&allowInsecure=1&pcs=AA%3ABB&vcn=cert.example&ech=AEX%2B%2F%3D"
+                )
+                .getAsJsonObject("tlsSettings")
+        assertFalse(tls.has("allowInsecure"))
+        assertEquals("AA:BB", tls["pinnedPeerCertSha256"].asString)
+        assertEquals("cert.example", tls["verifyPeerCertByName"].asString)
+        assertEquals("AEX+/=", tls["echConfigList"].asString)
+    }
+
+    @Test
+    fun realityKeepsPostQuantumVerifyKey() {
+        val reality =
+            stream("$endpoint?security=reality&pbk=key&pqv=mldsa-key&type=xhttp")
+                .getAsJsonObject("realitySettings")
+        assertEquals("mldsa-key", reality["mldsa65Verify"].asString)
+    }
+
+    @Test
+    fun rawHttpHeaderObfuscationIsKept() {
+        val stream =
+            stream("$endpoint?type=tcp&headerType=http&host=a.example%2Cb.example&path=%2Fx%2C%2Fy")
+        val header = stream.getAsJsonObject("rawSettings").getAsJsonObject("header")
+        assertEquals("http", header["type"].asString)
+        val request = header.getAsJsonObject("request")
+        assertEquals(listOf("/x", "/y"), request.getAsJsonArray("path").map { it.asString })
+        assertEquals(
+            listOf("a.example", "b.example"),
+            request.getAsJsonObject("headers").getAsJsonArray("Host").map { it.asString },
+        )
+        assertFalse(stream("$endpoint?type=tcp&headerType=none").has("rawSettings"))
+    }
+
+    @Test
+    fun kcpLegacyHeaderAndSeedBecomeMkcpLegacyMasks() {
+        fun masks(link: String) =
+            stream(link).getAsJsonObject("finalmask").getAsJsonArray("udp").map {
+                val mask = it.asJsonObject
+                assertEquals("mkcp-legacy", mask["type"].asString)
+                mask.getAsJsonObject("settings")?.entrySet()?.associate { (key, value) ->
+                    key to value.asString
+                } ?: emptyMap()
+            }
+        assertEquals(
+            listOf(mapOf("value" to "secret"), mapOf("header" to "wechat")),
+            masks("$endpoint?type=kcp&headerType=wechat-video&seed=secret"),
+        )
+        assertEquals(listOf(emptyMap<String, String>()), masks("$endpoint?type=mkcp"))
+        assertEquals(
+            listOf(emptyMap(), mapOf("header" to "dns", "value" to "dns.example")),
+            masks("$endpoint?type=kcp&headerType=dns&host=dns.example"),
+        )
+        assertEquals(
+            listOf(emptyMap(), mapOf("header" to "srtp")),
+            masks("$endpoint?type=kcp&headerType=srtp&host=ignored.example"),
+        )
+        assertEquals("kcp", stream("$endpoint?type=mkcp")["network"].asString)
+        assertFalse(stream("$endpoint?type=kcp").has("kcpSettings"))
+    }
+
+    @Test
+    fun unencodedNamesWithSpacesAndEmojiAreAccepted() {
+        assertEquals(
+            "🇩🇪 Berlin #1",
+            VlessConfigParser.parse("$endpoint?security=none#🇩🇪 Berlin #1").first,
+        )
+    }
+
+    @Test
     fun invalidLinksFailBeforeProducingAProfile() {
         for (link in
             listOf(
@@ -111,6 +220,15 @@ class VlessConfigParserTest {
                 "$endpoint?security=unknown",
                 "vless://id@edge.example:70000",
                 "trojan://id@edge.example",
+                "$endpoint?type=xhttp&extra=%7Bbroken",
+                "$endpoint?type=xhttp&extra=%5B1%2C2%5D",
+                "$endpoint?type=xhttp&extra=plain",
+                "$endpoint?type=h2",
+                "$endpoint?type=http",
+                "$endpoint?type=quic",
+                "$endpoint?type=h3",
+                "$endpoint?type=carrier-pigeon",
+                "$endpoint?type=kcp&headerType=morse",
             )) {
             assertTrue("Accepted $link", runCatching { VlessConfigParser.parse(link) }.isFailure)
         }
@@ -122,6 +240,9 @@ class VlessConfigParserTest {
             .getAsJsonArray("outbounds")
             .single()
             .asJsonObject
+
+    private fun stream(link: String): JsonObject =
+        outbound(VlessConfigParser.parse(link).second).getAsJsonObject("streamSettings")
 
     private fun user(outbound: JsonObject) =
         outbound
