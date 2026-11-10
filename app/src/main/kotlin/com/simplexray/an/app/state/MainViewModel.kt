@@ -28,6 +28,7 @@ import com.simplexray.an.feature.settings.state.geodata.GeodataController
 import com.simplexray.an.feature.settings.state.updates.UpdatesController
 import com.simplexray.an.feature.subscriptions.data.SubscriptionManager
 import com.simplexray.an.feature.subscriptions.model.Subscription
+import com.simplexray.an.feature.subscriptions.routing.SubscriptionRoutingView
 import com.simplexray.an.feature.subscriptions.state.SubscriptionSyncState
 import com.simplexray.an.feature.subscriptions.state.SubscriptionsController
 import com.simplexray.an.prefs.Preferences
@@ -173,6 +174,9 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     val subscriptionSync: StateFlow<Map<String, SubscriptionSyncState>> =
         subscriptionState.subscriptionSync
 
+    val subscriptionRouting: StateFlow<Map<String, SubscriptionRoutingView>> =
+        subscriptionState.subscriptionRouting
+
     val subscriptionByFile: StateFlow<Map<String, String>> = subscriptionState.subscriptionByFile
 
     val isCheckingForUpdates: StateFlow<Boolean> = updates.isCheckingForUpdates
@@ -316,6 +320,9 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         subscriptionState.updateSubscriptionUrl(id, url)
 
     fun deleteSubscription(id: String) = subscriptionState.deleteSubscription(id)
+
+    fun setSubscriptionRoutingAccepted(id: String, accepted: Boolean) =
+        subscriptionState.setSubscriptionRoutingAccepted(id, accepted)
 
     fun checkForUpdates() = updates.checkForUpdates()
 

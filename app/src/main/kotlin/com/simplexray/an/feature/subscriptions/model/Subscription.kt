@@ -9,6 +9,8 @@ data class Subscription(
     val displayTitle: String? = null,
     val usage: SubscriptionUsage? = null,
     val lastError: String? = null,
+    val routingDisabled: Boolean = false,
+    val routingError: String? = null,
 ) {
     val displayName: String
         get() = displayTitle?.takeIf { it.isNotBlank() } ?: name

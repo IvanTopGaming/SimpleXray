@@ -2,19 +2,28 @@ package com.simplexray.an.core.config.profile
 
 import com.google.gson.JsonElement
 import com.google.gson.JsonParser
+import com.simplexray.an.core.geodata.GeodataFiles
 
 object ProfileGeodata {
     fun requiredFiles(config: String): Set<String> {
         val root = JsonParser.parseString(config).asJsonObject
         val required = mutableSetOf<String>()
         fun reference(value: String) {
-            if (value.startsWith("geoip:")) required.add("geoip.dat")
-            if (value.startsWith("geosite:")) required.add("geosite.dat")
-            require(
-                !value.startsWith("ext:", true) &&
-                    !value.startsWith("ext-ip:", true) &&
-                    !value.startsWith("ext-domain:", true)
-            ) {
+            if (value.startsWith("geoip:")) required.add(GeodataFiles.GEOIP)
+            if (value.startsWith("geosite:")) required.add(GeodataFiles.GEOSITE)
+            if (value.startsWith("ext:", true)) {
+                val file = value.substring(4).substringBefore(':')
+                require(
+                    value.startsWith("ext:") &&
+                        GeodataFiles.isSubscription(file) &&
+                        value.length > file.length + 5
+                ) {
+                    "Внешние файлы правил не поддерживаются"
+                }
+                required.add(file)
+                return
+            }
+            require(!value.startsWith("ext-ip:", true) && !value.startsWith("ext-domain:", true)) {
                 "Внешние файлы правил не поддерживаются"
             }
         }

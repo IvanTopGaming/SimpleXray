@@ -50,7 +50,7 @@ internal object RoutingPresetCodec {
 
     private const val MAX_BYTES = 8 * 1024 * 1024
     private const val MAX_URL_CHARS = 8192
-    private const val LINK_PREFIX = "simplexray://routing/"
+    const val LINK_PREFIX = "simplexray://routing/"
     private const val MAX_BASE64_CHARS = (MAX_BYTES * 4 + 2) / 3
     private const val BASE64_ALPHABET =
         "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_"
@@ -73,7 +73,7 @@ internal object RoutingPresetCodec {
             source.startsWith(authority, ignoreCase = true) &&
                 (source.length == authority.length || source[authority.length] in "/?#:\\")
         ) {
-            return decodeLink(source)
+            return decode(linkJson(source))
         }
         checkSize(raw)
         if (!source.startsWith("{")) return null
@@ -109,7 +109,7 @@ internal object RoutingPresetCodec {
         return decodeUtf8(output.toByteArray())
     }
 
-    private fun decodeLink(source: String): RoutingPreset {
+    fun linkJson(source: String): String {
         require(source.startsWith(LINK_PREFIX, ignoreCase = true)) {
             "Некорректная ссылка настроек роутинга"
         }
@@ -139,7 +139,7 @@ internal object RoutingPresetCodec {
                 throw IllegalArgumentException("Некорректное содержимое ссылки настроек роутинга")
             }
         require(bytes.size <= MAX_BYTES) { "Пресет роутинга превышает 8 МиБ" }
-        return decode(decodeUtf8(bytes))
+        return decodeUtf8(bytes)
     }
 
     private fun decodeUtf8(bytes: ByteArray): String {

@@ -15,6 +15,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.produceState
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -28,7 +29,10 @@ import com.simplexray.an.feature.logs.ui.LoggingSettingsSection
 import com.simplexray.an.feature.profile.ui.ProfileSettingsSection
 import com.simplexray.an.feature.routing.server.RoutingServerCatalog
 import com.simplexray.an.feature.routing.server.RoutingServerOption
+import com.simplexray.an.feature.routing.ui.RoutingProfileTab
+import com.simplexray.an.feature.routing.ui.RoutingProfileTabs
 import com.simplexray.an.feature.routing.ui.RoutingSettingsSection
+import com.simplexray.an.feature.routing.ui.SubscriptionRoutingTab
 import com.simplexray.an.feature.servers.ui.PingSettingsSection
 import com.simplexray.an.feature.subscriptions.data.SubscriptionManager
 import com.simplexray.an.feature.subscriptions.ui.SubscriptionSettingsSection
@@ -146,7 +150,25 @@ fun SettingsScreen(
                             }
                         }
                 }
-            RoutingSettingsSection(mainViewModel.routingEditor, serverOptions)
+            val subscriptionRouting by
+                mainViewModel.subscriptionRouting.collectAsStateWithLifecycle()
+            val routedSubscriptions = subscriptions.filter { it.id in subscriptionRouting }
+            var routingTab by rememberSaveable { mutableStateOf<String?>(null) }
+            val selectedSubscription = routedSubscriptions.firstOrNull { it.id == routingTab }
+            Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
+                if (routedSubscriptions.isNotEmpty())
+                    RoutingProfileTabs(
+                        listOf(RoutingProfileTab(null, "Глобальный")) +
+                            routedSubscriptions.map { RoutingProfileTab(it.id, it.displayName) },
+                        selectedSubscription?.id,
+                    ) {
+                        routingTab = it
+                    }
+                val view = selectedSubscription?.let { subscriptionRouting[it.id] }
+                if (selectedSubscription != null && view != null)
+                    SubscriptionRoutingTab(selectedSubscription, view)
+                else RoutingSettingsSection(mainViewModel.routingEditor, serverOptions)
+            }
         }
         if (section == null || section == "Входящие подключения") {
             InboundSettingsSection(mainViewModel, settingsState, vpnDisabled, sheetState, scope)

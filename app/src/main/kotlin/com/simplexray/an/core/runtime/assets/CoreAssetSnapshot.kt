@@ -1,5 +1,6 @@
 package com.simplexray.an.core.runtime.assets
 
+import com.simplexray.an.core.geodata.GeodataFiles
 import java.io.Closeable
 import java.io.File
 import java.nio.file.Files
@@ -17,7 +18,7 @@ class CoreAssetSnapshot private constructor(val directory: File) : Closeable {
         }
 
         fun create(source: File, cache: File, required: Set<String>): CoreAssetSnapshot {
-            require(required.all { it == "geoip.dat" || it == "geosite.dat" })
+            require(required.all(GeodataFiles::isKnown))
             val directory = Files.createTempDirectory(cache.toPath(), "core-assets-").toFile()
             try {
                 required.forEach { name ->

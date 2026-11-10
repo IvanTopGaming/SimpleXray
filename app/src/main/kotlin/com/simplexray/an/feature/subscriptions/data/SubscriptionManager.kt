@@ -8,6 +8,8 @@ import com.simplexray.an.feature.servers.importing.SubscriptionParser
 import com.simplexray.an.feature.subscriptions.data.files.SubscriptionConfigFiles
 import com.simplexray.an.feature.subscriptions.data.remote.SubscriptionDocumentClient
 import com.simplexray.an.feature.subscriptions.model.Subscription
+import com.simplexray.an.feature.subscriptions.routing.SubscriptionRoutingCodec
+import com.simplexray.an.feature.subscriptions.routing.SubscriptionRoutingStore
 import com.simplexray.an.prefs.Preferences
 import java.io.File
 import java.io.IOException
@@ -27,6 +29,7 @@ class SubscriptionManager(
 ) {
     private val documentClient = SubscriptionDocumentClient(prefs, isServiceEnabled)
     private val configFiles = SubscriptionConfigFiles(application, prefs)
+    private val routingStore = SubscriptionRoutingStore(application.filesDir)
 
     suspend fun create(name: String, url: String): Subscription =
         withContext(Dispatchers.IO) {
@@ -97,6 +100,15 @@ class SubscriptionManager(
                 if (servers.isEmpty()) {
                     return@withLock failed(sub, R.string.subscription_error_empty)
                 }
+                val routingLink = SubscriptionRoutingCodec.link(response.routing, response.body)
+                val routing =
+                    routingLink?.let {
+                        try {
+                            Result.success(SubscriptionRoutingCodec.decodeLink(it))
+                        } catch (e: Exception) {
+                            Result.failure(e)
+                        }
+                    }
 
                 val filesDir = application.filesDir
                 currentCoroutineContext().ensureActive()
@@ -111,6 +123,31 @@ class SubscriptionManager(
                         sub.files.filter { it !in newFileNames }.map { File(filesDir, it) }
                     removedPaths.forEach { if (it.exists()) it.delete() }
 
+                    val routingError =
+                        try {
+                            when {
+                                routing == null -> {
+                                    routingStore.delete(sub.id)
+                                    null
+                                }
+                                routing.isSuccess -> {
+                                    routingStore.write(
+                                        sub.id,
+                                        routing
+                                            .getOrThrow()
+                                            .copy(updatedAt = System.currentTimeMillis()),
+                                    )
+                                    null
+                                }
+                                else ->
+                                    "Роутинг подписки не принят: " +
+                                        routing.exceptionOrNull()?.message.orEmpty().take(300)
+                            }
+                        } catch (e: Exception) {
+                            Log.e(TAG, "Subscription routing save failed: ${e.javaClass.simpleName}")
+                            "Не удалось сохранить роутинг подписки"
+                        }
+
                     val updated =
                         sub.copy(
                             files = newFileNames,
@@ -118,6 +155,7 @@ class SubscriptionManager(
                             displayTitle = response.title,
                             usage = parseSubscriptionUsage(response.userinfo),
                             lastError = null,
+                            routingError = routingError,
                         )
                     prefs.subscriptions =
                         prefs.subscriptions.map { if (it.id == id) updated else it }
@@ -140,9 +178,22 @@ class SubscriptionManager(
                         if (f.exists()) f.delete()
                     }
                     prefs.subscriptions = prefs.subscriptions.filter { it.id != id }
+                    routingStore.delete(id)
                     configFiles.reconcileOrderAndSelection(emptyList())
                     true
                 }
+            }
+        }
+
+    suspend fun setRoutingDisabled(id: String, disabled: Boolean): Boolean =
+        withContext(Dispatchers.IO) {
+            mutex.withLock {
+                if (prefs.subscriptions.none { it.id == id }) return@withLock false
+                prefs.subscriptions =
+                    prefs.subscriptions.map {
+                        if (it.id == id) it.copy(routingDisabled = disabled) else it
+                    }
+                true
             }
         }
 
@@ -167,7 +218,12 @@ class SubscriptionManager(
             }
         }
 
-    data class Response(val body: String, val title: String, val userinfo: String?)
+    data class Response(
+        val body: String,
+        val title: String,
+        val userinfo: String?,
+        val routing: List<String> = emptyList(),
+    )
 
     suspend fun fetchForImport(url: String, subscriptionIdentity: Boolean = true): Response =
         withContext(Dispatchers.IO) {

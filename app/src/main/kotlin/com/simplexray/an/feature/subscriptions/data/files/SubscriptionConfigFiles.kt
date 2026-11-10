@@ -85,7 +85,7 @@ internal class SubscriptionConfigFiles(
         internal fun serverName(subscription: Subscription, filename: String): String =
             filename.removePrefix("${sanitize(subscription.name)} - ").ifBlank { "Сервер" }
 
-        private fun sanitize(name: String): String {
+        internal fun sanitize(name: String): String {
             val cleaned = name.trim().replace(Regex("[\\\\/:*?\"<>|]"), "_")
             return cleaned.ifEmpty { "server" }
         }

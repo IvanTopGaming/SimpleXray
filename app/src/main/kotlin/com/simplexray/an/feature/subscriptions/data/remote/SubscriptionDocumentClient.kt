@@ -97,6 +97,7 @@ internal class SubscriptionDocumentClient(
                     response.header("Content-Disposition"),
                 ),
                 response.header("subscription-userinfo"),
+                response.headers("routing"),
             )
         }
     }

@@ -9,6 +9,7 @@ import com.simplexray.an.core.config.ownership.RoutingServerOutbounds
 import com.simplexray.an.core.config.profile.ProfileGeodata
 import com.simplexray.an.core.config.profile.ProfileOverrides
 import com.simplexray.an.core.config.routing.RoutingCompiler
+import com.simplexray.an.core.config.routing.RoutingLayer
 import com.simplexray.an.feature.dns.model.DnsSettings
 import com.simplexray.an.feature.kernel.model.KernelSettings
 import com.simplexray.an.feature.logs.model.LogSettings
@@ -34,6 +35,7 @@ class AppConfig(prefs: Preferences) {
         source: String,
         routing: RoutingSettings?,
         serverSources: Map<String, String> = emptyMap(),
+        layers: List<RoutingLayer> = emptyList(),
     ): String =
         LoggingConfigCompiler.compile(
             KernelConfigCompiler.compile(
@@ -54,6 +56,7 @@ class AppConfig(prefs: Preferences) {
                     dnsSettings,
                     ipv6,
                     routing,
+                    layers,
                 ),
                 kernelSettings,
             ),
@@ -65,10 +68,12 @@ class AppConfig(prefs: Preferences) {
         routing: RoutingSettings,
         overrides: ProfileOverrides = ProfileOverrides.decode(profileOverridesJson),
         serverSources: Map<String, String> = emptyMap(),
+        layers: List<RoutingLayer> = emptyList(),
     ): String {
         routing.validate()
+        RoutingLayer.validate(routing.rules, layers)
         val additional =
-            routing.rules
+            (routing.rules + layers.flatMap { it.rules })
                 .filter { it.enabled }
                 .mapNotNull { it.serverBlockId }
                 .distinct()
@@ -79,8 +84,14 @@ class AppConfig(prefs: Preferences) {
                 }
         val compiled =
             RoutingCompiler.compile(
-                build(source, routing.takeUnless { overrides.hasCustomDnsRouting }, additional),
+                build(
+                    source,
+                    routing.takeUnless { overrides.hasCustomDnsRouting },
+                    additional,
+                    layers,
+                ),
                 routing,
+                layers,
             )
         val result =
             InboundConfigCompiler.applyTrafficPolicy(overrides.applyTo(compiled), inboundSettings)

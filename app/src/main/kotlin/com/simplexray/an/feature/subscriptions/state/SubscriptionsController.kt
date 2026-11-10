@@ -11,6 +11,9 @@ import com.simplexray.an.feature.routing.state.RoutingPresetController
 import com.simplexray.an.feature.subscriptions.data.SubscriptionManager
 import com.simplexray.an.feature.subscriptions.data.SubscriptionRefreshScheduler
 import com.simplexray.an.feature.subscriptions.model.Subscription
+import com.simplexray.an.feature.subscriptions.routing.SubscriptionRoutingResolver
+import com.simplexray.an.feature.subscriptions.routing.SubscriptionRoutingStore
+import com.simplexray.an.feature.subscriptions.routing.SubscriptionRoutingView
 import com.simplexray.an.prefs.Preferences
 import com.simplexray.an.prefs.PrefsContract
 import java.io.File
@@ -75,10 +78,34 @@ internal class SubscriptionsController(
 
     val subscriptionByFile: StateFlow<Map<String, String>> = _subscriptionByFile.asStateFlow()
 
+    private val _subscriptionRouting =
+        MutableStateFlow<Map<String, SubscriptionRoutingView>>(emptyMap())
+
+    val subscriptionRouting: StateFlow<Map<String, SubscriptionRoutingView>> =
+        _subscriptionRouting.asStateFlow()
+
     fun refreshSubscriptions() =
         scope.launch(Dispatchers.IO) {
             subscriptionRefreshMutex.withLock {
                 val subs = prefs.subscriptions
+                val filesDir = application.filesDir
+                val store = SubscriptionRoutingStore(filesDir)
+                _subscriptionRouting.value = buildMap {
+                    subs.forEach { sub ->
+                        store.read(sub.id)?.let { routing ->
+                            val unresolved =
+                                if (sub.routingDisabled) emptyList()
+                                else
+                                    SubscriptionRoutingResolver.unresolved(
+                                        filesDir,
+                                        sub,
+                                        subs,
+                                        routing,
+                                    )
+                            put(sub.id, SubscriptionRoutingView(routing, unresolved))
+                        }
+                    }
+                }
                 _subscriptions.value = subs
                 _subscriptionByFile.value = buildMap {
                     subs.forEach { sub -> sub.files.forEach { put(it, sub.id) } }
@@ -147,6 +174,13 @@ internal class SubscriptionsController(
                 refreshSubscriptions()
                 refreshConfigFileList()
             }
+        }
+    }
+
+    fun setSubscriptionRoutingAccepted(id: String, accepted: Boolean) {
+        scope.launch(Dispatchers.IO) {
+            subscriptionManager.setRoutingDisabled(id, !accepted)
+            refreshSubscriptions()
         }
     }
 
