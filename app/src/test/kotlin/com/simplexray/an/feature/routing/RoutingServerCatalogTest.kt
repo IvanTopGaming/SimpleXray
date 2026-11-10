@@ -151,9 +151,48 @@ class RoutingServerCatalogTest {
         val subscription = subscription(owned)
         val reference = option(owned, subscription)
         unresolved(reference, listOf(owned), emptyList())
-        unresolved(reference, listOf(owned), listOf(subscription.copy(id = "another")))
+        unresolved(
+            reference,
+            listOf(owned),
+            listOf(subscription.copy(id = "another", url = "https://subscription.invalid/another")),
+        )
         unresolved(reference, listOf(owned), listOf(subscription.copy(files = emptyList())))
         unresolved(reference, emptyList(), listOf(subscription))
+    }
+
+    @Test
+    fun reAddedSubscriptionWithSameUrlKeepsSelection() {
+        val owned = server("Feed - One.json")
+        val subscription = subscription(owned)
+        val reference = option(owned, subscription)
+        val readded = subscription.copy(id = "readded-id")
+        assertEquals(owned, RoutingServerCatalog.resolve(reference, listOf(owned), listOf(readded)))
+        unresolved(
+            reference,
+            listOf(owned),
+            listOf(readded, readded.copy(id = "twice", files = emptyList())),
+        )
+        unresolved(reference.copy(subscriptionKey = null), listOf(owned), listOf(readded))
+        assertFalse(reference.toString().contains(subscription.url))
+    }
+
+    @Test
+    fun renamedServerWithSameProfileKeepsSelection() {
+        val original = server("Feed - One.json")
+        val subscription = subscription(original)
+        val reference = option(original, subscription)
+        val renamed = server("Feed - One renamed.json")
+        val other = server("Feed - Two.json", "two.example")
+        val refreshed = subscription.copy(files = listOf(other.name, renamed.name))
+        assertEquals(
+            renamed,
+            RoutingServerCatalog.resolve(reference, listOf(other, renamed), listOf(refreshed)),
+        )
+        other.writeText(renamed.readText())
+        unresolved(reference, listOf(other, renamed), listOf(refreshed))
+        renamed.writeText(config("changed.example"))
+        other.writeText(config("changed.example"))
+        unresolved(reference, listOf(other, renamed), listOf(refreshed))
     }
 
     @Test

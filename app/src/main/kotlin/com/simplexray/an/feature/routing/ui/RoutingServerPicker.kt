@@ -71,15 +71,24 @@ internal fun isRoutingServerAvailable(
         return options.any {
             it.reference.subscriptionId == null && it.reference.fileName == reference.fileName
         }
-    val candidates =
-        options.filter {
-            it.reference.subscriptionId == reference.subscriptionId &&
-                it.reference.name == reference.name
-        }
-    return if (!reference.matchFingerprint && candidates.size == 1) true
-    else
-        reference.fingerprint.isNotEmpty() &&
-            candidates.count {
-                it.reference.fingerprint.equals(reference.fingerprint, ignoreCase = true)
-            } == 1
+    val owned =
+        options
+            .filter { it.reference.subscriptionId == reference.subscriptionId }
+            .ifEmpty {
+                val key = reference.subscriptionKey ?: return false
+                options
+                    .filter { it.reference.subscriptionKey == key }
+                    .takeIf { matches ->
+                        matches.map { it.reference.subscriptionId }.distinct().size == 1
+                    }
+                    .orEmpty()
+            }
+    val named = owned.filter { it.reference.name == reference.name }
+    if (!reference.matchFingerprint && named.size == 1) return true
+    if (reference.fingerprint.isEmpty()) return false
+    fun pinned(candidates: List<RoutingServerOption>) =
+        candidates.count {
+            it.reference.fingerprint.equals(reference.fingerprint, ignoreCase = true)
+        } == 1
+    return pinned(named) || pinned(owned)
 }

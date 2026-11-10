@@ -30,6 +30,7 @@ object RoutingServerCatalog {
                     matchFingerprint =
                         subscription != null &&
                             subscription.files.count { serverName(subscription, it) == name } > 1,
+                    subscriptionKey = subscription?.let(::subscriptionKey),
                 )
             try {
                 reference.validate()
@@ -70,28 +71,42 @@ object RoutingServerCatalog {
             return source(file)
         }
         val subscription =
-            subscriptions.singleOrNull { it.id == ref.subscriptionId }
+            owner(ref, subscriptions)
                 ?: throw IllegalArgumentException("Подписка недоступна. Выбери сервер заново")
         val otherOwned =
-            subscriptions.filter { it.id != ref.subscriptionId }.flatMap { it.files }.toSet()
-        val matches =
+            subscriptions.filter { it.id != subscription.id }.flatMap { it.files }.toSet()
+        val owned =
             files.filter {
-                it.isFile &&
-                    it.name in subscription.files &&
-                    it.name !in otherOwned &&
-                    serverName(subscription, it.name) == ref.name
+                it.isFile && it.name in subscription.files && it.name !in otherOwned
             }
-        if (matches.size == 1 && !ref.matchFingerprint) return source(matches.single())
-        if (matches.isEmpty()) {
-            throw IllegalArgumentException("Сервер недоступен. Выбери сервер заново")
-        }
-        return matches.map(::source).singleOrNull {
-            ref.fingerprint.isNotEmpty() &&
-                fingerprint(it.content)?.equals(ref.fingerprint, ignoreCase = true) == true
-        } ?: throw IllegalArgumentException("Сервер не удалось определить. Выбери сервер заново")
+        val named = owned.filter { serverName(subscription, it.name) == ref.name }
+        if (named.size == 1 && !ref.matchFingerprint) return source(named.single())
+        val namedSources = named.map(::source)
+        return pinned(ref, namedSources)
+            ?: pinned(ref, owned.filter { it !in named }.map(::source) + namedSources)
+            ?: throw IllegalArgumentException(
+                if (named.isEmpty()) "Сервер недоступен. Выбери сервер заново"
+                else "Сервер не удалось определить. Выбери сервер заново"
+            )
     }
 
-    private fun serverName(subscription: Subscription, fileName: String): String =
+    internal fun subscriptionKey(subscription: Subscription): String =
+        sha256(subscription.url.trim())
+
+    private fun owner(ref: RoutingServerRef, subscriptions: List<Subscription>): Subscription? =
+        subscriptions.singleOrNull { it.id == ref.subscriptionId }
+            ?: ref.subscriptionKey?.let { key ->
+                subscriptions.singleOrNull { subscriptionKey(it) == key }
+            }
+
+    private fun pinned(ref: RoutingServerRef, sources: List<ServerSource>): ServerSource? =
+        if (ref.fingerprint.isEmpty()) null
+        else
+            sources.singleOrNull {
+                fingerprint(it.content)?.equals(ref.fingerprint, ignoreCase = true) == true
+            }
+
+    internal fun serverName(subscription: Subscription, fileName: String): String =
         SubscriptionConfigFiles.serverName(subscription, fileName)
             .removeSuffix(".json")
             .replace(Regex(" \\(([2-9]|[1-9][0-9]+)\\)$"), "")
@@ -109,12 +124,15 @@ object RoutingServerCatalog {
                 JsonParser.parseString(OwnedConfig.serverProfile(content))
                     .asJsonObject
                     .getAsJsonArray("outbounds")
-            MessageDigest.getInstance("SHA-256")
-                .digest(canonical(profile).toString().toByteArray(Charsets.UTF_8))
-                .joinToString("") { "%02x".format(it.toInt() and 0xff) }
+            sha256(canonical(profile).toString())
         } catch (_: Exception) {
             null
         }
+
+    private fun sha256(value: String): String =
+        MessageDigest.getInstance("SHA-256")
+            .digest(value.toByteArray(Charsets.UTF_8))
+            .joinToString("") { "%02x".format(it.toInt() and 0xff) }
 
     private fun canonical(value: JsonElement): JsonElement =
         when {

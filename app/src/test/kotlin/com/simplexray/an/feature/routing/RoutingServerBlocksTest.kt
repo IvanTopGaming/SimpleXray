@@ -50,6 +50,7 @@ class RoutingServerBlocksTest {
                 subscriptionId = "sub",
                 fingerprint = "a".repeat(64),
                 matchFingerprint = true,
+                subscriptionKey = "c".repeat(64),
             )
         val block = RoutingBlock(RouteTarget.PROXY, "suffix:example.com", "route_a", ref)
         val blocks = RoutingBlocks.fromRules(emptyList()) + block

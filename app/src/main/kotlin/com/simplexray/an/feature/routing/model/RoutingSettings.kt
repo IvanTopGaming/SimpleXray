@@ -161,6 +161,10 @@ data class RoutingSettings(
                                                     )
                                                     it.asBoolean
                                                 } ?: false,
+                                            subscriptionKey =
+                                                server["subscriptionKey"]
+                                                    ?.takeUnless { it.isJsonNull }
+                                                    ?.let { serverString("subscriptionKey") },
                                         )
                                     },
                             )
