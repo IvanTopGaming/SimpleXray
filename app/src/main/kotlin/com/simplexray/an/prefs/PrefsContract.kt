@@ -2,9 +2,10 @@ package com.simplexray.an.prefs
 
 import android.net.Uri
 import android.provider.BaseColumns
+import com.simplexray.an.BuildConfig
 
 object PrefsContract {
-    const val AUTHORITY: String = "com.simplexray.an.prefsprovider"
+    const val AUTHORITY: String = "${BuildConfig.APPLICATION_ID}.prefsprovider"
     val BASE_CONTENT_URI: Uri = Uri.parse("content://$AUTHORITY")
     const val PATH_PREFS: String = "prefs"
 

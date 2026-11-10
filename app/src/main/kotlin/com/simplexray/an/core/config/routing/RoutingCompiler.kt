@@ -25,8 +25,13 @@ object RoutingCompiler {
             .toSet()
     }
 
-    fun compile(source: String, settings: RoutingSettings): String {
+    fun compile(
+        source: String,
+        settings: RoutingSettings,
+        layers: List<RoutingLayer> = emptyList(),
+    ): String {
         settings.validate()
+        RoutingLayer.validate(settings.rules, layers)
         val root =
             try {
                 JsonParser.parseString(source).asJsonObject
@@ -91,7 +96,11 @@ object RoutingCompiler {
         require(clientTags.none { it in internalTags }) {
             "Тег клиентского входа совпадает со служебным трафиком. Нужны разные теги."
         }
-        val active = settings.rules.filter { it.enabled }
+        val entries =
+            (listOf(RoutingLayer(settings.rules)) + layers).flatMap { layer ->
+                layer.rules.filter { it.enabled }.map { layer to it }
+            }
+        val active = entries.map { it.second }
         val needProxy =
             settings.defaultRoute == RouteTarget.PROXY ||
                 active.any { it.target == RouteTarget.PROXY }
@@ -196,28 +205,14 @@ object RoutingCompiler {
                     )
                 }
             )
-        active.forEach { rule ->
+        entries.forEach { (layer, rule) ->
             result.add(
                 scoped(rule.target, rule.serverBlockId).apply {
                     if (rule.kind == RuleKind.IP) add("ip", strings(rule.values))
                     else if (rule.kind == RuleKind.GEOIP)
-                        add(
-                            "ip",
-                            strings(
-                                rule.values.map {
-                                    "geoip:" + RoutingRule.normalizeCategory(it, rule.kind)
-                                }
-                            ),
-                        )
+                        add("ip", strings(rule.values.map { layer.category(rule, it) }))
                     else if (rule.kind == RuleKind.GEOSITE)
-                        add(
-                            "domain",
-                            strings(
-                                rule.values.map {
-                                    "geosite:" + RoutingRule.normalizeCategory(it, rule.kind)
-                                }
-                            ),
-                        )
+                        add("domain", strings(rule.values.map { layer.category(rule, it) }))
                     else
                         add(
                             "domain",

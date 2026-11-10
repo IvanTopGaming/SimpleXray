@@ -47,5 +47,42 @@ class RoutingServerAvailabilityTest {
         assertFalse(isRoutingServerAvailable(original, emptyList()))
     }
 
+    @Test
+    fun reAddedSubscriptionAndRenamedServerStayAvailable() {
+        val original =
+            RoutingServerRef(
+                "Feed - One.json",
+                "One",
+                "old",
+                "a".repeat(64),
+                subscriptionKey = "c".repeat(64),
+            )
+        val readded = original.copy(subscriptionId = "new")
+        assertTrue(isRoutingServerAvailable(original, listOf(option(readded))))
+        assertFalse(
+            isRoutingServerAvailable(original.copy(subscriptionKey = null), listOf(option(readded)))
+        )
+        assertFalse(
+            isRoutingServerAvailable(
+                original,
+                listOf(option(readded), option(readded.copy(subscriptionId = "twice"))),
+            )
+        )
+        val renamed = original.copy(fileName = "Feed - Two.json", name = "Two")
+        assertTrue(isRoutingServerAvailable(original, listOf(option(renamed))))
+        assertFalse(
+            isRoutingServerAvailable(
+                original,
+                listOf(option(renamed), option(renamed.copy(fileName = "Feed - Three.json"))),
+            )
+        )
+        assertFalse(
+            isRoutingServerAvailable(
+                original,
+                listOf(option(renamed.copy(fingerprint = "b".repeat(64)))),
+            )
+        )
+    }
+
     private fun option(reference: RoutingServerRef) = RoutingServerOption(reference, "Group")
 }

@@ -28,6 +28,7 @@ fun SubscriptionsScreen(
 ) {
     val subscriptions by mainViewModel.subscriptions.collectAsState()
     val sync by mainViewModel.subscriptionSync.collectAsState()
+    val routing by mainViewModel.subscriptionRouting.collectAsState()
     var deleting by remember { mutableStateOf<Subscription?>(null) }
     var editing by remember { mutableStateOf<Subscription?>(null) }
     val outline = MaterialTheme.colorScheme.outlineVariant
@@ -88,6 +89,10 @@ fun SubscriptionsScreen(
             initialUrl = sub.url,
             editing = true,
             onDismiss = { editing = null },
+            routingAccepted =
+                (!sub.routingDisabled).takeIf { routing[sub.id] != null || sub.routingError != null },
+            routingError = sub.routingError,
+            onRoutingAcceptedChange = { mainViewModel.setSubscriptionRoutingAccepted(sub.id, it) },
             onConfirm = { _, url ->
                 mainViewModel.updateSubscriptionUrl(sub.id, url)
                 editing = null

@@ -1,6 +1,7 @@
 package com.simplexray.an.core.geodata.validation
 
 import com.google.protobuf.CodedInputStream
+import com.simplexray.an.core.geodata.GeodataFiles
 import com.simplexray.an.core.geodata.MAX_BYTES
 import java.io.File
 import java.io.IOException
@@ -30,13 +31,13 @@ internal object GeodataValidator {
                                     10 -> category = shortString()
                                     18 -> {
                                         message {
-                                            if (filename == "geoip.dat") validateCidr()
+                                            if (GeodataFiles.isGeoip(filename)) validateCidr()
                                             else validateDomain()
                                         }
                                         records++
                                     }
                                     24 ->
-                                        if (filename == "geoip.dat") readBool() else skip(entryTag)
+                                        if (GeodataFiles.isGeoip(filename)) readBool() else skip(entryTag)
                                     else -> skip(entryTag)
                                 }
                             }

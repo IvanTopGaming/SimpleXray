@@ -3,6 +3,7 @@ package com.simplexray.an.core.config.dns
 import com.google.gson.JsonArray
 import com.google.gson.JsonObject
 import com.google.gson.JsonParser
+import com.simplexray.an.core.config.routing.RoutingLayer
 import com.simplexray.an.core.config.routing.RoutingServerTags
 import com.simplexray.an.feature.dns.model.DnsQueryStrategy
 import com.simplexray.an.feature.dns.model.DnsSettings
@@ -18,6 +19,7 @@ object DnsConfigCompiler {
         settings: DnsSettings,
         ipv6: Boolean,
         routing: RoutingSettings? = null,
+        layers: List<RoutingLayer> = emptyList(),
     ): String {
         settings.validate()
         val root = JsonParser.parseString(source).asJsonObject
@@ -43,7 +45,7 @@ object DnsConfigCompiler {
                 it["tag"]?.asString
                     ?: unique("__sx_client").also { tag -> it.addProperty("tag", tag) }
             }
-        val splitRules = routing?.let(SplitDnsRules::from).orEmpty()
+        val splitRules = routing?.let { SplitDnsRules.from(it, layers) }.orEmpty()
         val hasDirect = routing?.defaultRoute == RouteTarget.DIRECT || splitRules.any { it.direct }
         val split = hasDirect || splitRules.any { it.serverBlockId != null }
         val directDnsTag = if (hasDirect) unique("__sx_direct_dns") else null

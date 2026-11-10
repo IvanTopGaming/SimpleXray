@@ -90,6 +90,9 @@ fun SubscriptionCard(
             if (error != null && syncState?.syncing != true) {
                 Text(error, style = MaterialTheme.typography.bodySmall, color = colors.error)
             }
+            sub.routingError?.let {
+                Text(it, style = MaterialTheme.typography.bodySmall, color = colors.error)
+            }
             Spacer(Modifier.height(14.dp))
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
                 Text(

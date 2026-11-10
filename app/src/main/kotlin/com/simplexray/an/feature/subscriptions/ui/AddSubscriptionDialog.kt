@@ -16,6 +16,7 @@ import com.simplexray.an.ui.components.LabButton
 import com.simplexray.an.ui.components.LabDialog
 import com.simplexray.an.ui.components.LabField
 import com.simplexray.an.ui.components.LabIcon
+import com.simplexray.an.ui.components.settings.LabSettingToggle
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.launch
 import okhttp3.HttpUrl.Companion.toHttpUrlOrNull
@@ -29,8 +30,12 @@ fun AddSubscriptionDialog(
     onDelete: (() -> Unit)? = null,
     busy: Boolean = false,
     error: String? = null,
+    routingAccepted: Boolean? = null,
+    routingError: String? = null,
+    onRoutingAcceptedChange: (Boolean) -> Unit = {},
 ) {
     var url by rememberSaveable { mutableStateOf(initialUrl) }
+    var acceptRouting by rememberSaveable { mutableStateOf(routingAccepted ?: true) }
     var clipboardError by remember { mutableStateOf<String?>(null) }
     val clipboard = LocalClipboard.current
     val context = LocalContext.current
@@ -49,7 +54,11 @@ fun AddSubscriptionDialog(
             LabButton(
                 if (busy) "Загрузка…" else if (editing) "Сохранить" else "Добавить",
                 onClick = {
-                    if (!busy && validLink) onConfirm(parsed?.host ?: "Пресет роутинга", url.trim())
+                    if (!busy && validLink) {
+                        if (routingAccepted != null && acceptRouting != routingAccepted)
+                            onRoutingAcceptedChange(acceptRouting)
+                        onConfirm(parsed?.host ?: "Пресет роутинга", url.trim())
+                    }
                 },
                 modifier = Modifier.weight(1f),
                 primary = true,
@@ -110,6 +119,20 @@ fun AddSubscriptionDialog(
                 color = MaterialTheme.colorScheme.error,
             )
         clipboardError?.let {
+            Text(
+                it,
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.error,
+            )
+        }
+        if (routingAccepted != null)
+            LabSettingToggle(
+                "Принимать роутинг",
+                "Правила от провайдера для серверов этой подписки. Смотреть их — в Настройки → Роутинг.",
+                acceptRouting,
+                if (busy) null else { value: Boolean -> acceptRouting = value },
+            )
+        routingError?.let {
             Text(
                 it,
                 style = MaterialTheme.typography.bodySmall,

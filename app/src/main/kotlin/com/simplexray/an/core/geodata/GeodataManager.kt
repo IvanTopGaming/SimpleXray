@@ -194,12 +194,12 @@ class GeodataManager(
     }
 
     private fun requireFilename(filename: String) {
-        require(filename == "geoip.dat" || filename == "geosite.dat") { "Неизвестная база" }
+        require(GeodataFiles.isKnown(filename)) { "Неизвестная база" }
     }
 
     companion object {
         private val mutex = Mutex()
-        private val stagingFilename = Regex("""\.(geoip|geosite)\.dat-[0-9]+\.tmp""")
+        private val stagingFilename = Regex("""\.(?:sub-[A-Za-z0-9-]{1,100}-)?(geoip|geosite)\.dat-[0-9]+\.tmp""")
         private val defaultClient =
             OkHttpClient.Builder()
                 .connectTimeout(15, TimeUnit.SECONDS)

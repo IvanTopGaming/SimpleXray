@@ -6,6 +6,7 @@ data class RoutingServerRef(
     val subscriptionId: String? = null,
     val fingerprint: String = "",
     val matchFingerprint: Boolean = false,
+    val subscriptionKey: String? = null,
 ) {
     fun validate() {
         require(
@@ -29,6 +30,12 @@ data class RoutingServerRef(
         }
         require(!matchFingerprint || subscriptionId != null && fingerprint.isNotEmpty()) {
             "Некорректная ссылка на сервер. Выбери сервер заново"
+        }
+        require(
+            subscriptionKey == null ||
+                subscriptionId != null && subscriptionKey.matches(Regex("[a-f0-9]{64}"))
+        ) {
+            "Некорректная ссылка на подписку. Выбери сервер заново"
         }
     }
 }

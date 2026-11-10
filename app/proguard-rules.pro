@@ -4,6 +4,8 @@
 
 -keep class com.simplexray.an.feature.subscriptions.model.Subscription { *; }
 -keep class com.simplexray.an.feature.subscriptions.model.SubscriptionUsage { *; }
+-keep class com.simplexray.an.feature.subscriptions.routing.SubscriptionRouting { *; }
+-keep class com.simplexray.an.feature.subscriptions.routing.SubscriptionRoutingBlock { *; }
 -keep class com.simplexray.an.feature.routing.model.RoutingSettings { *; }
 -keep class com.simplexray.an.feature.routing.model.RoutingRule { *; }
 -keep class com.simplexray.an.feature.routing.model.RoutingBlock { *; }

@@ -1,5 +1,6 @@
 package com.simplexray.an.core.config.dns
 
+import com.simplexray.an.core.config.routing.RoutingLayer
 import com.simplexray.an.feature.routing.model.RouteTarget
 import com.simplexray.an.feature.routing.model.RoutingRule
 import com.simplexray.an.feature.routing.model.RoutingSettings
@@ -12,12 +13,13 @@ internal data class SplitDnsRule(
 )
 
 internal object SplitDnsRules {
-    fun from(settings: RoutingSettings): List<SplitDnsRule> {
+    fun from(settings: RoutingSettings, layers: List<RoutingLayer> = emptyList()): List<SplitDnsRule> {
         settings.validate()
+        RoutingLayer.validate(settings.rules, layers)
         val groups = mutableListOf<SplitDnsRule>()
-        settings.rules
-            .filter { it.enabled }
-            .forEach { rule ->
+        (listOf(RoutingLayer(settings.rules)) + layers)
+            .flatMap { layer -> layer.rules.filter { it.enabled }.map { layer to it } }
+            .forEach { (layer, rule) ->
                 val prefix =
                     when (rule.kind) {
                         RuleKind.DOMAIN -> "domain:"
@@ -27,10 +29,8 @@ internal object SplitDnsRules {
                     }
                 val domains =
                     rule.values.map {
-                        prefix +
-                            if (rule.kind == RuleKind.GEOSITE)
-                                RoutingRule.normalizeCategory(it, rule.kind)
-                            else RoutingRule.normalizeDomain(it)
+                        if (rule.kind == RuleKind.GEOSITE) layer.category(rule, it)
+                        else prefix + RoutingRule.normalizeDomain(it)
                     }
                 val direct = rule.target == RouteTarget.DIRECT
                 val last = groups.lastOrNull()
