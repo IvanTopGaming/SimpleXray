@@ -95,6 +95,12 @@ android {
             signingConfig signingConfigs.debug
             debuggable true
         }
+        dev {
+            initWith debug
+            applicationIdSuffix ".dev"
+            versionNameSuffix "-dev"
+            matchingFallbacks = ['debug']
+        }
     }
 
     externalNativeBuild {
